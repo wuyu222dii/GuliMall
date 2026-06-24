@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    username: root
+    password: Wuyujian
+    url: jdbc:mysql://localhost:3306/gulimall_oms?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  application:
+    name: gulimall-order
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+server:
+  port: 9000
+
+alipay:
+  app_id: app_id
+  merchant_private_key: merchant_private_key
+  alipay_public_key: alipay_public_key
+  notify_url: notify_url
+  return_url: http://member.gulimall.com/memberOrder.html
+  sign_type: RSA2
+  charset: utf-8
+  timeout: 30m
+  gatewayUrl: https://openapi.alipaydev.com/gateway.do

@@ -1,0 +1,12 @@
+# 复制此文件为 application-local.yml 并填入真实密钥（application-local.yml 已加入 .gitignore，不会提交）
+spring:
+  cloud:
+    alicloud:
+      access-key: your-access-key-id
+      secret-key: your-access-key-secret
+      sms:
+        host: https://gyytz.market.alicloudapi.com
+        path: /sms/smsSend
+        sms-sign-id: your-sms-sign-id
+        template-code: your-template-id
+        appcode: your-appcode

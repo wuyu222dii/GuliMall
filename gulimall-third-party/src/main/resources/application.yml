@@ -1,0 +1,23 @@
+server:
+  port: 30000
+
+spring:
+  application:
+    name: gulimall-third-party
+  config:
+    additional-location: optional:classpath:application-local.yml
+  cloud:
+    alicloud:
+      access-key: ${ALIYUN_ACCESS_KEY:}
+      secret-key: ${ALIYUN_SECRET_KEY:}
+      oss:
+        endpoint: oss-cn-beijing.aliyuncs.com
+        bucket: harry-gulimall
+
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+
+logging:
+  level:
+    com.atguigu.gulimall.product: debug
