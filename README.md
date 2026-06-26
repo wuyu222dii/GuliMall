@@ -17,8 +17,23 @@
 | `gulimall-third-party` | 第三方服务（OSS 等） | 30000 | 是 |
 | `gulimall-auth-server` | 认证中心 | 20000 | 是 |
 | `renren-generator` | 代码生成器 | 80 | 是 |
+| `gulimall-web` | **React 前端** | 5173 | 是（`npm run dev`） |
 
 > **注意**：`gulimall-common` 是公共依赖库，**不能**执行 `mvn spring-boot:run`。请在各业务模块目录下启动服务。
+
+## React 前端
+
+前端项目位于 `gulimall-web/`，使用 React + Vite 构建，对接微服务网关与各业务 API。
+
+```bash
+cd gulimall-web
+npm install
+npm run dev    # http://localhost:5173
+```
+
+主要页面：首页、商品搜索、商品详情、购物车、结算、登录/注册、我的订单、收货地址管理。
+
+详见 [gulimall-web/README.md](gulimall-web/README.md)。
 
 ## 环境要求
 
