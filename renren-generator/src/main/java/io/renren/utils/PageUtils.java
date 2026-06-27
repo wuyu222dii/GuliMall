@@ -4,31 +4,31 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 分页工具类
+ * Pagination utility
  * 
  * @author chenshun
  * @email sunlightcs@gmail.com
- * @date 2016年11月4日 下午12:59:00
+ * @date Nov 4, 2016
  */
 public class PageUtils implements Serializable {
 	private static final long serialVersionUID = 1L;
-	//总记录数
+	// Total records
 	private int totalCount;
-	//每页记录数
+	// Records per page
 	private int pageSize;
-	//总页数
+	// Total pages
 	private int totalPage;
-	//当前页数
+	// Current page
 	private int currPage;
-	//列表数据
+	// List data
 	private List<?> list;
 	
 	/**
-	 * 分页
-	 * @param list        列表数据
-	 * @param totalCount  总记录数
-	 * @param pageSize    每页记录数
-	 * @param currPage    当前页数
+	 * Paginate
+	 * @param list        list data
+	 * @param totalCount  total record count
+	 * @param pageSize    records per page
+	 * @param currPage    current page
 	 */
 	public PageUtils(List<?> list, int totalCount, int pageSize, int currPage) {
 		this.list = list;

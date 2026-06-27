@@ -8,16 +8,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 返回数据
+ * Response data
  *
  * @author Mark sunlightcs@gmail.com
  */
 public class R extends HashMap<String, Object> {
     private static final long serialVersionUID = 1L;
 
-    // 利用fastjson进行逆转
+    // Use fastjson for type conversion
     public <T> T getData(String key,TypeReference<T> typeReference) {
-        Object data = get(key); // 默认是map类型
+        Object data = get(key); // Default is map type
         String s = JSON.toJSONString(data);
         T t = JSON.parseObject(s, typeReference);
         return t;
@@ -34,7 +34,7 @@ public class R extends HashMap<String, Object> {
     }
 
     public static R error() {
-        return error(HttpStatus.SC_INTERNAL_SERVER_ERROR, "未知异常，请联系管理员");
+        return error(HttpStatus.SC_INTERNAL_SERVER_ERROR, "Unknown exception, please contact the administrator");
     }
 
     public static R error(String msg) {

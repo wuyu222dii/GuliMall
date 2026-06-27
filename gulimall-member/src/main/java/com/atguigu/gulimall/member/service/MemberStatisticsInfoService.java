@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.MemberStatisticsInfoEntity;
 import java.util.Map;
 
 /**
- * 会员统计信息
+ * Member Statistics Info
  *
  * @author liurui
  * @email liurui@gmail.com

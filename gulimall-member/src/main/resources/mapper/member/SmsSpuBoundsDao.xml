@@ -3,7 +3,7 @@
 
 <mapper namespace="com.atguigu.gulimall.member.dao.SmsSpuBoundsDao">
 
-	<!-- 可根据自己的需求，是否要使用 -->
+	<!-- Customize as needed for your requirements -->
     <resultMap type="com.atguigu.gulimall.member.entity.SmsSpuBoundsEntity" id="smsSpuBoundsMap">
         <result property="id" column="id"/>
         <result property="spuId" column="spu_id"/>

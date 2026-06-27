@@ -7,7 +7,7 @@ import com.atguigu.gulimall.coupon.entity.SeckillSkuNoticeEntity;
 import java.util.Map;
 
 /**
- * 秒杀商品通知订阅
+ * Seckill SKU notification subscription
  *
  * @author liurui
  * @email liurui@gmail.com

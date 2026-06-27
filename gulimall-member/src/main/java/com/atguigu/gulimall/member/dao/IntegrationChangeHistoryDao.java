@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 积分变化历史记录
+ * Integration Change History
  * 
  * @author liurui
  * @email liurui@gmail.com

@@ -2,12 +2,12 @@
   <div class="mod-config">
     <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
       <el-form-item>
-        <el-input v-model="dataForm.key" placeholder="参数名" clearable></el-input>
+        <el-input v-model="dataForm.key" placeholder="Parameter name" clearable></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button @click="getDataList()">查询</el-button>
-        <el-button v-if="isAuth('${moduleName}:${pathName}:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
-        <el-button v-if="isAuth('${moduleName}:${pathName}:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
+        <el-button @click="getDataList()">Search</el-button>
+        <el-button v-if="isAuth('${moduleName}:${pathName}:save')" type="primary" @click="addOrUpdateHandle()">Add</el-button>
+        <el-button v-if="isAuth('${moduleName}:${pathName}:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">Batch Delete</el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -35,10 +35,10 @@
         header-align="center"
         align="center"
         width="150"
-        label="操作">
+        label="Actions">
         <template slot-scope="scope">
-          <el-button type="text" size="small" @click="addOrUpdateHandle(scope.row.${pk.attrname})">修改</el-button>
-          <el-button type="text" size="small" @click="deleteHandle(scope.row.${pk.attrname})">删除</el-button>
+          <el-button type="text" size="small" @click="addOrUpdateHandle(scope.row.${pk.attrname})">Edit</el-button>
+          <el-button type="text" size="small" @click="deleteHandle(scope.row.${pk.attrname})">Delete</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -51,7 +51,7 @@
       :total="totalPage"
       layout="total, sizes, prev, pager, next, jumper">
     </el-pagination>
-    <!-- 弹窗, 新增 / 修改 -->
+    <!-- Dialog: add / edit -->
     <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
   </div>
 </template>
@@ -80,7 +80,7 @@
       this.getDataList()
     },
     methods: {
-      // 获取数据列表
+      // Fetch data list
       getDataList () {
         this.dataListLoading = true
         #[[this.$http({]]#
@@ -102,36 +102,36 @@
           this.dataListLoading = false
         })
       },
-      // 每页数
+      // Page size
       sizeChangeHandle (val) {
         this.pageSize = val
         this.pageIndex = 1
         this.getDataList()
       },
-      // 当前页
+      // Current page
       currentChangeHandle (val) {
         this.pageIndex = val
         this.getDataList()
       },
-      // 多选
+      // Multi-select
       selectionChangeHandle (val) {
         this.dataListSelections = val
       },
-      // 新增 / 修改
+      // Add / edit
       addOrUpdateHandle (id) {
         this.addOrUpdateVisible = true
         #[[this.$nextTick(() => {]]#
           this.$refs.addOrUpdate.init(id)
         })
       },
-      // 删除
+      // Delete
       deleteHandle (id) {
         var ids = id ? [id] : this.dataListSelections.map(item => {
           return item.${pk.attrname}
         })
-        #[[this.$confirm(`确定对[id=${ids.join(',')}]进行[${id ? '删除' : '批量删除'}]操作?`, '提示', {]]#
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        #[[this.$confirm(`Confirm [${id ? 'delete' : 'batch delete'}] for id(s)=${ids.join(',')}?`, 'Confirm', {]]#
+          confirmButtonText: 'OK',
+          cancelButtonText: 'Cancel',
           type: 'warning'
         }).then(() => {
           #[[this.$http({]]#
@@ -141,7 +141,7 @@
           }).then(({data}) => {
             if (data && data.code === 0) {
               #[[this.$message({]]#
-                message: '操作成功',
+                message: 'Success',
                 type: 'success',
                 duration: 1500,
                 onClose: () => {

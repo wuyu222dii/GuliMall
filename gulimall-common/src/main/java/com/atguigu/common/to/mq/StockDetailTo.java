@@ -14,21 +14,21 @@ public class StockDetailTo {
      */
     private String skuName;
     /**
-     * 购买个数
+     * Purchase quantity
      */
     private Integer skuNum;
     /**
-     * 工作单id
+     * Work order id
      */
     private Long taskId;
 
     /**
-     * 仓库id
+     * Warehouse id
      */
     private Long wareId;
 
     /**
-     * 锁定状态
+     * Lock status
      */
     private Integer lockStatus;
 }

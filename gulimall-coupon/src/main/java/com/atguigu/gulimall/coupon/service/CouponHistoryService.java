@@ -7,7 +7,7 @@ import com.atguigu.gulimall.coupon.entity.CouponHistoryEntity;
 import java.util.Map;
 
 /**
- * 优惠券领取历史记录
+ * Coupon claim history
  *
  * @author liurui
  * @email liurui@gmail.com

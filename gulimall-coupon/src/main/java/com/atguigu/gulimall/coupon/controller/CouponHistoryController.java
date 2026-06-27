@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 优惠券领取历史记录
+ * Coupon claim history
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class CouponHistoryController {
     private CouponHistoryService couponHistoryService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:couponhistory:list")
@@ -43,7 +43,7 @@ public class CouponHistoryController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:couponhistory:info")
@@ -54,7 +54,7 @@ public class CouponHistoryController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("coupon:couponhistory:save")
@@ -65,7 +65,7 @@ public class CouponHistoryController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:couponhistory:update")
@@ -76,7 +76,7 @@ public class CouponHistoryController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:couponhistory:delete")

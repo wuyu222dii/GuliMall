@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 商品属性
+ * Product attributes
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -36,7 +36,7 @@ public interface AttrService extends IService<AttrEntity> {
     PageUtils getNoRelationAttr(Map<String, Object> params, Long attrgroupId);
 
     /**
-     * 在指定的所有属性集合里面，挑出所有属性
+     * Select all attributes in the specified set of attributes
      *
      * @param attrIds
      * @return

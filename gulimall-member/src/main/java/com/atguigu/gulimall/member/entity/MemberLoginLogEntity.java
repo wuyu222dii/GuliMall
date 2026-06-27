@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 会员登录记录
+ * Member Login Log
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -29,7 +29,7 @@ public class MemberLoginLogEntity implements Serializable {
 	 */
 	private Long memberId;
 	/**
-	 * 创建时间
+	 * Create time
 	 */
 	private Date createTime;
 	/**
@@ -41,7 +41,7 @@ public class MemberLoginLogEntity implements Serializable {
 	 */
 	private String city;
 	/**
-	 * 登录类型[1-web，2-app]
+	 * Login type [1-web, 2-app]
 	 */
 	private Integer loginType;
 

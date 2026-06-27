@@ -13,7 +13,7 @@ import java.util.Map;
 
 
 /**
- * 订单退货申请
+ * Order return application
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -26,7 +26,7 @@ public class OrderReturnApplyController {
     private OrderReturnApplyService orderReturnApplyService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("order:orderreturnapply:list")
@@ -38,7 +38,7 @@ public class OrderReturnApplyController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("order:orderreturnapply:info")
@@ -49,7 +49,7 @@ public class OrderReturnApplyController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("order:orderreturnapply:save")
@@ -60,7 +60,7 @@ public class OrderReturnApplyController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("order:orderreturnapply:update")
@@ -71,7 +71,7 @@ public class OrderReturnApplyController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("order:orderreturnapply:delete")

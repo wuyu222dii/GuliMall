@@ -17,7 +17,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 采购信息
+ * Purchase info
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -30,7 +30,7 @@ public class PurchaseController {
     private PurchaseService purchaseService;
 
     /**
-     * 完成采购单
+     * Complete purchase order
      */
     @PostMapping("/done")
     public R finish(@RequestBody PurchaseDoneVo doneVo) {
@@ -41,7 +41,7 @@ public class PurchaseController {
 
 
     /**
-     * 领取采购单
+     * Assign purchase order
      *
      * @param ids
      * @return
@@ -71,7 +71,7 @@ public class PurchaseController {
     }
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("ware:purchase:list")
@@ -83,7 +83,7 @@ public class PurchaseController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("ware:purchase:info")
@@ -94,7 +94,7 @@ public class PurchaseController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("ware:purchase:save")
@@ -107,7 +107,7 @@ public class PurchaseController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("ware:purchase:update")
@@ -118,7 +118,7 @@ public class PurchaseController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:purchase:delete")

@@ -7,7 +7,7 @@ import com.atguigu.gulimall.coupon.entity.HomeSubjectSpuEntity;
 import java.util.Map;
 
 /**
- * 专题商品
+ * Subject SPU
  *
  * @author liurui
  * @email liurui@gmail.com

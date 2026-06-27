@@ -15,7 +15,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品三级分类
+ * Three-level classification of goods
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -28,7 +28,7 @@ public class CategoryController {
     private CategoryService categoryService;
 
     /**
-     * 查出所有分类以及子分类，以树形结构组装起来
+     * Find all categories and subcategories and assemble them in a tree structure
      */
     @RequestMapping("/list/tree")
     //@RequiresPermissions("product:category:list")
@@ -40,7 +40,7 @@ public class CategoryController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{catId}")
     //@RequiresPermissions("product:category:info")
@@ -51,7 +51,7 @@ public class CategoryController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:category:save")
@@ -62,7 +62,7 @@ public class CategoryController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:category:update")
@@ -73,13 +73,13 @@ public class CategoryController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:category:delete")
     public R delete(@RequestBody Long[] catIds) {
 
-        // 检查当前删除的菜单是否被引用
+        // Check if the currently deleted menu is referenced
 //        categoryService.removeByIds(Arrays.asList(catIds));
 
         categoryService.removeMenuByIds(Arrays.asList(catIds));

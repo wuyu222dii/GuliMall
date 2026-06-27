@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 品牌分类关联
+ * Brand classification association
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class CategoryBrandRelationController {
     private CategoryBrandRelationService categoryBrandRelationService;
 
     /**
-     * 获取当前品牌关联的所有分类列表
+     * Get a list of all categories associated with the current brand
      */
     @GetMapping("/catelog/list")
     //@RequiresPermissions("product:categorybrandrelation:list")
@@ -44,9 +44,9 @@ public class CategoryBrandRelationController {
     /**
      * /product/categorybrandrelation/brands/list
      * <p>
-     * controller:处理请求，接收和校验数据
-     * service接收controller传来的数据，进行业务处理
-     * controller接收service处理完的数据，封装页面指定的vo
+     * controller:Process requests, receive and verify data
+     * servicetake overcontrollerTransmitted data for business processing
+     * controllertake overserviceThe processed data is encapsulated as specified on the page.vo
      */
     @GetMapping("/brands/list")
     public R relationBrandsList(@RequestParam(value = "catId", required = true) Long catId) {
@@ -62,7 +62,7 @@ public class CategoryBrandRelationController {
     }
 
     /**
-     * 保存功能
+     * save function
      *
      * @param params
      * @return
@@ -79,7 +79,7 @@ public class CategoryBrandRelationController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:categorybrandrelation:info")
@@ -90,7 +90,7 @@ public class CategoryBrandRelationController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:categorybrandrelation:save")
@@ -103,7 +103,7 @@ public class CategoryBrandRelationController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:categorybrandrelation:update")
@@ -114,7 +114,7 @@ public class CategoryBrandRelationController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:categorybrandrelation:delete")

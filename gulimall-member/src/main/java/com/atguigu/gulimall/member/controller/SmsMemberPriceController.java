@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品会员价格
+ * Product Member Price
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsMemberPriceController {
     private SmsMemberPriceService smsMemberPriceService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smsmemberprice:list")
@@ -43,7 +43,7 @@ public class SmsMemberPriceController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smsmemberprice:info")
@@ -54,7 +54,7 @@ public class SmsMemberPriceController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smsmemberprice:save")
@@ -65,7 +65,7 @@ public class SmsMemberPriceController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smsmemberprice:update")
@@ -76,7 +76,7 @@ public class SmsMemberPriceController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smsmemberprice:delete")

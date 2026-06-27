@@ -8,7 +8,7 @@ import com.atguigu.gulimall.coupon.entity.SkuFullReductionEntity;
 import java.util.Map;
 
 /**
- * 商品满减信息
+ * SKU full reduction info
  *
  * @author liurui
  * @email liurui@gmail.com

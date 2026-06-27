@@ -1,4 +1,4 @@
-//iframe自适应
+// Auto-resize iframe
 $(window).on('resize', function() {
 	var $content = $('.content');
 	$content.height($(this).height() - 120);
@@ -12,7 +12,7 @@ var vm = new Vue({
 	el:'#rrapp',
 	data:{
 		main:"main.html",
-        navTitle:"欢迎页"
+        navTitle:"Welcome"
 	},
     methods: {
         donate: function () {
@@ -28,7 +28,7 @@ var vm = new Vue({
     }
 });
 
-//路由
+// Routing
 var router = new Router();
 var menus = ["main.html","generator.html"];
 routerList(router, menus);
@@ -39,10 +39,10 @@ function routerList(router, menus){
 		router.add('#'+menus[index], function() {
 			var url = window.location.hash;
 
-			//替换iframe的url
+			// Replace iframe url
 			vm.main = url.replace('#', '');
 
-			//导航菜单展开
+			// Expand nav menu
 			$(".treeview-menu li").removeClass("active");
 			$("a[href='"+url+"']").parents("li").addClass("active");
 

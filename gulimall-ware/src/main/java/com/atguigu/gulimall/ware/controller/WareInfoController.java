@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 仓库信息
+ * Warehouse info
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class WareInfoController {
     private WareInfoService wareInfoService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("ware:wareinfo:list")
@@ -43,7 +43,7 @@ public class WareInfoController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("ware:wareinfo:info")
@@ -54,7 +54,7 @@ public class WareInfoController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("ware:wareinfo:save")
@@ -65,7 +65,7 @@ public class WareInfoController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("ware:wareinfo:update")
@@ -76,7 +76,7 @@ public class WareInfoController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:wareinfo:delete")

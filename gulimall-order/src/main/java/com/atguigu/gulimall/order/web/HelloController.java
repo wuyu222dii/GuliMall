@@ -17,7 +17,7 @@ public class HelloController {
 
     @GetMapping("/testSubmit")
     public String testSubmitOrder() {
-        //订单下单成功
+        // Order placed successfully
         OrderEntity orderEntity = new OrderEntity();
         orderEntity.setOrderSn(UUID.randomUUID().toString());
         orderEntity.setModifyTime(new Date());

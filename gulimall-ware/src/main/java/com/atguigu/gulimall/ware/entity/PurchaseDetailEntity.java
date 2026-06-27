@@ -26,27 +26,27 @@ public class PurchaseDetailEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 采购单id
+	 * Purchase order id
 	 */
 	private Long purchaseId;
 	/**
-	 * 采购商品id
+	 * Purchased product id
 	 */
 	private Long skuId;
 	/**
-	 * 采购数量
+	 * Purchase quantity
 	 */
 	private Integer skuNum;
 	/**
-	 * 采购金额
+	 * Purchase amount
 	 */
 	private BigDecimal skuPrice;
 	/**
-	 * 仓库id
+	 * Warehouse id
 	 */
 	private Long wareId;
 	/**
-	 * 状态[0新建，1已分配，2正在采购，3已完成，4采购失败]
+	 * Status [0-new, 1-assigned, 2-in progress, 3-completed, 4-failed]
 	 */
 	private Integer status;
 

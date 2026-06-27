@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * spu信息
+ * spuinformation
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -21,24 +21,24 @@ public class SpuInfoEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * 商品id
+	 * commodityid
 	 */
 	@TableId
 	private Long id;
 	/**
-	 * 商品名称
+	 * Product name
 	 */
 	private String spuName;
 	/**
-	 * 商品描述
+	 * Product description
 	 */
 	private String spuDescription;
 	/**
-	 * 所属分类id
+	 * Categoryid
 	 */
 	private Long catalogId;
 	/**
-	 * 品牌id
+	 * brandid
 	 */
 	private Long brandId;
 	/**
@@ -46,7 +46,7 @@ public class SpuInfoEntity implements Serializable {
 	 */
 	private BigDecimal weight;
 	/**
-	 * 上架状态[0 - 下架，1 - 上架]
+	 * Shelf status[0 - Taken off the shelves,1 - On the shelves]
 	 */
 	private Integer publishStatus;
 	/**

@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 统一处理所有controller的异常
+ * Process all in one placecontrolleranomaly
  */
 @Slf4j
 @RestControllerAdvice(basePackages = "com.atguigu.gulimall.product.controller")
@@ -22,7 +22,7 @@ public class GulimallExceptionControllerAdvice {
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public R handleValidException(MethodArgumentNotValidException e) {
-        log.error("数据校验出现问题{}", "异常类型：{}", e.getMessage(), e.getClass());
+        log.error("Problem with data verification{}", "Exception type:{}", e.getMessage(), e.getClass());
         BindingResult bindingResult = e.getBindingResult();
         Map<String, String> errorMap = new HashMap<>();
         bindingResult.getFieldErrors().forEach((fieldError) -> {
@@ -33,7 +33,7 @@ public class GulimallExceptionControllerAdvice {
 
     @ExceptionHandler(value = Throwable.class)
     public R handleException(Throwable throwable) {
-        log.error("错误：", throwable);
+        log.error("mistake:", throwable);
         return R.error(BizCodeEnume.UNKNOWN_EXCEPTION.getCode(), BizCodeEnume.UNKNOWN_EXCEPTION.getMsg());
     }
 }

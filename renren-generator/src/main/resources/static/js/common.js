@@ -1,13 +1,13 @@
-//jqGrid的配置信息
+// jqGrid configuration
 $.jgrid.defaults.width = 1000;
 $.jgrid.defaults.responsive = true;
 $.jgrid.defaults.styleUI = 'Bootstrap';
 
-//工具集合Tools
+// Utility helpers
 window.T = {};
 
-// 获取请求参数
-// 使用示例
+// Get query string parameters
+// Usage example
 // location.href = http://localhost:8080/index.html?id=123
 // T.p('id') --> 123;
 var url = function(name) {
@@ -17,7 +17,7 @@ var url = function(name) {
 };
 T.p = url;
 
-//全局配置
+// Global config
 $.ajaxSetup({
 	dataType: "json",
 	contentType: "application/json",
@@ -32,7 +32,7 @@ function hasPermission(permission) {
     }
 }
 
-//重写alert
+// Override alert
 window.alert = function(msg, callback){
 	parent.layer.alert(msg, function(index){
 		parent.layer.close(index);
@@ -42,40 +42,40 @@ window.alert = function(msg, callback){
 	});
 }
 
-//重写confirm式样框
+// Override confirm dialog
 window.confirm = function(msg, callback){
-	parent.layer.confirm(msg, {btn: ['确定','取消']},
-	function(){//确定事件
+	parent.layer.confirm(msg, {btn: ['OK','Cancel']},
+	function(){// Confirm handler
 		if(typeof(callback) === "function"){
 			callback("ok");
 		}
 	});
 }
 
-//选择一条记录
+// Select one record
 function getSelectedRow() {
     var grid = $("#jqGrid");
     var rowKey = grid.getGridParam("selrow");
     if(!rowKey){
-    	alert("请选择一条记录");
+    	alert("Please select a record");
     	return ;
     }
     
     var selectedIDs = grid.getGridParam("selarrrow");
     if(selectedIDs.length > 1){
-    	alert("只能选择一条记录");
+    	alert("Only one record can be selected");
     	return ;
     }
     
     return selectedIDs[0];
 }
 
-//选择多条记录
+// Select multiple records
 function getSelectedRows() {
     var grid = $("#jqGrid");
     var rowKey = grid.getGridParam("selrow");
     if(!rowKey){
-    	alert("请选择一条记录");
+    	alert("Please select a record");
     	return ;
     }
     

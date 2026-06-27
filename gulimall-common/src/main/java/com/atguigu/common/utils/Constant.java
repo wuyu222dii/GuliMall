@@ -1,59 +1,59 @@
 /**
- * Copyright (c) 2016-2019 人人开源 All rights reserved.
+ * Copyright (c) 2016-2019 Renren Open Source All rights reserved.
  *
  * https://www.renren.io
  *
- * 版权所有，侵权必究！
+ * All rights reserved.
  */
 
 package com.atguigu.common.utils;
 
 /**
- * 常量
+ * Constants
  *
  * @author Mark sunlightcs@gmail.com
  */
 public class Constant {
-	/** 超级管理员ID */
+	/** Super admin id */
 	public static final int SUPER_ADMIN = 1;
     /**
-     * 当前页码
+     * Current page number
      */
     public static final String PAGE = "page";
     /**
-     * 每页显示记录数
+     * Records per page
      */
     public static final String LIMIT = "limit";
     /**
-     * 排序字段
+     * Sort field
      */
     public static final String ORDER_FIELD = "sidx";
     /**
-     * 排序方式
+     * Sort order
      */
     public static final String ORDER = "order";
     /**
-     *  升序
+     * Ascending order
      */
     public static final String ASC = "asc";
 	/**
-	 * 菜单类型
+	 * Menu type
 	 * 
 	 * @author chenshun
 	 * @email sunlightcs@gmail.com
-	 * @date 2016年11月15日 下午1:24:29
+	 * @date Nov 15, 2016 1:24:29 PM
 	 */
     public enum MenuType {
         /**
-         * 目录
+         * Catalog
          */
     	CATALOG(0),
         /**
-         * 菜单
+         * Menu
          */
         MENU(1),
         /**
-         * 按钮
+         * Button
          */
         BUTTON(2);
 
@@ -69,19 +69,19 @@ public class Constant {
     }
     
     /**
-     * 定时任务状态
+     * Scheduled task status
      * 
      * @author chenshun
      * @email sunlightcs@gmail.com
-     * @date 2016年12月3日 上午12:07:22
+     * @date Dec 3, 2016 12:07:22 AM
      */
     public enum ScheduleStatus {
         /**
-         * 正常
+         * Normal
          */
     	NORMAL(0),
         /**
-         * 暂停
+         * Paused
          */
     	PAUSE(1);
 
@@ -97,19 +97,19 @@ public class Constant {
     }
 
     /**
-     * 云服务商
+     * Cloud service provider
      */
     public enum CloudService {
         /**
-         * 七牛云
+         * Qiniu Cloud
          */
         QINIU(1),
         /**
-         * 阿里云
+         * Alibaba Cloud
          */
         ALIYUN(2),
         /**
-         * 腾讯云
+         * Tencent Cloud
          */
         QCLOUD(3);
 

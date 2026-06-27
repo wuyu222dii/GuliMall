@@ -13,7 +13,7 @@ import java.util.Map;
 
 
 /**
- * 退货原因
+ * Return reason
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -26,7 +26,7 @@ public class OrderReturnReasonController {
     private OrderReturnReasonService orderReturnReasonService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("order:orderreturnreason:list")
@@ -38,7 +38,7 @@ public class OrderReturnReasonController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("order:orderreturnreason:info")
@@ -49,7 +49,7 @@ public class OrderReturnReasonController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("order:orderreturnreason:save")
@@ -60,7 +60,7 @@ public class OrderReturnReasonController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("order:orderreturnreason:update")
@@ -71,7 +71,7 @@ public class OrderReturnReasonController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("order:orderreturnreason:delete")

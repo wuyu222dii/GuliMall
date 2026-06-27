@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 秒杀活动场次
+ * Seckill Session
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsSeckillSessionController {
     private SmsSeckillSessionService smsSeckillSessionService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smsseckillsession:list")
@@ -43,7 +43,7 @@ public class SmsSeckillSessionController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smsseckillsession:info")
@@ -54,7 +54,7 @@ public class SmsSeckillSessionController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smsseckillsession:save")
@@ -65,7 +65,7 @@ public class SmsSeckillSessionController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smsseckillsession:update")
@@ -76,7 +76,7 @@ public class SmsSeckillSessionController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smsseckillsession:delete")

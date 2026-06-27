@@ -64,7 +64,7 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
     public void mergePurchase(MergeVo mergeVo) {
         Long purchaseId = mergeVo.getPurchaseId();
         if (purchaseId == null) {
-            // 新建一个
+            // Create a new one
             PurchaseEntity purchaseEntity = new PurchaseEntity();
 
             purchaseEntity.setStatus(WareConstant.PurchaseStatusEnum.CREATED.getCode());
@@ -74,7 +74,7 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
             purchaseId = purchaseEntity.getId();
         }
 
-        // todo 确认采购单状态是0，1才可以合并
+        // TODO: Confirm purchase order status is 0 or 1 before merging
 
         List<Long> items = mergeVo.getItems();
         Long finalPurchaseId = purchaseId;
@@ -98,13 +98,13 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
     }
 
     /**
-     * 采购单id
+     * Purchase order id
      *
      * @param ids
      */
     @Override
     public void received(List<Long> ids) {
-        // 1、确认当前采购单是新建或者以分配状态
+        // 1. Confirm the purchase order is new or assigned
         List<PurchaseEntity> collect = ids.stream().map(id -> {
             PurchaseEntity byId = this.getById(id);
             return byId;
@@ -119,10 +119,10 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
             return item;
         }).collect(Collectors.toList());
 
-        // 2、改变采购单的状态
+        // 2. Update purchase order status
         this.updateBatchById(collect);
 
-        // 3、改变采购项的状态
+        // 3. Update purchase item status
         collect.forEach(item -> {
             List<PurchaseDetailEntity> entities = detailService.listDetailByPurchaseId(item.getId());
             List<PurchaseDetailEntity> detailEntities = entities.stream().map(entity -> {
@@ -142,7 +142,7 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
 
         Long id = doneVo.getId();
 
-        // 2、改变采购项状态
+        // 2. Update purchase item status
         Boolean flag = true;
         List<PurchaseItemDoneVo> items = doneVo.getItems();
 
@@ -154,7 +154,7 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
                 detailEntity.setStatus(item.getStatus());
             } else {
                 detailEntity.setStatus(WareConstant.PurchaseDetailStatusEnum.FINISH.getCode());
-                // 3、将成功采购的进行入库
+                // 3. Put successfully purchased items into warehouse
                 PurchaseDetailEntity entity = detailService.getById(item.getItemId());
                 wareSkuService.addStock(entity.getSkuId(), entity.getWareId(), entity.getSkuNum());
             }
@@ -163,7 +163,7 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
         }
         detailService.updateBatchById(updates);
 
-        // 1、改变采购单状态
+        // 1. Update purchase order status
         PurchaseEntity purchaseEntity = new PurchaseEntity();
         purchaseEntity.setId(id);
         purchaseEntity.setStatus(flag ? WareConstant.PurchaseStatusEnum.FINISH.getCode() : WareConstant.PurchaseStatusEnum.HASERROR.getCode());

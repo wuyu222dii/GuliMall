@@ -3,7 +3,7 @@
 
 <mapper namespace="com.atguigu.gulimall.product.dao.AttrGroupDao">
 
-    <!-- 可根据自己的需求，是否要使用 -->
+    <!-- You can use it according to your own needs -->
     <resultMap type="com.atguigu.gulimall.product.entity.AttrGroupEntity" id="attrGroupMap">
         <result property="attrGroupId" column="attr_group_id"/>
         <result property="attrGroupName" column="attr_group_name"/>
@@ -12,7 +12,7 @@
         <result property="icon" column="icon"/>
         <result property="catelogId" column="catelog_id"/>
     </resultMap>
-    <!--resultType 返回集合里面元素的类型,只要有嵌套属性就要封装自定义结果集-->
+    <!--resultType Returns the type of elements in the collection,As long as there are nested attributes, a custom result set must be encapsulated-->
     <resultMap id="spuItemAttrGroupVo" type="com.atguigu.gulimall.product.vo.SpuItemAttrGroupVo">
         <result property="groupName" column="attr_group_name"/>
         <collection property="attrs" ofType="com.atguigu.gulimall.product.vo.Attr">

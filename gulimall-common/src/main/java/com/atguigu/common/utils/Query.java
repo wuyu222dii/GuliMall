@@ -1,9 +1,9 @@
 /**
- * Copyright (c) 2016-2019 人人开源 All rights reserved.
+ * Copyright (c) 2016-2019 Renren Open Source All rights reserved.
  *
  * https://www.renren.io
  *
- * 版权所有，侵权必究！
+ * All rights reserved.
  */
 
 package com.atguigu.common.utils;
@@ -17,7 +17,7 @@ import org.apache.commons.lang.StringUtils;
 import java.util.Map;
 
 /**
- * 查询参数
+ * Query parameters
  *
  * @author Mark sunlightcs@gmail.com
  */
@@ -28,7 +28,7 @@ public class Query<T> {
     }
 
     public IPage<T> getPage(Map<String, Object> params, String defaultOrderField, boolean isAsc) {
-        //分页参数
+        // Pagination parameters
         long curPage = 1;
         long limit = 10;
 
@@ -39,19 +39,19 @@ public class Query<T> {
             limit = Long.parseLong((String)params.get(Constant.LIMIT));
         }
 
-        //分页对象
+        // Pagination object
         Page<T> page = new Page<>(curPage, limit);
 
-        //分页参数
+        // Pagination parameters
         params.put(Constant.PAGE, page);
 
-        //排序字段
-        //防止SQL注入（因为sidx、order是通过拼接SQL实现排序的，会有SQL注入风险）
+        // Sort field
+        // Prevent SQL injection (sidx and order are concatenated into SQL for sorting, which poses an injection risk)
         String orderField = SQLFilter.sqlInject((String)params.get(Constant.ORDER_FIELD));
         String order = (String)params.get(Constant.ORDER);
 
 
-        //前端字段排序
+        // Frontend field sorting
         if(StringUtils.isNotEmpty(orderField) && StringUtils.isNotEmpty(order)){
             if(Constant.ASC.equalsIgnoreCase(order)) {
                 return  page.addOrder(OrderItem.asc(orderField));
@@ -60,12 +60,12 @@ public class Query<T> {
             }
         }
 
-        //没有排序字段，则不排序
+        // No sort field, skip sorting
         if(StringUtils.isBlank(defaultOrderField)){
             return page;
         }
 
-        //默认排序
+        // Default sorting
         if(isAsc) {
             page.addOrder(OrderItem.asc(defaultOrderField));
         }else {

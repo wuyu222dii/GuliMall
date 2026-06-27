@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * 订单项信息
+ * Order item info
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -45,59 +45,59 @@ public class OrderItemEntity implements Serializable {
 	 */
 	private String spuPic;
 	/**
-	 * 品牌
+	 * Brand
 	 */
 	private String spuBrand;
 	/**
-	 * 商品分类id
+	 * Product category id
 	 */
 	private Long categoryId;
 	/**
-	 * 商品sku编号
+	 * Product SKU id
 	 */
 	private Long skuId;
 	/**
-	 * 商品sku名字
+	 * Product SKU name
 	 */
 	private String skuName;
 	/**
-	 * 商品sku图片
+	 * Product SKU image
 	 */
 	private String skuPic;
 	/**
-	 * 商品sku价格
+	 * Product SKU price
 	 */
 	private BigDecimal skuPrice;
 	/**
-	 * 商品购买的数量
+	 * Product purchase quantity
 	 */
 	private Integer skuQuantity;
 	/**
-	 * 商品销售属性组合（JSON）
+	 * Product sale attribute combination (JSON)
 	 */
 	private String skuAttrsVals;
 	/**
-	 * 商品促销分解金额
+	 * Product promotion allocation amount
 	 */
 	private BigDecimal promotionAmount;
 	/**
-	 * 优惠券优惠分解金额
+	 * Coupon discount allocation amount
 	 */
 	private BigDecimal couponAmount;
 	/**
-	 * 积分优惠分解金额
+	 * Integration discount allocation amount
 	 */
 	private BigDecimal integrationAmount;
 	/**
-	 * 该商品经过优惠后的分解金额
+	 * Item amount after discount allocation
 	 */
 	private BigDecimal realAmount;
 	/**
-	 * 赠送积分
+	 * Bonus integration points
 	 */
 	private Integer giftIntegration;
 	/**
-	 * 赠送成长值
+	 * Bonus growth value
 	 */
 	private Integer giftGrowth;
 

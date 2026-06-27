@@ -7,7 +7,7 @@ import com.atguigu.gulimall.coupon.entity.SeckillSessionEntity;
 import java.util.Map;
 
 /**
- * 秒杀活动场次
+ * Seckill session
  *
  * @author liurui
  * @email liurui@gmail.com

@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 仓库信息
+ * Warehouse info
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,15 +25,15 @@ public class WareInfoEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 仓库名
+	 * Warehouse name
 	 */
 	private String name;
 	/**
-	 * 仓库地址
+	 * Warehouse address
 	 */
 	private String address;
 	/**
-	 * 区域编码
+	 * Area code
 	 */
 	private String areacode;
 

@@ -14,86 +14,86 @@ public class MemberResponseVo implements Serializable {
 
     private Long id;
     /**
-     * 会员等级id
+     * Member level id
      */
     private Long levelId;
     /**
-     * 用户名
+     * Username
      */
     private String username;
     /**
-     * 密码
+     * Password
      */
     private String password;
     /**
-     * 昵称
+     * Nickname
      */
     private String nickname;
     /**
-     * 手机号码
+     * Mobile phone number
      */
     private String mobile;
     /**
-     * 邮箱
+     * Email
      */
     private String email;
     /**
-     * 头像
+     * Avatar
      */
     private String header;
     /**
-     * 性别
+     * Gender
      */
     private Integer gender;
     /**
-     * 生日
+     * Birthday
      */
     private Date birth;
     /**
-     * 所在城市
+     * City
      */
     private String city;
     /**
-     * 职业
+     * Occupation
      */
     private String job;
     /**
-     * 个性签名
+     * Personal signature
      */
     private String sign;
     /**
-     * 用户来源
+     * User source
      */
     private Integer sourceType;
     /**
-     * 积分
+     * Points
      */
     private Integer integration;
     /**
-     * 成长值
+     * Growth value
      */
     private Integer growth;
     /**
-     * 启用状态
+     * Enable status
      */
     private Integer status;
     /**
-     * 注册时间
+     * Registration time
      */
     private Date createTime;
 
     /**
-     * 社交登录UID
+     * Social login UID
      */
     private String socialUid;
 
     /**
-     * 社交登录TOKEN
+     * Social login token
      */
     private String accessToken;
 
     /**
-     * 社交登录过期时间
+     * Social login expiration time
      */
     private long expiresIn;
 

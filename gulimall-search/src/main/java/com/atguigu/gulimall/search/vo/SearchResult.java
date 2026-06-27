@@ -8,26 +8,26 @@ import java.util.List;
 
 @Data
 public class SearchResult {
-    // 查询到的所有商品信息
+    // All product information found
     private List<SkuEsModel> products;
 
     /**
-     * 一下是分页信息
+     * Here is the paging information
      */
-    private Integer pageNum;// 当前页码
-    private Long total; // 总记录数
-    private Integer totalPages;// 总页码
-    private List<Integer> pageNavs; // 当前页的导航页码数
+    private Integer pageNum;// Current page number
+    private Long total; // Total number of records
+    private Integer totalPages;// Total page number
+    private List<Integer> pageNavs; // The number of navigation pages of the current page
 
-    private List<BrandVo> brands; // 当前查询到的结果，所有涉及到品牌
+    private List<BrandVo> brands; // Current query results, all related to brands
 
-    private List<CatalogVo> catalogs; // 当前查询到的结果，所有涉及到的所有分类
+    private List<CatalogVo> catalogs; // The current query results, all categories involved
 
-    private List<AttrVo> attrs; // 当前查询到的结果，所欧涉及到的所有属性
+    private List<AttrVo> attrs; // The current query results, all attributes involved
 
-    // ==========以上是返回给页面的所有信息=================
+    // ==========The above is all the information returned to the page=================
 
-    // 构建面包屑导航功能
+    // Build breadcrumb navigation functionality
     private List<NavVo> navs = new ArrayList<>();
     private List<Long> attrIds = new ArrayList<>();
 

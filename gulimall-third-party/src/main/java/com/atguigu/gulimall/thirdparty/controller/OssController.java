@@ -38,9 +38,9 @@ public class OssController {
     @RequestMapping("/oss/policy")
     public Map<String, String> policy() {
 
-        String host = "https://" + bucket + "." + endpoint; // host的格式为 bucketname.endpoint
+        String host = "https://" + bucket + "." + endpoint; // host format: bucketname.endpoint
 
-        String format = new SimpleDateFormat("yyyy-MM-dd").format(new Date()); // 用户上传文件时指定的前缀。
+        String format = new SimpleDateFormat("yyyy-MM-dd").format(new Date()); // Prefix specified when user uploads
         String dir = format + "/";
 
         Map<String, String> respMap = null;

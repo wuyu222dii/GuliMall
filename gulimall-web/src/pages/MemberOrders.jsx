@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import { getOrders } from '../api/order'
 
 const STATUS_MAP = {
-  0: '待付款',
-  1: '待发货',
-  2: '已发货',
-  3: '已完成',
-  4: '已关闭',
-  5: '无效订单',
+  0: 'Pending payment',
+  1: 'Pending shipment',
+  2: 'Shipped',
+  3: 'Completed',
+  4: 'Closed',
+  5: 'Invalid order',
 }
 
 export default function MemberOrders() {
@@ -37,16 +37,16 @@ export default function MemberOrders() {
 
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
-      <h1 className="page-title">我的订单</h1>
+      <h1 className="page-title">My Orders</h1>
 
       {loading ? (
-        <div className="loading">加载中...</div>
+        <div className="loading">Loading...</div>
       ) : orders.length > 0 ? (
         <>
           {orders.map((order) => (
             <div key={order.id} className="card" style={{ padding: 20, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 13, color: '#666' }}>
-                <span>订单号：{order.orderSn}</span>
+                <span>Order No.: {order.orderSn}</span>
                 <span>{order.createTime}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -58,10 +58,10 @@ export default function MemberOrders() {
                     borderRadius: 4,
                     fontSize: 12,
                   }}>
-                    {STATUS_MAP[order.status] ?? '未知'}
+                    {STATUS_MAP[order.status] ?? 'Unknown'}
                   </span>
                   <span style={{ marginLeft: 16 }}>
-                    收货人：{order.receiverName} {order.receiverPhone}
+                    Recipient: {order.receiverName} {order.receiverPhone}
                   </span>
                 </div>
                 <div className="price">
@@ -72,16 +72,16 @@ export default function MemberOrders() {
           ))}
           {totalPage > 1 && (
             <div className="pagination">
-              <button disabled={page <= 1} onClick={() => setPage(page - 1)}>上一页</button>
+              <button disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
               <span style={{ lineHeight: '32px' }}>{page} / {totalPage}</span>
-              <button disabled={page >= totalPage} onClick={() => setPage(page + 1)}>下一页</button>
+              <button disabled={page >= totalPage} onClick={() => setPage(page + 1)}>Next</button>
             </div>
           )}
         </>
       ) : (
         <div className="empty-state card" style={{ padding: 60 }}>
-          <p>暂无订单</p>
-          <Link to="/" className="btn btn-primary" style={{ marginTop: 16 }}>去购物</Link>
+          <p>No orders yet</p>
+          <Link to="/" className="btn btn-primary" style={{ marginTop: 16 }}>Go shopping</Link>
         </div>
       )}
     </div>

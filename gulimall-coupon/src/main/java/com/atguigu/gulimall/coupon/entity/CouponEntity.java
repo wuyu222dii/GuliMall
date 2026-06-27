@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 优惠券信息
+ * Coupon info
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -26,79 +26,79 @@ public class CouponEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 优惠卷类型[0->全场赠券；1->会员赠券；2->购物赠券；3->注册赠券]
+	 * Coupon type [0-site-wide, 1-member, 2-shopping, 3-registration]
 	 */
 	private Integer couponType;
 	/**
-	 * 优惠券图片
+	 * Coupon image
 	 */
 	private String couponImg;
 	/**
-	 * 优惠卷名字
+	 * Coupon name
 	 */
 	private String couponName;
 	/**
-	 * 数量
+	 * Quantity
 	 */
 	private Integer num;
 	/**
-	 * 金额
+	 * Amount
 	 */
 	private BigDecimal amount;
 	/**
-	 * 每人限领张数
+	 * Per-user claim limit
 	 */
 	private Integer perLimit;
 	/**
-	 * 使用门槛
+	 * Minimum spend
 	 */
 	private BigDecimal minPoint;
 	/**
-	 * 开始时间
+	 * Start time
 	 */
 	private Date startTime;
 	/**
-	 * 结束时间
+	 * End time
 	 */
 	private Date endTime;
 	/**
-	 * 使用类型[0->全场通用；1->指定分类；2->指定商品]
+	 * Use type [0-all, 1-category, 2-product]
 	 */
 	private Integer useType;
 	/**
-	 * 备注
+	 * Remark
 	 */
 	private String note;
 	/**
-	 * 发行数量
+	 * Publish quantity
 	 */
 	private Integer publishCount;
 	/**
-	 * 已使用数量
+	 * Used quantity
 	 */
 	private Integer useCount;
 	/**
-	 * 领取数量
+	 * Claimed quantity
 	 */
 	private Integer receiveCount;
 	/**
-	 * 可以领取的开始日期
+	 * Claim start date
 	 */
 	private Date enableStartTime;
 	/**
-	 * 可以领取的结束日期
+	 * Claim end date
 	 */
 	private Date enableEndTime;
 	/**
-	 * 优惠码
+	 * Promo code
 	 */
 	private String code;
 	/**
-	 * 可以领取的会员等级[0->不限等级，其他-对应等级]
+	 * Member level [0-any, else specific level]
 	 */
 	private Integer memberLevel;
 	/**
-	 * 发布状态[0-未发布，1-已发布]
+	 * Publish status [0-unpublished, 1-published]
 	 */
 	private Integer publish;
 

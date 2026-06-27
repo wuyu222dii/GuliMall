@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MongoManager {
 
-    /***mongo扫描很消耗性能 尤其是子类的封装  使用缓存**/
+    /** Mongo scan is expensive; cache results */
     private static Map<String, MongoDefinition> mongoCache = new ConcurrentHashMap<>();
 
     public static Map<String, MongoDefinition> getCache() {
@@ -28,7 +28,7 @@ public class MongoManager {
     }
 
     /**
-     * 当前配置是否为mongo内容
+     * Whether current config is MongoDB
      */
     public static boolean isMongo() {
         return DbConfig.isMongo();

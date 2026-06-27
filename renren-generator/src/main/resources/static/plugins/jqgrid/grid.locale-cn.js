@@ -1,6 +1,6 @@
 /**
  * jqGrid Chinese Translation
- * 咖啡兔 yanhonglei@gmail.com
+ * Coffee Rabbit yanhonglei@gmail.com
  * http://www.kafeitu.me 
  * Dual licensed under the MIT and GPL licenses:
  * http://www.opensource.org/licenses/mit-license.php
@@ -27,11 +27,11 @@ if(!$.jgrid.hasOwnProperty("regional")) {
 }
 $.jgrid.regional["cn"] = {
     defaults : {
-        recordtext: "{0} - {1}\u3000共 {2} 条", // 共字前是全角空格
-        emptyrecords: "无数据显示",
-        loadtext: "读取中...",
+        recordtext: "{0} - {1} of {2}",
+        emptyrecords: "No records to display",
+        loadtext: "Loading...",
 		savetext: "Saving...",
-        pgtext : " {0} 共 {1} 页",
+        pgtext : " Page {0} of {1}",
 		pgfirst : "First Page",
 		pglast : "Last Page",
 		pgnext : "Next Page",
@@ -48,64 +48,64 @@ $.jgrid.regional["cn"] = {
 		scrollRefresh : "Release to refresh..."
     },
     search : {
-        caption: "搜索...",
-        Find: "查找",
-        Reset: "重置",
-        odata: [{ oper:'eq', text:'等于\u3000\u3000'},{ oper:'ne', text:'不等\u3000\u3000'},{ oper:'lt', text:'小于\u3000\u3000'},{ oper:'le', text:'小于等于'},{ oper:'gt', text:'大于\u3000\u3000'},{ oper:'ge', text:'大于等于'},{ oper:'bw', text:'开始于'},{ oper:'bn', text:'不开始于'},{ oper:'in', text:'属于\u3000\u3000'},{ oper:'ni', text:'不属于'},{ oper:'ew', text:'结束于'},{ oper:'en', text:'不结束于'},{ oper:'cn', text:'包含\u3000\u3000'},{ oper:'nc', text:'不包含'},{ oper:'nu', text:'不存在'},{ oper:'nn', text:'存在'}, {oper:'bt', text:'between'}],
-        groupOps: [ { op: "AND", text: "所有" },    { op: "OR",  text: "任一" } ],
+        caption: "Search...",
+        Find: "Find",
+        Reset: "Reset",
+        odata: [{ oper:'eq', text:'equals'},{ oper:'ne', text:'not equal'},{ oper:'lt', text:'less than'},{ oper:'le', text:'less or equal'},{ oper:'gt', text:'greater than'},{ oper:'ge', text:'greater or equal'},{ oper:'bw', text:'starts with'},{ oper:'bn', text:'does not start with'},{ oper:'in', text:'in'},{ oper:'ni', text:'not in'},{ oper:'ew', text:'ends with'},{ oper:'en', text:'does not end with'},{ oper:'cn', text:'contains'},{ oper:'nc', text:'does not contain'},{ oper:'nu', text:'is null'},{ oper:'nn', text:'is not null'}, {oper:'bt', text:'between'}],
+        groupOps: [ { op: "AND", text: "all" },    { op: "OR",  text: "any" } ],
 		operandTitle : "Click to select search operation.",
 		resetTitle : "Reset Search Value"
     },
     edit : {
-        addCaption: "添加记录",
-        editCaption: "编辑记录",
-        bSubmit: "提交",
-        bCancel: "取消",
-        bClose: "关闭",
-        saveData: "数据已改变，是否保存？",
-        bYes : "是",
-        bNo : "否",
-        bExit : "取消",
+        addCaption: "Add Record",
+        editCaption: "Edit Record",
+        bSubmit: "Submit",
+        bCancel: "Cancel",
+        bClose: "Close",
+        saveData: "Data changed. Save?",
+        bYes : "Yes",
+        bNo : "No",
+        bExit : "Cancel",
         msg: {
-            required:"此字段必需",
-            number:"请输入有效数字",
-            minValue:"输值必须大于等于 ",
-            maxValue:"输值必须小于等于 ",
-            email: "这不是有效的e-mail地址",
-            integer: "请输入有效整数",
-            date: "请输入有效时间",
-            url: "无效网址。前缀必须为 ('http://' 或 'https://')",
-            nodefined : " 未定义！",
-            novalue : " 需要返回值！",
-            customarray : "自定义函数需要返回数组！",
-            customfcheck : "必须有自定义函数!"
+            required:"This field is required",
+            number:"Enter a valid number",
+            minValue:"Value must be >= ",
+            maxValue:"Value must be <= ",
+            email: "Invalid email address",
+            integer: "Enter a valid integer",
+            date: "Enter a valid date/time",
+            url: "Invalid URL. Must start with http:// or https://",
+            nodefined : " is not defined!",
+            novalue : " return value is required!",
+            customarray : "Custom function must return an array!",
+            customfcheck : "Custom function is required!"
         }
     },
     view : {
-        caption: "查看记录",
-        bClose: "关闭"
+        caption: "View Record",
+        bClose: "Close"
     },
     del : {
-        caption: "删除",
-        msg: "删除所选记录？",
-        bSubmit: "删除",
-        bCancel: "取消"
+        caption: "Delete",
+        msg: "Delete selected records?",
+        bSubmit: "Delete",
+        bCancel: "Cancel"
     },
     nav : {
         edittext: "",
-        edittitle: "编辑所选记录",
+        edittitle: "Edit selected record",
         addtext:"",
-        addtitle: "添加新记录",
+        addtitle: "Add new record",
         deltext: "",
-        deltitle: "删除所选记录",
+        deltitle: "Delete selected records",
         searchtext: "",
-        searchtitle: "查找",
+        searchtitle: "Search",
         refreshtext: "",
-        refreshtitle: "刷新表格",
-        alertcap: "注意",
-        alerttext: "请选择记录",
+        refreshtitle: "Refresh grid",
+        alertcap: "Notice",
+        alerttext: "Please select a record",
         viewtext: "",
-        viewtitle: "查看所选记录",
+        viewtitle: "View selected record",
 		savetext: "",
 		savetitle: "Save row",
 		canceltext: "",
@@ -113,15 +113,15 @@ $.jgrid.regional["cn"] = {
 		selectcaption : "Actions..."
     },
     col : {
-        caption: "选择列",
-        bSubmit: "确定",
-        bCancel: "取消"
+        caption: "Select columns",
+        bSubmit: "OK",
+        bCancel: "Cancel"
     },
     errors : {
-        errcap : "错误",
-        nourl : "没有设置url",
-        norecords: "没有要处理的记录",
-        model : "colNames 和 colModel 长度不等！"
+        errcap : "Error",
+        nourl : "No url configured",
+        norecords: "No records to process",
+        model : "colNames and colModel length mismatch!"
     },
     formatter : {
         integer : {thousandsSeparator: ",", defaultValue: '0'},
@@ -129,14 +129,14 @@ $.jgrid.regional["cn"] = {
         currency : {decimalSeparator:".", thousandsSeparator: ",", decimalPlaces: 2, prefix: "", suffix:"", defaultValue: '0.00'},
         date : {
             dayNames:   [
-                "日", "一", "二", "三", "四", "五", "六",
-                "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六",
+                "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+                "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
             ],
             monthNames: [
-                "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二",
-                "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+                "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
             ],
-            AmPm : ["am","pm","上午","下午"],
+            AmPm : ["am","pm","AM","PM"],
             S: function (j) {return j < 11 || j > 13 ? ['st', 'nd', 'rd', 'th'][Math.min((j - 1) % 10, 3)] : 'th';},
             srcformat: 'Y-m-d',
             newformat: 'Y-m-d',

@@ -14,10 +14,10 @@ public class OrderCreateTo {
 
     private List<OrderItemEntity> orderItems;
 
-    /** 订单计算的应付价格 **/
+    /** Payable price calculated for the order **/
     private BigDecimal payPrice;
 
-    /** 运费 **/
+    /** Freight **/
     private BigDecimal fare;
 
 }

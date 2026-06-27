@@ -18,7 +18,7 @@ public class SearchController {
     MallSearchService mallsearchService;
 
     /**
-     * 自动将页面提交过来的所有请求查询参数封装成指定的对象
+     * Automatically encapsulate all request query parameters submitted by the page into specified objects
      *
      * @param param
      * @return
@@ -27,7 +27,7 @@ public class SearchController {
     public String listPage(SearchParam param, Model model, HttpServletRequest request) {
 
         param.set_queryString(request.getQueryString());
-        // 1、根据传递来的页面的查询参数，去es中检索商品
+        // 1, according to the query parameters of the passed page, go toesSearch products in
         SearchResult result = mallsearchService.search(param);
 
         model.addAttribute("result", result);

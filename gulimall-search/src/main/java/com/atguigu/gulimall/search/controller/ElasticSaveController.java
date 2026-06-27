@@ -22,7 +22,7 @@ public class ElasticSaveController {
     @Autowired
     ProductSaveService productSaveService;
 
-    // 上架商品
+    // Products on shelves
     @PostMapping("/product")
     public R productStatusUp(@RequestBody List<SkuEsModel> skuEsModels) {
         boolean b = false;
@@ -30,7 +30,7 @@ public class ElasticSaveController {
         try {
             b = productSaveService.productStatusUp(skuEsModels);
         } catch (Exception e) {
-            log.error("ElasticSaveController商品上架错误：{}", e);
+            log.error("ElasticSaveControllerProduct listing error:{}", e);
             return R.error(BizCodeEnume.PRODUCT_UP_EXCEPTION.getCode(), BizCodeEnume.PRODUCT_UP_EXCEPTION.getMsg());
         }
 

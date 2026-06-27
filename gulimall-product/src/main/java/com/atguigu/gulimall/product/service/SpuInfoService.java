@@ -9,7 +9,7 @@ import com.atguigu.gulimall.product.entity.SpuInfoEntity;
 import java.util.Map;
 
 /**
- * spu信息
+ * spuinformation
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -26,7 +26,7 @@ public interface SpuInfoService extends IService<SpuInfoEntity> {
     PageUtils queryPageByCondition(Map<String, Object> params);
 
     /**
-     * 商品上架
+     * Products on shelves
      * @param spuId
      */
     void up(Long spuId);

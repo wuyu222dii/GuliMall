@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 秒杀活动
+ * Seckill promotion
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,27 +25,27 @@ public class SeckillPromotionEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 活动标题
+	 * Promotion title
 	 */
 	private String title;
 	/**
-	 * 开始日期
+	 * Start date
 	 */
 	private Date startTime;
 	/**
-	 * 结束日期
+	 * End date
 	 */
 	private Date endTime;
 	/**
-	 * 上下线状态
+	 * Online/offline status
 	 */
 	private Integer status;
 	/**
-	 * 创建时间
+	 * Create time
 	 */
 	private Date createTime;
 	/**
-	 * 创建人
+	 * Creator
 	 */
 	private Long userId;
 

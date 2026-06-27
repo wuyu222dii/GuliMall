@@ -1,29 +1,29 @@
-# 谷粒商城（gulimall001）
+# Gulimall (gulimall001)
 
-基于 Spring Boot 2.1.8 + Spring Cloud Greenwich + Nacos 的微服务电商项目。
+A microservices e-commerce project built on Spring Boot 2.1.8 + Spring Cloud Greenwich + Nacos.
 
-## 模块说明
+## Module Overview
 
-| 模块 | 说明 | 默认端口 | 是否可独立运行 |
+| Module | Description | Default Port | Standalone Runnable |
 |------|------|----------|----------------|
-| `gulimall-common` | 公共工具类、通用依赖 | — | 否（无启动类） |
-| `gulimall-product` | 商品服务 | 10000 | 是 |
-| `gulimall-coupon` | 优惠券服务 | 7001 | 是 |
-| `gulimall-member` | 会员服务 | 8000 | 是 |
-| `gulimall-order` | 订单服务 | 9000 | 是 |
-| `gulimall-search` | 检索服务 | 12000 | 是 |
-| `gulimall-ware` | 仓储服务 | 11000 | 是 |
-| `gulimall-gateway` | API 网关 | 88 | 是 |
-| `gulimall-third-party` | 第三方服务（OSS 等） | 30000 | 是 |
-| `gulimall-auth-server` | 认证中心 | 20000 | 是 |
-| `renren-generator` | 代码生成器 | 80 | 是 |
-| `gulimall-web` | **React 前端** | 5173 | 是（`npm run dev`） |
+| `gulimall-common` | Shared utilities and common dependencies | — | No (no main class) |
+| `gulimall-product` | Product service | 10000 | Yes |
+| `gulimall-coupon` | Coupon service | 7001 | Yes |
+| `gulimall-member` | Member service | 8000 | Yes |
+| `gulimall-order` | Order service | 9000 | Yes |
+| `gulimall-search` | Search service | 12000 | Yes |
+| `gulimall-ware` | Warehouse service | 11000 | Yes |
+| `gulimall-gateway` | API gateway | 88 | Yes |
+| `gulimall-third-party` | Third-party services (OSS, etc.) | 30000 | Yes |
+| `gulimall-auth-server` | Authentication center | 20000 | Yes |
+| `renren-generator` | Code generator | 80 | Yes |
+| `gulimall-web` | **React frontend** | 5173 | Yes (`npm run dev`) |
 
-> **注意**：`gulimall-common` 是公共依赖库，**不能**执行 `mvn spring-boot:run`。请在各业务模块目录下启动服务。
+> **Note**: `gulimall-common` is a shared dependency library and **cannot** be started with `mvn spring-boot:run`. Start services from individual business module directories.
 
-## React 前端
+## React Frontend
 
-前端项目位于 `gulimall-web/`，使用 React + Vite 构建，对接微服务网关与各业务 API。
+The frontend project is located at `gulimall-web/`, built with React + Vite, and connects to the microservices gateway and business APIs.
 
 ```bash
 cd gulimall-web
@@ -31,160 +31,160 @@ npm install
 npm run dev    # http://localhost:5173
 ```
 
-主要页面：首页、商品搜索、商品详情、购物车、结算、登录/注册、我的订单、收货地址管理。
+Main pages: home, product search, product detail, shopping cart, checkout, login/register, my orders, shipping address management.
 
-详见 [gulimall-web/README.md](gulimall-web/README.md)。
+See [gulimall-web/README.md](gulimall-web/README.md) for details.
 
-## 环境要求
+## Environment Requirements
 
-| 组件 | 版本/说明 |
+| Component | Version / Notes |
 |------|-----------|
-| JDK | 1.8（必须，项目不兼容高版本 JDK） |
+| JDK | 1.8 (required; the project is not compatible with newer JDK versions) |
 | Maven | 3.6+ |
-| MySQL | 8.x，需提前创建以下数据库 |
-| Redis | 商品、认证等服务依赖，默认 `127.0.0.1:6379` |
-| Nacos | 服务注册与配置中心，默认 `127.0.0.1:8848`（可选，未启动时部分服务仍可运行，但会打印注册失败日志） |
+| MySQL | 8.x; create the following databases in advance |
+| Redis | Required by product, auth, and other services; default `127.0.0.1:6379` |
+| Nacos | Service registry and config center; default `127.0.0.1:8848` (optional; some services can still run without Nacos, but registration failure logs will be printed) |
 
-### MySQL 数据库
+### MySQL Databases
 
-项目使用以下数据库（用户名/密码见各模块 `application.yml`，默认 `root` / `Wuyujian`）：
+The project uses the following databases (username/password in each module's `application.yml`, default `root` / `Wuyujian`):
 
 ```
-gulimall_pms   # 商品
-gulimall_sms   # 优惠券/营销
-gulimall_ums   # 会员
-gulimall_oms   # 订单
-gulimall_wms   # 仓储
-gulimall_admin # 后台（如有）
+gulimall_pms   # Product
+gulimall_sms   # Coupon / marketing
+gulimall_ums   # Member
+gulimall_oms   # Order
+gulimall_wms   # Warehouse
+gulimall_admin # Admin (if applicable)
 ```
 
-### Redis 启动
+### Starting Redis
 
 ```bash
-# 方式一：直接启动（推荐，无需 brew 安装）
+# Option 1: Start directly (recommended; no brew install required)
 redis-server --daemonize yes
 
-# 方式二：Homebrew 管理（需先 brew install redis）
+# Option 2: Managed via Homebrew (requires brew install redis first)
 brew install redis
 brew services start redis
 ```
 
-### Nacos 启动（可选）
+### Starting Nacos (Optional)
 
 ```bash
-# Docker 方式
+# Docker
 docker run -d --name nacos -p 8848:8848 -e MODE=standalone nacos/nacos-server:v2.1.0
 ```
 
-## 构建项目
+## Building the Project
 
-在项目根目录执行：
+Run from the project root:
 
 ```bash
-# 切换到 JDK 8
+# Switch to JDK 8
 jdk8
 
-# 全量编译打包（跳过测试）
+# Full compile and package (skip tests)
 mvn clean install -DskipTests
 ```
 
-## 启动服务
+## Starting Services
 
-进入对应模块目录，执行：
+Navigate to the corresponding module directory and run:
 
 ```bash
 jdk8
 mvn spring-boot:run -DskipTests
 ```
 
-### 各模块启动示例
+### Module Startup Examples
 
 ```bash
-# 商品服务（依赖 Redis）
+# Product service (depends on Redis)
 cd gulimall-product && mvn spring-boot:run -DskipTests
 
-# 仓储服务
+# Warehouse service
 cd gulimall-ware && mvn spring-boot:run -DskipTests
 
-# 优惠券服务
+# Coupon service
 cd gulimall-coupon && mvn spring-boot:run -DskipTests
 
-# 会员服务
+# Member service
 cd gulimall-member && mvn spring-boot:run -DskipTests
 
-# 订单服务
+# Order service
 cd gulimall-order && mvn spring-boot:run -DskipTests
 
-# 代码生成器（避免 80 端口冲突时可指定端口）
+# Code generator (specify port to avoid port 80 conflicts)
 cd renren-generator && mvn spring-boot:run -DskipTests -Dspring-boot.run.arguments=--server.port=8088
 ```
 
-### 启动顺序建议
+### Recommended Startup Order
 
-完整联调时建议按以下顺序启动基础设施和业务服务：
+For full end-to-end integration, start infrastructure and business services in this order:
 
-1. MySQL、Redis、Nacos
-2. `gulimall-product`、`gulimall-member`、`gulimall-ware`、`gulimall-coupon`
-3. `gulimall-order`、`gulimall-search`、`gulimall-third-party`、`gulimall-auth-server`
-4. `gulimall-gateway`（网关依赖其他服务已注册到 Nacos）
+1. MySQL, Redis, Nacos
+2. `gulimall-product`, `gulimall-member`, `gulimall-ware`, `gulimall-coupon`
+3. `gulimall-order`, `gulimall-search`, `gulimall-third-party`, `gulimall-auth-server`
+4. `gulimall-gateway` (the gateway depends on other services being registered in Nacos)
 
-## 已修复问题（feature-gulimall_p27）
+## Fixed Issues (feature-gulimall_p27)
 
-本次修复使项目达到**可编译、可启动**状态，主要变更如下：
+This fix brings the project to a **compilable and runnable** state. Main changes:
 
-### 1. 编译错误修复
+### 1. Compilation Error Fixes
 
-- **gulimall-order**：新增缺失的 `AlipayTemplate` 支付宝配置类
-- **gulimall-order**：补全 `OrderService` 接口方法（`confirmOrder`、`submitOrder`、`getOrderPay`、`getMemberOrderPage`）及实现
-- **JUnit 测试**：将 `gulimall-order`、`gulimall-member`、`gulimall-ware`、`gulimall-coupon` 的 JUnit 5 测试改为 JUnit 4，与 Spring Boot 2.1.8 保持一致
+- **gulimall-order**: Added missing `AlipayTemplate` Alipay configuration class
+- **gulimall-order**: Completed `OrderService` interface methods (`confirmOrder`, `submitOrder`, `getOrderPay`, `getMemberOrderPage`) and their implementations
+- **JUnit tests**: Migrated JUnit 5 tests in `gulimall-order`, `gulimall-member`, `gulimall-ware`, and `gulimall-coupon` to JUnit 4 to align with Spring Boot 2.1.8
 
-### 2. 配置修复
+### 2. Configuration Fixes
 
-- **gulimall-coupon**：恢复被注释的 `application.yml`（数据库连接、端口 7001）
-- **gulimall-order**：补充 `application.yml` 中支付宝沙箱配置占位项
+- **gulimall-coupon**: Restored commented-out `application.yml` (database connection, port 7001)
+- **gulimall-order**: Added Alipay sandbox configuration placeholders in `application.yml`
 
-### 3. 常见启动错误
+### 3. Common Startup Errors
 
-| 错误 | 原因 | 处理 |
+| Error | Cause | Resolution |
 |------|------|------|
-| `No plugin found for prefix 'spring-boot'` | 在 `gulimall-common` 等非 Boot 模块运行 | 切换到具体业务模块目录 |
-| `Unable to connect to Redis` | Redis 未启动 | 执行 `redis-server --daemonize yes` |
-| `nacos registry ... register failed` | Nacos 未启动 | 启动 Nacos，或忽略（部分服务仍可运行） |
-| `Address already in use` | 端口被占用 | 修改对应模块 `application.yml` 中的 `server.port` |
+| `No plugin found for prefix 'spring-boot'` | Running in non-Boot modules like `gulimall-common` | Switch to a specific business module directory |
+| `Unable to connect to Redis` | Redis is not running | Run `redis-server --daemonize yes` |
+| `nacos registry ... register failed` | Nacos is not running | Start Nacos, or ignore (some services can still run) |
+| `Address already in use` | Port is already in use | Change `server.port` in the corresponding module's `application.yml` |
 
-## 待完善功能
+## Pending Features
 
-以下功能当前为**占位实现**，完整业务逻辑尚未接入：
+The following features are currently **placeholder implementations**; full business logic is not yet integrated:
 
-- **订单确认/提交**（`confirmOrder`、`submitOrder`）：需接入 Feign 远程调用、Redis 防重令牌、库存锁定、RabbitMQ 等
-- **支付宝支付**：`AlipayTemplate` 中密钥为占位值，需替换为支付宝沙箱真实配置
+- **Order confirmation/submission** (`confirmOrder`, `submitOrder`): Requires Feign remote calls, Redis anti-replay tokens, inventory locking, RabbitMQ, etc.
+- **Alipay payment**: Keys in `AlipayTemplate` are placeholder values; replace with real Alipay sandbox configuration
 
-## 技术栈
+## Tech Stack
 
 - Spring Boot 2.1.8.RELEASE
 - Spring Cloud Greenwich.SR3
 - Spring Cloud Alibaba 2.1.0.RELEASE
 - MyBatis-Plus 3.2.0
-- Nacos（服务发现 + 配置中心）
+- Nacos (service discovery + config center)
 - Redis / Redisson
-- RabbitMQ（订单模块）
-- Seata（订单模块分布式事务）
-- Thymeleaf（部分模块页面渲染）
+- RabbitMQ (order module)
+- Seata (distributed transactions in order module)
+- Thymeleaf (page rendering in some modules)
 
-## 目录结构
+## Directory Structure
 
 ```
 gulimall001/
-├── gulimall-common/        # 公共模块（不可运行）
-├── gulimall-product/       # 商品服务
-├── gulimall-coupon/        # 优惠券服务
-├── gulimall-member/        # 会员服务
-├── gulimall-order/         # 订单服务
-├── gulimall-search/        # 检索服务
-├── gulimall-ware/          # 仓储服务
-├── gulimall-gateway/       # 网关
-├── gulimall-third-party/   # 第三方服务
-├── gulimall-auth-server/   # 认证中心
-├── renren-generator/       # 代码生成器
-└── pom.xml                 # 父 POM
+├── gulimall-common/        # Common module (not runnable)
+├── gulimall-product/       # Product service
+├── gulimall-coupon/        # Coupon service
+├── gulimall-member/        # Member service
+├── gulimall-order/         # Order service
+├── gulimall-search/        # Search service
+├── gulimall-ware/          # Warehouse service
+├── gulimall-gateway/       # Gateway
+├── gulimall-third-party/   # Third-party services
+├── gulimall-auth-server/   # Authentication center
+├── renren-generator/       # Code generator
+└── pom.xml                 # Parent POM
 ```

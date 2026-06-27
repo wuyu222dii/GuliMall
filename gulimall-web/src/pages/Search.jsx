@@ -30,7 +30,7 @@ export default function Search() {
           setTotalPage(res.page?.totalPage || 1)
           setTotalCount(res.page?.totalCount || 0)
         } else {
-          setError(res.msg || '查询失败')
+          setError(res.msg || 'Search failed')
         }
       } catch (e) {
         setError(e.message)
@@ -50,20 +50,20 @@ export default function Search() {
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
       <div className="breadcrumb">
-        <a href="/">首页</a>
+        <a href="/">Home</a>
         <span>&gt;</span>
-        搜索结果
-        {keyword && <> — 「{keyword}」</>}
+        Search results
+        {keyword && <> — &ldquo;{keyword}&rdquo;</>}
       </div>
 
       <div className="search-header">
         <div>
-          共找到 <strong style={{ color: '#e4393c' }}>{totalCount}</strong> 件商品
+          Found <strong style={{ color: '#e4393c' }}>{totalCount}</strong> products
         </div>
       </div>
 
       {loading ? (
-        <div className="loading">搜索中...</div>
+        <div className="loading">Searching...</div>
       ) : error ? (
         <div className="empty-state">{error}</div>
       ) : products.length > 0 ? (
@@ -75,7 +75,7 @@ export default function Search() {
           </div>
           {totalPage > 1 && (
             <div className="pagination">
-              <button disabled={page <= 1} onClick={() => goPage(page - 1)}>上一页</button>
+              <button disabled={page <= 1} onClick={() => goPage(page - 1)}>Previous</button>
               {Array.from({ length: Math.min(totalPage, 10) }, (_, i) => i + 1).map((p) => (
                 <button
                   key={p}
@@ -85,12 +85,12 @@ export default function Search() {
                   {p}
                 </button>
               ))}
-              <button disabled={page >= totalPage} onClick={() => goPage(page + 1)}>下一页</button>
+              <button disabled={page >= totalPage} onClick={() => goPage(page + 1)}>Next</button>
             </div>
           )}
         </>
       ) : (
-        <div className="empty-state">没有找到相关商品</div>
+        <div className="empty-state">No matching products found</div>
       )}
     </div>
   )

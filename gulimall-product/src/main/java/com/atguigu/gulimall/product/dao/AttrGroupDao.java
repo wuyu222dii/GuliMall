@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 /**
- * 属性分组
+ * Attribute grouping
  * 
  * @author liurui
  * @email liurui@gmail.com

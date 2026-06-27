@@ -1,6 +1,6 @@
 import request from './request'
 
-/** 批量查询 SKU 是否有库存 */
+/** Batch check whether SKUs are in stock */
 export function getSkuHasStock(skuIds) {
   return request.post('/api/ware/waresku/hasstock', skuIds)
 }

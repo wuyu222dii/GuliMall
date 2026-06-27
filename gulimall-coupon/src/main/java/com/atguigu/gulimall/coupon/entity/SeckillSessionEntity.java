@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 秒杀活动场次
+ * Seckill session
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,23 +25,23 @@ public class SeckillSessionEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 场次名称
+	 * Session name
 	 */
 	private String name;
 	/**
-	 * 每日开始时间
+	 * Daily start time
 	 */
 	private Date startTime;
 	/**
-	 * 每日结束时间
+	 * Daily end time
 	 */
 	private Date endTime;
 	/**
-	 * 启用状态
+	 * Enabled status
 	 */
 	private Integer status;
 	/**
-	 * 创建时间
+	 * Create time
 	 */
 	private Date createTime;
 

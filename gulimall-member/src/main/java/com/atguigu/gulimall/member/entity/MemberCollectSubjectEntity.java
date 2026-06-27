@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 会员收藏的专题活动
+ * Member Collected Subject Activities
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -37,7 +37,7 @@ public class MemberCollectSubjectEntity implements Serializable {
 	 */
 	private String subjectImg;
 	/**
-	 * 活动url
+	 * Activity URL
 	 */
 	private String subjectUrll;
 

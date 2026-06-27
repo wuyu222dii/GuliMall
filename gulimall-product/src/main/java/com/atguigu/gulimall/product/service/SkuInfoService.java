@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
- * sku信息
+ * skuinformation
  *
  * @author liurui
  * @email liurui@gmail.com

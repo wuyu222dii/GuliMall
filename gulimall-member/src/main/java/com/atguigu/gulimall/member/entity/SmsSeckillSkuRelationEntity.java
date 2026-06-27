@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 秒杀活动商品关联
+ * Seckill Activity Product Relation
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -26,31 +26,31 @@ public class SmsSeckillSkuRelationEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 活动id
+	 * Activity id
 	 */
 	private Long promotionId;
 	/**
-	 * 活动场次id
+	 * Activity session id
 	 */
 	private Long promotionSessionId;
 	/**
-	 * 商品id
+	 * Product id
 	 */
 	private Long skuId;
 	/**
-	 * 秒杀价格
+	 * Seckill price
 	 */
 	private BigDecimal seckillPrice;
 	/**
-	 * 秒杀总量
+	 * Seckill total quantity
 	 */
 	private Integer seckillCount;
 	/**
-	 * 每人限购数量
+	 * Purchase limit per person
 	 */
 	private Integer seckillLimit;
 	/**
-	 * 排序
+	 * Sort order
 	 */
 	private Integer seckillSort;
 

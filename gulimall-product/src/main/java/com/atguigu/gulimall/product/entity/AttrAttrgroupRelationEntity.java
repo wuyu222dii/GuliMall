@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 属性&属性分组关联
+ * property&attribute group association
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,15 +25,15 @@ public class AttrAttrgroupRelationEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 属性id
+	 * propertyid
 	 */
 	private Long attrId;
 	/**
-	 * 属性分组id
+	 * Attribute groupingid
 	 */
 	private Long attrGroupId;
 	/**
-	 * 属性组内排序
+	 * Sorting within attribute groups
 	 */
 	private Integer attrSort;
 

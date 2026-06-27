@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 会员收藏的商品
+ * Member Collected Products
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,7 +25,7 @@ public class MemberCollectSpuEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 会员id
+	 * Member id
 	 */
 	private Long memberId;
 	/**

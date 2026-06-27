@@ -7,27 +7,27 @@ import java.util.List;
 @Data
 public class AttrGroupWithAttrsVo {
     /**
-     * 分组id
+     * Groupid
      */
     private Long attrGroupId;
     /**
-     * 组名
+     * Group name
      */
     private String attrGroupName;
     /**
-     * 排序
+     * sort
      */
     private Integer sort;
     /**
-     * 描述
+     * describe
      */
     private String descript;
     /**
-     * 组图标
+     * group icon
      */
     private String icon;
     /**
-     * 所属分类id
+     * Categoryid
      */
     private Long catelogId;
 

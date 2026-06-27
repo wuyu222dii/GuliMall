@@ -7,30 +7,30 @@ import java.math.BigDecimal;
 @Data
 public class SeckillOrderTo {
     /**
-     * 订单号
+     * Order number
      */
     private String orderSn;
 
     /**
-     * 活动场次id
+     * Promotion session id
      */
     private Long promotionSessionId;
     /**
-     * 商品id
+     * Product id
      */
     private Long skuId;
     /**
-     * 秒杀价格
+     * Seckill price
      */
     private BigDecimal seckillPrice;
 
     /**
-     * 购买数量
+     * Purchase quantity
      */
     private Integer num;
 
     /**
-     * 会员ID
+     * Member id
      */
     private Long memberId;
 }

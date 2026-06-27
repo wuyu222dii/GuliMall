@@ -7,7 +7,7 @@ import com.atguigu.gulimall.product.entity.SpuInfoDescEntity;
 import java.util.Map;
 
 /**
- * spu信息介绍
+ * spuInformation introduction
  *
  * @author liurui
  * @email liurui@gmail.com

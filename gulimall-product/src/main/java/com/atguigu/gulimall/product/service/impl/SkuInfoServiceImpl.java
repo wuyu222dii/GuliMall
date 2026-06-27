@@ -125,37 +125,37 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
         SkuItemVo skuItemVo = new SkuItemVo();
 
         CompletableFuture<SkuInfoEntity> infoFuture = CompletableFuture.supplyAsync(() -> {
-            // 1、sku基本信息获取 pms_sku_info
+            // 1,skuObtain basic information pms_sku_info
             SkuInfoEntity info = getById(skuId);
             skuItemVo.setInfo(info);
             return info;
         }, executor);
 
         CompletableFuture<Void> saleAttrFuture = infoFuture.thenAcceptAsync((res) -> {
-            // 3、获取spu的销售属性组合 pms_sku_sale_attr
+            // 3, getspusales attribute combination pms_sku_sale_attr
             List<SkuItemSaleAttrVo> saleAttrVos = skuSaleAttrValueService.getSaleAttrsBySpuId(res.getSpuId());
             skuItemVo.setSaleAttr(saleAttrVos);
         }, executor);
 
         CompletableFuture<Void> descFuture = infoFuture.thenAcceptAsync((res) -> {
-            // 4、获取spu的介绍 pms_spu_info_desc
+            // 4, getspuIntroduction pms_spu_info_desc
             SpuInfoDescEntity spuInfoDesc = spuInfoDescService.getById(res.getSpuId());
             skuItemVo.setDesc(spuInfoDesc);
         }, executor);
 
         CompletableFuture<Void> baseAttrFuture = infoFuture.thenAcceptAsync((res) -> {
-            // 5、获取spu的规格参数信息 pms_sku_attr_value
+            // 5, getspuSpecification parameter information pms_sku_attr_value
             List<SpuItemAttrGroupVo> attrGroupVos = attrGroupService.getAttrGroupWithAttrsBySpuId(res.getSpuId(), res.getCatalogId());
             skuItemVo.setGroupAttrs(attrGroupVos);
         }, executor);
 
-        // 2、sku图片信息获取 pms_sku_images
+        // 2,skuImage information acquisition pms_sku_images
         CompletableFuture<Void> imagesFuture = CompletableFuture.runAsync(() -> {
             List<SkuImagesEntity> images = skuImagesService.geImagesBySkuId(skuId);
             skuItemVo.setImages(images);
         }, executor);
 
-        // 等待所有任务都完成
+        // Wait for all tasks to be completed
         CompletableFuture.allOf(saleAttrFuture, descFuture, baseAttrFuture, imagesFuture).get();
 
         return skuItemVo;

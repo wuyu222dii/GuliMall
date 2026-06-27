@@ -3,7 +3,7 @@ package com.atguigu.gulimall.order.vo;
 import lombok.Data;
 
 /**
- * 收货地址
+ * Shipping address
  */
 @Data
 public class MemberAddressVo {
@@ -13,39 +13,39 @@ public class MemberAddressVo {
      */
     private Long memberId;
     /**
-     * 收货人姓名
+     * Receiver name
      */
     private String name;
     /**
-     * 电话
+     * Phone
      */
     private String phone;
     /**
-     * 邮政编码
+     * Postal code
      */
     private String postCode;
     /**
-     * 省份/直辖市
+     * Province/municipality
      */
     private String province;
     /**
-     * 城市
+     * City
      */
     private String city;
     /**
-     * 区
+     * District
      */
     private String region;
     /**
-     * 详细地址(街道)
+     * Detailed address (street)
      */
     private String detailAddress;
     /**
-     * 省市区代码
+     * Province/city/district code
      */
     private String areacode;
     /**
-     * 是否默认
+     * Is default
      */
     private Integer defaultStatus;
 }

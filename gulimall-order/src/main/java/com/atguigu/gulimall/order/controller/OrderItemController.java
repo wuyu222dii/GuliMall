@@ -13,7 +13,7 @@ import java.util.Map;
 
 
 /**
- * 订单项信息
+ * Order item info
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -26,7 +26,7 @@ public class OrderItemController {
     private OrderItemService orderItemService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("order:orderitem:list")
@@ -38,7 +38,7 @@ public class OrderItemController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("order:orderitem:info")
@@ -49,7 +49,7 @@ public class OrderItemController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("order:orderitem:save")
@@ -60,7 +60,7 @@ public class OrderItemController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("order:orderitem:update")
@@ -71,7 +71,7 @@ public class OrderItemController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("order:orderitem:delete")

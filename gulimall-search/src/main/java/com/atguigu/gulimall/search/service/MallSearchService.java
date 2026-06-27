@@ -5,8 +5,8 @@ import com.atguigu.gulimall.search.vo.SearchResult;
 
 public interface MallSearchService {
     /**
-     * @param param 检索的所有参数
-     * @return 返回所有结果, 里面包含页面需要的所有信息
+     * @param param All parameters retrieved
+     * @return Return all results, It contains all the information needed for the page
      */
     SearchResult search(SearchParam param);
 }

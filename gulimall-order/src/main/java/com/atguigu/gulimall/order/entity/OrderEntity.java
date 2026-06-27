@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 订单
+ * Order
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -30,11 +30,11 @@ public class OrderEntity implements Serializable {
 	 */
 	private Long memberId;
 	/**
-	 * 订单号
+	 * Order number
 	 */
 	private String orderSn;
 	/**
-	 * 使用的优惠券
+	 * Coupon used
 	 */
 	private Long couponId;
 	/**
@@ -42,151 +42,151 @@ public class OrderEntity implements Serializable {
 	 */
 	private Date createTime;
 	/**
-	 * 用户名
+	 * Username
 	 */
 	private String memberUsername;
 	/**
-	 * 订单总额
+	 * Order total amount
 	 */
 	private BigDecimal totalAmount;
 	/**
-	 * 应付总额
+	 * Payable amount
 	 */
 	private BigDecimal payAmount;
 	/**
-	 * 运费金额
+	 * Freight amount
 	 */
 	private BigDecimal freightAmount;
 	/**
-	 * 促销优化金额（促销价、满减、阶梯价）
+	 * Promotion discount amount (promotional price, full reduction, tiered pricing)
 	 */
 	private BigDecimal promotionAmount;
 	/**
-	 * 积分抵扣金额
+	 * Integration discount amount
 	 */
 	private BigDecimal integrationAmount;
 	/**
-	 * 优惠券抵扣金额
+	 * Coupon discount amount
 	 */
 	private BigDecimal couponAmount;
 	/**
-	 * 后台调整订单使用的折扣金额
+	 * Discount amount adjusted by admin
 	 */
 	private BigDecimal discountAmount;
 	/**
-	 * 支付方式【1->支付宝；2->微信；3->银联； 4->货到付款；】
+	 * Payment method [1->Alipay; 2->WeChat; 3->UnionPay; 4->Cash on delivery]
 	 */
 	private Integer payType;
 	/**
-	 * 订单来源[0->PC订单；1->app订单]
+	 * Order source [0->PC order; 1->App order]
 	 */
 	private Integer sourceType;
 	/**
-	 * 订单状态【0->待付款；1->待发货；2->已发货；3->已完成；4->已关闭；5->无效订单】
+	 * Order status [0->Pending payment; 1->Pending shipment; 2->Shipped; 3->Completed; 4->Closed; 5->Invalid order]
 	 */
 	private Integer status;
 	/**
-	 * 物流公司(配送方式)
+	 * Logistics company (delivery method)
 	 */
 	private String deliveryCompany;
 	/**
-	 * 物流单号
+	 * Tracking number
 	 */
 	private String deliverySn;
 	/**
-	 * 自动确认时间（天）
+	 * Auto confirm time (days)
 	 */
 	private Integer autoConfirmDay;
 	/**
-	 * 可以获得的积分
+	 * Integration points to earn
 	 */
 	private Integer integration;
 	/**
-	 * 可以获得的成长值
+	 * Growth value to earn
 	 */
 	private Integer growth;
 	/**
-	 * 发票类型[0->不开发票；1->电子发票；2->纸质发票]
+	 * Invoice type [0->No invoice; 1->Electronic invoice; 2->Paper invoice]
 	 */
 	private Integer billType;
 	/**
-	 * 发票抬头
+	 * Invoice title
 	 */
 	private String billHeader;
 	/**
-	 * 发票内容
+	 * Invoice content
 	 */
 	private String billContent;
 	/**
-	 * 收票人电话
+	 * Invoice receiver phone
 	 */
 	private String billReceiverPhone;
 	/**
-	 * 收票人邮箱
+	 * Invoice receiver email
 	 */
 	private String billReceiverEmail;
 	/**
-	 * 收货人姓名
+	 * Receiver name
 	 */
 	private String receiverName;
 	/**
-	 * 收货人电话
+	 * Receiver phone
 	 */
 	private String receiverPhone;
 	/**
-	 * 收货人邮编
+	 * Receiver postal code
 	 */
 	private String receiverPostCode;
 	/**
-	 * 省份/直辖市
+	 * Province/municipality
 	 */
 	private String receiverProvince;
 	/**
-	 * 城市
+	 * City
 	 */
 	private String receiverCity;
 	/**
-	 * 区
+	 * District
 	 */
 	private String receiverRegion;
 	/**
-	 * 详细地址
+	 * Detailed address
 	 */
 	private String receiverDetailAddress;
 	/**
-	 * 订单备注
+	 * Order note
 	 */
 	private String note;
 	/**
-	 * 确认收货状态[0->未确认；1->已确认]
+	 * Confirm receipt status [0->Unconfirmed; 1->Confirmed]
 	 */
 	private Integer confirmStatus;
 	/**
-	 * 删除状态【0->未删除；1->已删除】
+	 * Delete status [0->Not deleted; 1->Deleted]
 	 */
 	private Integer deleteStatus;
 	/**
-	 * 下单时使用的积分
+	 * Integration points used when placing order
 	 */
 	private Integer useIntegration;
 	/**
-	 * 支付时间
+	 * Payment time
 	 */
 	private Date paymentTime;
 	/**
-	 * 发货时间
+	 * Shipment time
 	 */
 	private Date deliveryTime;
 	/**
-	 * 确认收货时间
+	 * Confirm receipt time
 	 */
 	private Date receiveTime;
 	/**
-	 * 评价时间
+	 * Review time
 	 */
 	private Date commentTime;
 	/**
-	 * 修改时间
+	 * Modification time
 	 */
 	private Date modifyTime;
 

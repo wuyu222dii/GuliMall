@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 优惠券信息
+ * Coupon Info
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsCouponController {
     private SmsCouponService smsCouponService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smscoupon:list")
@@ -43,7 +43,7 @@ public class SmsCouponController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smscoupon:info")
@@ -54,7 +54,7 @@ public class SmsCouponController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smscoupon:save")
@@ -65,7 +65,7 @@ public class SmsCouponController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smscoupon:update")
@@ -76,7 +76,7 @@ public class SmsCouponController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smscoupon:delete")

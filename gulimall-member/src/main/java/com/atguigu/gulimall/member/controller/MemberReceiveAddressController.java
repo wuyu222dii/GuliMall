@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 会员收货地址
+ * Member Receive Address
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class MemberReceiveAddressController {
     private MemberReceiveAddressService memberReceiveAddressService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:memberreceiveaddress:list")
@@ -43,7 +43,7 @@ public class MemberReceiveAddressController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:memberreceiveaddress:info")
@@ -54,7 +54,7 @@ public class MemberReceiveAddressController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:memberreceiveaddress:save")
@@ -65,7 +65,7 @@ public class MemberReceiveAddressController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:memberreceiveaddress:update")
@@ -76,7 +76,7 @@ public class MemberReceiveAddressController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:memberreceiveaddress:delete")

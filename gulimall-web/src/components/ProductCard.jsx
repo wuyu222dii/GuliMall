@@ -4,7 +4,7 @@ const PLACEHOLDER = 'https://via.placeholder.com/300x300?text=Gulimall'
 
 export default function ProductCard({ product }) {
   const img = product.skuDefaultImg || PLACEHOLDER
-  const name = product.skuTitle || product.skuName || '商品'
+  const name = product.skuTitle || product.skuName || 'Product'
   const price = product.price ?? '0.00'
 
   return (

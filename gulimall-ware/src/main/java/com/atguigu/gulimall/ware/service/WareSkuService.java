@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 商品库存
+ * Product SKU stock
  *
  * @author liurui
  * @email liurui@gmail.com

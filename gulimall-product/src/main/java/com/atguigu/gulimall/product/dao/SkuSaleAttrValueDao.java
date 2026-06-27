@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 
 /**
- * sku销售属性&值
+ * skuSales attributes&value
  * 
  * @author liurui
  * @email liurui@gmail.com

@@ -5,7 +5,7 @@ import java.util.Objects;
 public enum Type {
 
     /***
-     * 类型 和对应mongodb api 的$type的数字
+     * Type codes matching MongoDB API $type
      **/
     varchar(2),
     NUMBER(16),

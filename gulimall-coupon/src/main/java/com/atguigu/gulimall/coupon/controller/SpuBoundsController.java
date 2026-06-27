@@ -14,7 +14,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品spu积分设置
+ * SPU points settings
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -27,7 +27,7 @@ public class SpuBoundsController {
     private SpuBoundsService spuBoundsService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:spubounds:list")
@@ -39,7 +39,7 @@ public class SpuBoundsController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:spubounds:info")
@@ -50,7 +50,7 @@ public class SpuBoundsController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @PostMapping("/save")
     //@RequiresPermissions("coupon:spubounds:save")
@@ -61,7 +61,7 @@ public class SpuBoundsController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:spubounds:update")
@@ -72,7 +72,7 @@ public class SpuBoundsController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:spubounds:delete")

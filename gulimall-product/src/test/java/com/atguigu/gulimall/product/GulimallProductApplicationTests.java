@@ -63,26 +63,26 @@ public class GulimallProductApplicationTests {
     @Test
     public void testStringRedisTemplate() {
         ValueOperations<String, String> ops = stringRedisTemplate.opsForValue();
-        // 保存
+        // save
         ops.set("hello", "world" + UUID.randomUUID().toString());
 
-        // 查询
+        // Query
         String hello = ops.get("hello");
-        System.out.println("之前保存的数据是：" + hello);
+        System.out.println("The previously saved data is:" + hello);
     }
 
 
     @Test
     public void testFindPath() {
         Long[] catelogPath = categoryService.findCatelogPath(225L);
-        log.info("完整路径：{}", Arrays.asList(catelogPath));
+        log.info("Full path:{}", Arrays.asList(catelogPath));
     }
 
 
     @Test
     public void contextLoads() {
         BrandEntity brandEntity = new BrandEntity();
-        brandEntity.setName("华为");
+        brandEntity.setName("Huawei");
         brandService.save(brandEntity);
     }
 

@@ -3,7 +3,7 @@
 
 <mapper namespace="${package}.${moduleName}.dao.${className}Dao">
 
-	<!-- 可根据自己的需求，是否要使用 -->
+	<!-- Customize as needed -->
     <resultMap type="${package}.${moduleName}.entity.${className}Entity" id="${classname}Map">
 #foreach($column in $columns)
         <result property="${column.attrname}" column="${column.columnName}"/>

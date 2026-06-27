@@ -7,7 +7,7 @@ import com.atguigu.gulimall.coupon.entity.CouponSpuCategoryRelationEntity;
 import java.util.Map;
 
 /**
- * 优惠券分类关联
+ * Coupon category relation
  *
  * @author liurui
  * @email liurui@gmail.com

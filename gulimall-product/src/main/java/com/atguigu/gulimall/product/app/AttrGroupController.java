@@ -20,7 +20,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 属性分组
+ * Attribute grouping
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -52,8 +52,8 @@ public class AttrGroupController {
     @GetMapping("/{catelogId}/withattr")
     public R getAttrGroupWithAttrs(@PathVariable("catelogId") Long catelogId) {
 
-        // 查出当前分类下的所有属性分组
-        // 查出每个属性分组的所有属性
+        // Find all attribute groups under the current category
+        // Find all attributes of each attribute group
         List<AttrGroupWithAttrsVo> vos = attrGroupService.getAttrGroupWithAttrsByCatelogId(catelogId);
         return R.ok().put("data", vos);
     }
@@ -80,7 +80,7 @@ public class AttrGroupController {
     }
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list/{catelogId}")
     //@RequiresPermissions("product:attrgroup:list")
@@ -94,7 +94,7 @@ public class AttrGroupController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{attrGroupId}")
     //@RequiresPermissions("product:attrgroup:info")
@@ -110,7 +110,7 @@ public class AttrGroupController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:attrgroup:save")
@@ -121,7 +121,7 @@ public class AttrGroupController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:attrgroup:update")
@@ -132,7 +132,7 @@ public class AttrGroupController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:attrgroup:delete")

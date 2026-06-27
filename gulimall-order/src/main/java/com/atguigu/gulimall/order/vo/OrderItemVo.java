@@ -16,7 +16,7 @@ public class OrderItemVo {
     private String image;
 
     /**
-     * 商品套餐属性
+     * Product bundle attributes
      */
     private List<String> skuAttrValues;
 
@@ -26,6 +26,6 @@ public class OrderItemVo {
 
     private BigDecimal totalPrice;
 
-    /** 商品重量 **/
+    /** Product weight **/
     private BigDecimal weight = new BigDecimal("0.085");
 }

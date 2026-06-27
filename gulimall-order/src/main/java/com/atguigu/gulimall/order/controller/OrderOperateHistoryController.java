@@ -13,7 +13,7 @@ import java.util.Map;
 
 
 /**
- * 订单操作历史记录
+ * Order operation history
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -26,7 +26,7 @@ public class OrderOperateHistoryController {
     private OrderOperateHistoryService orderOperateHistoryService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("order:orderoperatehistory:list")
@@ -38,7 +38,7 @@ public class OrderOperateHistoryController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("order:orderoperatehistory:info")
@@ -49,7 +49,7 @@ public class OrderOperateHistoryController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("order:orderoperatehistory:save")
@@ -60,7 +60,7 @@ public class OrderOperateHistoryController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("order:orderoperatehistory:update")
@@ -71,7 +71,7 @@ public class OrderOperateHistoryController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("order:orderoperatehistory:delete")

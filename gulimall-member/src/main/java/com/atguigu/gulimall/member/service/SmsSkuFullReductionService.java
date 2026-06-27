@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.SmsSkuFullReductionEntity;
 import java.util.Map;
 
 /**
- * 商品满减信息
+ * Product Full Reduction Info
  *
  * @author liurui
  * @email liurui@gmail.com

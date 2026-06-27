@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 首页轮播广告
+ * Home carousel ad
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class HomeAdvController {
     private HomeAdvService homeAdvService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:homeadv:list")
@@ -43,7 +43,7 @@ public class HomeAdvController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:homeadv:info")
@@ -54,7 +54,7 @@ public class HomeAdvController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("coupon:homeadv:save")
@@ -65,7 +65,7 @@ public class HomeAdvController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:homeadv:update")
@@ -76,7 +76,7 @@ public class HomeAdvController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:homeadv:delete")

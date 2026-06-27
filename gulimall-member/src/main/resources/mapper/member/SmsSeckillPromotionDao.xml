@@ -3,7 +3,7 @@
 
 <mapper namespace="com.atguigu.gulimall.member.dao.SmsSeckillPromotionDao">
 
-	<!-- 可根据自己的需求，是否要使用 -->
+	<!-- Customize as needed for your requirements -->
     <resultMap type="com.atguigu.gulimall.member.entity.SmsSeckillPromotionEntity" id="smsSeckillPromotionMap">
         <result property="id" column="id"/>
         <result property="title" column="title"/>

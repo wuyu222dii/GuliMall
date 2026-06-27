@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 商品库存
+ * Product SKU stock
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -29,11 +29,11 @@ public class WareSkuEntity implements Serializable {
 	 */
 	private Long skuId;
 	/**
-	 * 仓库id
+	 * Warehouse id
 	 */
 	private Long wareId;
 	/**
-	 * 库存数
+	 * Stock quantity
 	 */
 	private Integer stock;
 	/**
@@ -41,7 +41,7 @@ public class WareSkuEntity implements Serializable {
 	 */
 	private String skuName;
 	/**
-	 * 锁定库存
+	 * Locked stock
 	 */
 	private Integer stockLocked;
 

@@ -3,7 +3,7 @@
 
 <mapper namespace="com.atguigu.gulimall.order.dao.OrderReturnApplyDao">
 
-	<!-- 可根据自己的需求，是否要使用 -->
+	<!-- Customize as needed -->
     <resultMap type="com.atguigu.gulimall.order.entity.OrderReturnApplyEntity" id="orderReturnApplyMap">
         <result property="id" column="id"/>
         <result property="orderId" column="order_id"/>
@@ -24,7 +24,7 @@
         <result property="skuPrice" column="sku_price"/>
         <result property="skuRealPrice" column="sku_real_price"/>
         <result property="reason" column="reason"/>
-        <result property="description述" column="description述"/>
+        <result property="description" column="description"/>
         <result property="descPics" column="desc_pics"/>
         <result property="handleNote" column="handle_note"/>
         <result property="handleMan" column="handle_man"/>

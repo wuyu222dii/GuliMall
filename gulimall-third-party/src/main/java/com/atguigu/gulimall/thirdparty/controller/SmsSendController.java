@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SmsSendController {
 
     /**
-     * 给手机发送验证码(提供给别的服务进行调用)
+     * Send verification code to phone (for other services to call)
      *
      * @param phone
      * @return

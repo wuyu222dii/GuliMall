@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Catelog2Vo {
-    //父分类id
+    //Parent categoryid
     private String catalog1Id;
 
     private String id;

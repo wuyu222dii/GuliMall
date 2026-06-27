@@ -15,39 +15,39 @@ public class SeckillSkuInfoVo {
      */
     private Long spuId;
     /**
-     * sku名称
+     * SKU name
      */
     private String skuName;
     /**
-     * sku介绍描述
+     * SKU description
      */
     private String skuDesc;
     /**
-     * 所属分类id
+     * Category id
      */
     private Long catalogId;
     /**
-     * 品牌id
+     * Brand id
      */
     private Long brandId;
     /**
-     * 默认图片
+     * Default image
      */
     private String skuDefaultImg;
     /**
-     * 标题
+     * Title
      */
     private String skuTitle;
     /**
-     * 副标题
+     * Subtitle
      */
     private String skuSubtitle;
     /**
-     * 价格
+     * Price
      */
     private BigDecimal price;
     /**
-     * 销量
+     * Sales volume
      */
     private Long saleCount;
 

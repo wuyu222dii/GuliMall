@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 商品三级分类
+ * Three-level classification of goods
  *
  * @author liurui
  * @email liurui@gmail.com

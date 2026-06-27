@@ -9,16 +9,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * mongo适配器
+ * MongoDB adapter
  *
  * @author: gxz gongxuanzhang@foxmail.com
  **/
 public class MongoTableInfoAdaptor {
 
     /**
-     * 查询表信息的时候 mongo只能获得表名 其他只能手动填写
+     * MongoDB table query only returns names; other fields must be filled manually
      *
-     * @param names 表名
+     * @param names table names
      */
     public static List<Map<String, String>> tableInfo(List<String> names) {
         List<Map<String, String>> result = new ArrayList<>(names.size());
@@ -30,16 +30,16 @@ public class MongoTableInfoAdaptor {
 
     public static Map<String, String> tableInfo(String name) {
         Map<String, String> tableInfo = new HashMap<>(4 * 4 / 3 + 1);
-        tableInfo.put("engine", "mongo无引擎");
-        tableInfo.put("createTime", "mongo无法查询创建时间");
-        tableInfo.put("tableComment", "mongo无备注");
+        tableInfo.put("engine", "MongoDB has no engine");
+        tableInfo.put("createTime", "MongoDB cannot query create time");
+        tableInfo.put("tableComment", "MongoDB has no comment");
         tableInfo.put("tableName", name);
         return tableInfo;
     }
 
     /**
-     * 在查询列名的时候 需要将解析出的mongo信息适配成关系型数据库所需要的信息形式
-     * 此方法只针对主Bean
+     * Adapt parsed MongoDB info to relational DB column format when querying columns
+     * This method applies to the main bean only
      */
     public static List<Map<String, String>> columnInfo(MongoDefinition mongoDefinition) {
         List<MongoDefinition> child = mongoDefinition.getChild();
@@ -54,7 +54,7 @@ public class MongoTableInfoAdaptor {
             map.put("columnComment", "");
             map.put("dataType", definition.hasChild() ? propertyName : type);
             map.put("columnName", propertyName);
-            // mongo默认主键是_id
+            // MongoDB default primary key is _id
             String columnKey = propertyName.equals(mongoKey) ? "PRI" : "";
             map.put("columnKey", columnKey);
             result.add(map);

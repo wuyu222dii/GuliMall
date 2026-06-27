@@ -19,7 +19,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * sku信息
+ * skuinformation
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -35,7 +35,7 @@ public class SkuInfoController {
     private SpuInfoService spuInfoService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:skuinfo:list")
@@ -47,7 +47,7 @@ public class SkuInfoController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{skuId}")
     //@RequiresPermissions("product:skuinfo:info")
@@ -58,7 +58,7 @@ public class SkuInfoController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:skuinfo:save")
@@ -69,7 +69,7 @@ public class SkuInfoController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:skuinfo:update")
@@ -80,7 +80,7 @@ public class SkuInfoController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:skuinfo:delete")

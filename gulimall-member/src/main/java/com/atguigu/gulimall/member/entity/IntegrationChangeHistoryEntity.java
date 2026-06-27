@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 积分变化历史记录
+ * Integration Change History
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -33,15 +33,15 @@ public class IntegrationChangeHistoryEntity implements Serializable {
 	 */
 	private Date createTime;
 	/**
-	 * 变化的值
+	 * Changed value
 	 */
 	private Integer changeCount;
 	/**
-	 * 备注
+	 * Remark
 	 */
 	private String note;
 	/**
-	 * 来源[0->购物；1->管理员修改;2->活动]
+	 * Source [0->shopping; 1->admin modification; 2->promotion]
 	 */
 	private Integer sourceTyoe;
 

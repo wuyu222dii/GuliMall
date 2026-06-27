@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.SmsSkuLadderEntity;
 import java.util.Map;
 
 /**
- * 商品阶梯价格
+ * Product Tiered Price
  *
  * @author liurui
  * @email liurui@gmail.com

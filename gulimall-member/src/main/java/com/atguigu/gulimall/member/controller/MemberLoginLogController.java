@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 会员登录记录
+ * Member Login Log
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class MemberLoginLogController {
     private MemberLoginLogService memberLoginLogService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:memberloginlog:list")
@@ -43,7 +43,7 @@ public class MemberLoginLogController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:memberloginlog:info")
@@ -54,7 +54,7 @@ public class MemberLoginLogController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:memberloginlog:save")
@@ -65,7 +65,7 @@ public class MemberLoginLogController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:memberloginlog:update")
@@ -76,7 +76,7 @@ public class MemberLoginLogController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:memberloginlog:delete")

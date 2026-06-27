@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * sku销售属性&值
+ * skuSales attributes&value
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SkuSaleAttrValueController {
     private SkuSaleAttrValueService skuSaleAttrValueService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:skusaleattrvalue:list")
@@ -43,7 +43,7 @@ public class SkuSaleAttrValueController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:skusaleattrvalue:info")
@@ -54,7 +54,7 @@ public class SkuSaleAttrValueController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:skusaleattrvalue:save")
@@ -65,7 +65,7 @@ public class SkuSaleAttrValueController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:skusaleattrvalue:update")
@@ -76,7 +76,7 @@ public class SkuSaleAttrValueController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:skusaleattrvalue:delete")

@@ -31,7 +31,7 @@ public class PurchaseDetailController {
     private PurchaseDetailService purchaseDetailService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("ware:purchasedetail:list")
@@ -43,7 +43,7 @@ public class PurchaseDetailController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("ware:purchasedetail:info")
@@ -54,7 +54,7 @@ public class PurchaseDetailController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("ware:purchasedetail:save")
@@ -65,7 +65,7 @@ public class PurchaseDetailController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("ware:purchasedetail:update")
@@ -76,7 +76,7 @@ public class PurchaseDetailController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:purchasedetail:delete")

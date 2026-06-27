@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * spu信息介绍
+ * spuInformation introduction
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SpuInfoDescController {
     private SpuInfoDescService spuInfoDescService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:spuinfodesc:list")
@@ -43,7 +43,7 @@ public class SpuInfoDescController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{spuId}")
     //@RequiresPermissions("product:spuinfodesc:info")
@@ -54,7 +54,7 @@ public class SpuInfoDescController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:spuinfodesc:save")
@@ -65,7 +65,7 @@ public class SpuInfoDescController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:spuinfodesc:update")
@@ -76,7 +76,7 @@ public class SpuInfoDescController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:spuinfodesc:delete")

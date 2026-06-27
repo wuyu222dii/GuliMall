@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.SmsSeckillSkuRelationEntity;
 import java.util.Map;
 
 /**
- * 秒杀活动商品关联
+ * Seckill Activity Product Relation
  *
  * @author liurui
  * @email liurui@gmail.com

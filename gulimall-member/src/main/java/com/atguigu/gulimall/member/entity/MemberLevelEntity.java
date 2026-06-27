@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 会员等级
+ * Member Level
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -26,39 +26,39 @@ public class MemberLevelEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 等级名称
+	 * Level name
 	 */
 	private String name;
 	/**
-	 * 等级需要的成长值
+	 * Growth points required for level
 	 */
 	private Integer growthPoint;
 	/**
-	 * 是否为默认等级[0->不是；1->是]
+	 * Whether default level [0->no; 1->yes]
 	 */
 	private Integer defaultStatus;
 	/**
-	 * 免运费标准
+	 * Free shipping threshold
 	 */
 	private BigDecimal freeFreightPoint;
 	/**
-	 * 每次评价获取的成长值
+	 * Growth points earned per review
 	 */
 	private Integer commentGrowthPoint;
 	/**
-	 * 是否有免邮特权
+	 * Whether has free shipping privilege
 	 */
 	private Integer priviledgeFreeFreight;
 	/**
-	 * 是否有会员价格特权
+	 * Whether has member price privilege
 	 */
 	private Integer priviledgeMemberPrice;
 	/**
-	 * 是否有生日特权
+	 * Whether has birthday privilege
 	 */
 	private Integer priviledgeBirthday;
 	/**
-	 * 备注
+	 * Remark
 	 */
 	private String note;
 

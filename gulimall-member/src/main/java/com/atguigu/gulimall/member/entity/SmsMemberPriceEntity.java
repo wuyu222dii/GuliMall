@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 商品会员价格
+ * Product Member Price
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -30,19 +30,19 @@ public class SmsMemberPriceEntity implements Serializable {
 	 */
 	private Long skuId;
 	/**
-	 * 会员等级id
+	 * Member level id
 	 */
 	private Long memberLevelId;
 	/**
-	 * 会员等级名
+	 * Member level name
 	 */
 	private String memberLevelName;
 	/**
-	 * 会员对应价格
+	 * Member corresponding price
 	 */
 	private BigDecimal memberPrice;
 	/**
-	 * 可否叠加其他优惠[0-不可叠加优惠，1-可叠加]
+	 * Whether stackable with other discounts [0-not stackable, 1-stackable]
 	 */
 	private Integer addOther;
 

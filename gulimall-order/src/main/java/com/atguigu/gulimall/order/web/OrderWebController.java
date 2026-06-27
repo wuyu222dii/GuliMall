@@ -44,13 +44,13 @@ public class OrderWebController {
                 model.addAttribute("order", responseVo.getOrder());
                 return "pay";
             }else {
-                String msg = "下单失败;";
+                String msg = "Order placement failed;";
                 switch (code) {
                     case 1:
-                        msg += "防重令牌校验失败";
+                        msg += "Duplicate submission token validation failed";
                         break;
                     case 2:
-                        msg += "商品价格发生变化";
+                        msg += "Product price has changed";
                         break;
                 }
                 attributes.addFlashAttribute("msg", msg);
@@ -58,7 +58,7 @@ public class OrderWebController {
             }
         }catch (Exception e){
             if (e instanceof NoStockException){
-                String msg = "下单失败，商品无库存";
+                String msg = "Order placement failed, product out of stock";
                 attributes.addFlashAttribute("msg", msg);
             }
             return "redirect:http://order.gulimall.com/toTrade";
@@ -66,7 +66,7 @@ public class OrderWebController {
     }
 
     /**
-     * 获取当前用户的所有订单
+     * Get all orders for the current user
      * @return
      */
     @RequestMapping("/memberOrder.html")

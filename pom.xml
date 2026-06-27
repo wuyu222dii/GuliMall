@@ -7,7 +7,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>gulimall</name>
 	<packaging>pom</packaging>
-	<description>聚合服务</description>
+	<description>Aggregated services</description>
 
 	<modules>
 		<module>gulimall-product</module>

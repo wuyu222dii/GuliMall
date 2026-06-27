@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 秒杀商品通知订阅
+ * Seckill SKU notification subscription
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SeckillSkuNoticeController {
     private SeckillSkuNoticeService seckillSkuNoticeService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:seckillskunotice:list")
@@ -43,7 +43,7 @@ public class SeckillSkuNoticeController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:seckillskunotice:info")
@@ -54,7 +54,7 @@ public class SeckillSkuNoticeController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("coupon:seckillskunotice:save")
@@ -65,7 +65,7 @@ public class SeckillSkuNoticeController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:seckillskunotice:update")
@@ -76,7 +76,7 @@ public class SeckillSkuNoticeController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:seckillskunotice:delete")

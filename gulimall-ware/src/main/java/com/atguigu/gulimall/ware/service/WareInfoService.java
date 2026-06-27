@@ -7,7 +7,7 @@ import com.atguigu.gulimall.ware.entity.WareInfoEntity;
 import java.util.Map;
 
 /**
- * 仓库信息
+ * Warehouse info
  *
  * @author liurui
  * @email liurui@gmail.com

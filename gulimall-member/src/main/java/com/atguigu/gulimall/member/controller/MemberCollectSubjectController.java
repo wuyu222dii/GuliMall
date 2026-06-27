@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 会员收藏的专题活动
+ * Member Collected Subject Activities
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class MemberCollectSubjectController {
     private MemberCollectSubjectService memberCollectSubjectService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:membercollectsubject:list")
@@ -43,7 +43,7 @@ public class MemberCollectSubjectController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:membercollectsubject:info")
@@ -54,7 +54,7 @@ public class MemberCollectSubjectController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:membercollectsubject:save")
@@ -65,7 +65,7 @@ public class MemberCollectSubjectController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:membercollectsubject:update")
@@ -76,7 +76,7 @@ public class MemberCollectSubjectController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:membercollectsubject:delete")

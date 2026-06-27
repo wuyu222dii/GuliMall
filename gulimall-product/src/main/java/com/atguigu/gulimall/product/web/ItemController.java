@@ -16,14 +16,14 @@ public class ItemController {
     SkuInfoService skuInfoService;
 
     /**
-     * 展示sku详情页
+     * exhibitskuDetails page
      *
      * @param skuId
      * @return
      */
     @GetMapping("/{skuId}.html")
     public String skuItem(@PathVariable("skuId") Long skuId, Model model) throws ExecutionException, InterruptedException {
-        System.out.println("准备查询" + skuId + "详情");
+        System.out.println("Prepare query" + skuId + "Details");
         SkuItemVo vo = skuInfoService.item(skuId);
         model.addAttribute("item", vo);
         return "item";

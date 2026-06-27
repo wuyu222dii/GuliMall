@@ -8,29 +8,29 @@ import java.util.*;
 
 
 /**
- * 解析表之后得到的信息实体
- * 换句话说这个类就是一张mongo一张表的内容
+ * Entity parsed from a MongoDB collection
+ * In other words, this class represents one MongoDB collection
  *
  * @author gxz 514190950@qq.com
  */
 
 public class MongoDefinition implements Serializable {
-    /***属性名**/
+    /** Property name */
     private String propertyName;
-    /***属性类型 对应mongodb api $type   如果没有类型 表示这是一个顶层实体  而不是内嵌属性**/
+    /** Property type (MongoDB $type); no type means top-level entity, not nested */
     private Integer type;
-    /***此属性是否是数组**/
+    /** Whether this property is an array */
     private boolean array = false;
-    /***如果此属性是对象  那么他仍然有此类型的子类**/
+    /** If object type, nested child properties */
     private List<MongoDefinition> child;
 
 
     public List<MongoGeneratorEntity> getChildrenInfo(String tableName) {
         List<MongoGeneratorEntity> result = new ArrayList<>();
         MongoGeneratorEntity info = new MongoGeneratorEntity();
-        // 表信息
+        // Table info
         Map<String, String> tableInfo = MongoTableInfoAdaptor.tableInfo(tableName);
-        // 列名信息
+        // Column info
         List<Map<String, String>> columnsInfo = new ArrayList<>();
         info.setColumns(columnsInfo);
         info.setTableInfo(tableInfo);

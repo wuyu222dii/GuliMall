@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.MemberLoginLogEntity;
 import java.util.Map;
 
 /**
- * 会员登录记录
+ * Member Login Log
  *
  * @author liurui
  * @email liurui@gmail.com

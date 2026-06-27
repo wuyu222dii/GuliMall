@@ -66,7 +66,7 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
     }
 
     /**
-     * 根据分类id查出所有的分组以及这些组里面的属性
+     * According to classificationidFind all groups and attributes in these groups
      *
      * @param catelogId
      * @return
@@ -74,12 +74,12 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
     @Override
     public List<AttrGroupWithAttrsVo> getAttrGroupWithAttrsByCatelogId(Long catelogId) {
 
-        // 查询分组信息
+        // Query group information
         QueryWrapper<AttrGroupEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("catelog_id", catelogId);
         List<AttrGroupEntity> attrGroupEntities = this.list(queryWrapper);
 
-        // 查询所有属性
+        // Query all properties
         List<AttrGroupWithAttrsVo> collect = attrGroupEntities.stream().map(group -> {
             AttrGroupWithAttrsVo attrsVo = new AttrGroupWithAttrsVo();
             BeanUtils.copyProperties(group, attrsVo);
@@ -92,8 +92,8 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
 
     @Override
     public List<SpuItemAttrGroupVo> getAttrGroupWithAttrsBySpuId(Long spuId, Long catalogId) {
-        // 1.查出当前spu对应的所有属性分组，以及当前分组下的所有属性
-        // 1)、
+        // 1.Find out currentspuAll corresponding attribute groups, and all attributes under the current group
+        // 1),
         AttrGroupDao baseMapper = this.baseMapper;
         List<SpuItemAttrGroupVo> vos = baseMapper.getAttrGroupWithAttrsBySpuId(spuId, catalogId);
         return null;

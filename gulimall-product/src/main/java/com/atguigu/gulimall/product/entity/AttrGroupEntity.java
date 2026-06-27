@@ -10,7 +10,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 属性分组
+ * Attribute grouping
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -22,28 +22,28 @@ public class AttrGroupEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 分组id
+     * Groupid
      */
     @TableId
     private Long attrGroupId;
     /**
-     * 组名
+     * Group name
      */
     private String attrGroupName;
     /**
-     * 排序
+     * sort
      */
     private Integer sort;
     /**
-     * 描述
+     * describe
      */
     private String descript;
     /**
-     * 组图标
+     * group icon
      */
     private String icon;
     /**
-     * 所属分类id
+     * Categoryid
      */
     private Long catelogId;
 

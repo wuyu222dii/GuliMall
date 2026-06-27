@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 商品spu积分设置
+ * Product SPU Points Settings
  * 
  * @author liurui
  * @email liurui@gmail.com

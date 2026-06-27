@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.GrowthChangeHistoryEntity;
 import java.util.Map;
 
 /**
- * 成长值变化历史记录
+ * Growth Change History
  *
  * @author liurui
  * @email liurui@gmail.com

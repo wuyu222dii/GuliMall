@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 属性&属性分组关联
+ * property&attribute group association
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class AttrAttrgroupRelationController {
     private AttrAttrgroupRelationService attrAttrgroupRelationService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:attrattrgrouprelation:list")
@@ -43,7 +43,7 @@ public class AttrAttrgroupRelationController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:attrattrgrouprelation:info")
@@ -54,7 +54,7 @@ public class AttrAttrgroupRelationController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:attrattrgrouprelation:save")
@@ -65,7 +65,7 @@ public class AttrAttrgroupRelationController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:attrattrgrouprelation:update")
@@ -76,7 +76,7 @@ public class AttrAttrgroupRelationController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:attrattrgrouprelation:delete")

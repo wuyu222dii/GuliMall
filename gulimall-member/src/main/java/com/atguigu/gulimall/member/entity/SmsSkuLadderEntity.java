@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 商品阶梯价格
+ * Product Tiered Price
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -30,19 +30,19 @@ public class SmsSkuLadderEntity implements Serializable {
 	 */
 	private Long skuId;
 	/**
-	 * 满几件
+	 * Minimum quantity
 	 */
 	private Integer fullCount;
 	/**
-	 * 打几折
+	 * Discount rate
 	 */
 	private BigDecimal discount;
 	/**
-	 * 折后价
+	 * Discounted price
 	 */
 	private BigDecimal price;
 	/**
-	 * 是否叠加其他优惠[0-不可叠加，1-可叠加]
+	 * Whether stackable with other discounts [0-not stackable, 1-stackable]
 	 */
 	private Integer addOther;
 

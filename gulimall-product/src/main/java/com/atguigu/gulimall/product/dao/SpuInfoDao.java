@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * spu信息
+ * spuinformation
  * 
  * @author liurui
  * @email liurui@gmail.com

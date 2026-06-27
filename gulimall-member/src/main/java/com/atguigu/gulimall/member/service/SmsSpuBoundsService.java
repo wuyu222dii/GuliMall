@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.SmsSpuBoundsEntity;
 import java.util.Map;
 
 /**
- * 商品spu积分设置
+ * Product SPU Points Settings
  *
  * @author liurui
  * @email liurui@gmail.com

@@ -21,21 +21,21 @@ export default function Header() {
           <div>
             {user ? (
               <>
-                欢迎，{user.username || user.phone}
+                Welcome, {user.username || user.phone}
                 <span style={{ margin: '0 8px' }}>|</span>
-                <a href="#" onClick={(e) => { e.preventDefault(); logout() }}>退出</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); logout() }}>Sign out</a>
               </>
             ) : (
               <>
-                <Link to="/login">你好，请登录</Link>
+                <Link to="/login">Hello, sign in</Link>
                 <span style={{ margin: '0 8px' }}>|</span>
-                <Link to="/register">免费注册</Link>
+                <Link to="/register">Register free</Link>
               </>
             )}
           </div>
           <div>
-            <Link to="/member/orders" style={{ marginRight: 16 }}>我的订单</Link>
-            <Link to="/member/address">收货地址</Link>
+            <Link to="/member/orders" style={{ marginRight: 16 }}>My orders</Link>
+            <Link to="/member/address">Shipping addresses</Link>
           </div>
         </div>
       </div>
@@ -43,17 +43,17 @@ export default function Header() {
       <div className="header-main">
         <div className="container">
           <Link to="/" className="logo">
-            谷粒商城
-            <span>品质生活，从这里开始</span>
+            Gulimall
+            <span>Quality living starts here</span>
           </Link>
 
           <form className="search-box" onSubmit={handleSearch}>
-            <input name="keyword" placeholder="搜索商品..." />
-            <button type="submit">搜索</button>
+            <input name="keyword" placeholder="Search products..." />
+            <button type="submit">Search</button>
           </form>
 
           <Link to="/cart" className="header-cart">
-            🛒 购物车
+            🛒 Cart
             {totalCount() > 0 && <span className="cart-badge">{totalCount()}</span>}
           </Link>
         </div>
@@ -61,12 +61,12 @@ export default function Header() {
 
       <nav className="category-nav">
         <div className="container">
-          <div className="nav-all">全部商品分类</div>
+          <div className="nav-all">All categories</div>
           <div className="nav-links">
-            <Link to="/">首页</Link>
-            <Link to="/search">商品搜索</Link>
-            <Link to="/cart">购物车</Link>
-            <Link to="/member/orders">我的订单</Link>
+            <Link to="/">Home</Link>
+            <Link to="/search">Product search</Link>
+            <Link to="/cart">Cart</Link>
+            <Link to="/member/orders">My orders</Link>
           </div>
         </div>
       </nav>

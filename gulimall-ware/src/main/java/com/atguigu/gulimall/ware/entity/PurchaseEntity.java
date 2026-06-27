@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 采购信息
+ * Purchase info
  * 
  * @author liurui
  * @email liurui@gmail.com

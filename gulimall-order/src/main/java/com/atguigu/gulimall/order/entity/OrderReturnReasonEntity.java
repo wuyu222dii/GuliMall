@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 退货原因
+ * Return reason
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,15 +25,15 @@ public class OrderReturnReasonEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 退货原因名
+	 * Return reason name
 	 */
 	private String name;
 	/**
-	 * 排序
+	 * Sort order
 	 */
 	private Integer sort;
 	/**
-	 * 启用状态
+	 * Enable status
 	 */
 	private Integer status;
 	/**

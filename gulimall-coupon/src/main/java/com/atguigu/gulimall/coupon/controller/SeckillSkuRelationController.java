@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 秒杀活动商品关联
+ * Seckill SKU relation
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SeckillSkuRelationController {
     private SeckillSkuRelationService seckillSkuRelationService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:seckillskurelation:list")
@@ -43,7 +43,7 @@ public class SeckillSkuRelationController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:seckillskurelation:info")
@@ -54,7 +54,7 @@ public class SeckillSkuRelationController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("coupon:seckillskurelation:save")
@@ -65,7 +65,7 @@ public class SeckillSkuRelationController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:seckillskurelation:update")
@@ -76,7 +76,7 @@ public class SeckillSkuRelationController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:seckillskurelation:delete")

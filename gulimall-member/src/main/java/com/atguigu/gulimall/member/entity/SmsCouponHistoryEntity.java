@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 优惠券领取历史记录
+ * Coupon Redemption History
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,39 +25,39 @@ public class SmsCouponHistoryEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 优惠券id
+	 * Coupon id
 	 */
 	private Long couponId;
 	/**
-	 * 会员id
+	 * Member id
 	 */
 	private Long memberId;
 	/**
-	 * 会员名字
+	 * Member name
 	 */
 	private String memberNickName;
 	/**
-	 * 获取方式[0->后台赠送；1->主动领取]
+	 * Acquisition method [0->admin gift; 1->self claim]
 	 */
 	private Integer getType;
 	/**
-	 * 创建时间
+	 * Create time
 	 */
 	private Date createTime;
 	/**
-	 * 使用状态[0->未使用；1->已使用；2->已过期]
+	 * Usage status [0->unused; 1->used; 2->expired]
 	 */
 	private Integer useType;
 	/**
-	 * 使用时间
+	 * Usage time
 	 */
 	private Date useTime;
 	/**
-	 * 订单id
+	 * Order id
 	 */
 	private Long orderId;
 	/**
-	 * 订单号
+	 * Order number
 	 */
 	private Long orderSn;
 

@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品阶梯价格
+ * Product Tiered Price
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsSkuLadderController {
     private SmsSkuLadderService smsSkuLadderService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smsskuladder:list")
@@ -43,7 +43,7 @@ public class SmsSkuLadderController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smsskuladder:info")
@@ -54,7 +54,7 @@ public class SmsSkuLadderController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smsskuladder:save")
@@ -65,7 +65,7 @@ public class SmsSkuLadderController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smsskuladder:update")
@@ -76,7 +76,7 @@ public class SmsSkuLadderController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smsskuladder:delete")

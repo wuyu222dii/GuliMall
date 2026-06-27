@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * 品牌分类关联
+ * Brand classification association
  *
  * @author liurui
  * @email liurui@gmail.com

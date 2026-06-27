@@ -28,17 +28,17 @@ public class IndexController {
     @Autowired
     StringRedisTemplate redisTemplate;
 
-    // 渲染一级分类菜单
+    // Rendering a first-level category menu
     @GetMapping({"/", "index.html"})
     public String getIndex(Model model) {
-        //获取所有的一级分类
+        //Get all first-level categories
         List<CategoryEntity> categoryEntities = categoryService.getLevel1Categorys();
         model.addAttribute("categorys", categoryEntities);
         return "index";
 //        return R.ok().setData(categoryEntities);
     }
 
-    // 渲染二级三级分类数据
+    // Rendering secondary and tertiary classification data
     @ResponseBody
     @GetMapping("/index/catalog.json")
     public Map<String, List<Catelog2Vo>> getCatelogJson() {
@@ -50,38 +50,38 @@ public class IndexController {
     @ResponseBody
     @GetMapping("/hello")
     public String hello() {
-        // 1、获取一把锁，只要锁的名字一样，就是同一把锁
+        // 1. Obtain a lock. As long as the lock name is the same, it is the same lock.
         RLock lock = redisson.getLock("my-lock");
 
-        // 2、加锁
-//        lock.lock(); // 阻塞式等待，默认加的锁都是30s时间
-        //1)、锁的自动续期，如果业务超长，运行期间自动给锁续上新的30s。不用担心业务时间长，锁自动过期被删掉
-        //2）、加锁的业务只要运行完成，就不会给当前锁续期，即使不手动解锁，锁默认在30s以后自动删除。
+        // 2, lock
+//        lock.lock(); // Blocking waiting, the default locks are30stime
+        //1), automatic renewal of the lock. If the business is too long, the lock will be automatically renewed with a new one during operation.30s. Don’t worry about long business hours, the lock will automatically expire and be deleted.
+        //2), as long as the locked business is completed, the current lock will not be renewed. Even if it is not manually unlocked, the lock will default to30sIt will be automatically deleted in the future.
 
-        lock.lock(10, TimeUnit.SECONDS); // 10s钟自动解锁,自动解锁时间一定要大于业务的执行时间
-        // 问题：lock.lock(10, TimeUnit.SECONDS); 在锁时间到了以后，不会自动续期。
-        //1、如果我们传递了锁的超时时间，就发送给redis执行脚本，进行占锁，默认超时就是我们指定的时间
-        //2、如果我们未指定锁的时间，就使用30*1000【LockWatchdogTimeout看门狗的默认时间】；
-        // 只要占锁成功，就会启动一个定时任务【重新给锁设置过期时间，新的过期时间就是看门狗的默认时间】,每隔10s都会自动再次续期，续成30s
-        // internalLockLeaseTime【看门狗时间】/ 3，10s
+        lock.lock(10, TimeUnit.SECONDS); // 10sClock automatically unlocks,The automatic unlocking time must be greater than the business execution time
+        // question:lock.lock(10, TimeUnit.SECONDS); After the lock time expires, it will not be automatically renewed.
+        //1, if we pass the lock timeout, send it toredisExecute the script and occupy the lock. The default timeout is the time we specify.
+        //2, if we do not specify the lock time, use30*1000【LockWatchdogTimeoutDefault time of watchdog];
+        // As long as the lock is successfully occupied, a scheduled task will be started [reset the expiration time for the lock, and the new expiration time is the default time of the watchdog],every10swill be automatically renewed again.30s
+        // internalLockLeaseTime[Watchdog time]/ 3,10s
 
-        // 最佳实战
-        //1）、lock.lock(10, TimeUnit.SECONDS);省掉了整个续期操作
+        // Best practice
+        //1),lock.lock(10, TimeUnit.SECONDS);Saves the entire renewal operation
         try {
-            System.out.println("加锁成功，执行业务。。。" + Thread.currentThread().getId());
+            System.out.println("The lock is successful and the business is executed. . ." + Thread.currentThread().getId());
             Thread.sleep(30000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            // 3、解锁 将设解锁代码没有运行，redisson会不会出现死锁
-            System.out.println("释放锁。。。" + Thread.currentThread().getId());
+            // 3, unlock will set the unlock code not running,redissonWill there be a deadlock?
+            System.out.println("Release the lock. . ." + Thread.currentThread().getId());
             lock.unlock();
         }
         return "hello";
     }
 
-    // 保证一定能读到最新数据，修改期间，写锁是一个拍他锁（互斥锁）。读锁是一个共享锁
-    // 写锁没释放读就必须等待
+    // It is guaranteed that the latest data can be read. During the modification period, the write lock is a mutual lock (mutex lock). The read lock is a shared lock
+    // Reading must wait until the write lock is released.
     @ResponseBody
     @GetMapping("/write")
     public String writeValue() {
@@ -90,9 +90,9 @@ public class IndexController {
         String s = "";
         RLock rLock = lock.writeLock();
         try {
-            // 1、改数据加写锁，读数据加读锁
+            // 1, change data and add write lock, read data and add read lock
             rLock.lock();
-            System.out.println("写锁加锁成功。。。" + Thread.currentThread().getId());
+            System.out.println("The write lock was successfully added. . ." + Thread.currentThread().getId());
             s = UUID.randomUUID().toString();
             Thread.sleep(30000);
             redisTemplate.opsForValue().set("writeValue", s);
@@ -100,7 +100,7 @@ public class IndexController {
             e.printStackTrace();
         } finally {
             rLock.unlock();
-            System.out.println("写锁释放" + Thread.currentThread().getId());
+            System.out.println("write lock release" + Thread.currentThread().getId());
         }
         return s;
     }
@@ -111,31 +111,31 @@ public class IndexController {
     public String readValue() {
         RReadWriteLock lock = redisson.getReadWriteLock("rw-lock");
         String s = "";
-        // 加读锁
+        // Add read lock
         RLock rLock = lock.readLock();
         rLock.lock();
-        System.out.println("读锁加锁成功。。。" + Thread.currentThread().getId());
+        System.out.println("The read lock was successfully added. . ." + Thread.currentThread().getId());
         try {
             s = redisTemplate.opsForValue().get("writeValue");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             rLock.unlock();
-            System.out.println("读锁释放" + Thread.currentThread().getId());
+            System.out.println("read lock release" + Thread.currentThread().getId());
         }
         return s;
     }
 
 
     /**
-     * 车库停车
-     * 3车位
+     * garage parking
+     * 3parking space
      */
     @ResponseBody
     @GetMapping("/park")
     public String park() throws InterruptedException {
         RSemaphore park = redisson.getSemaphore("park");
-        park.acquire(); // 获取一个信号，获取一个值
+        park.acquire(); // Get a signal, get a value
 
         return "ok";
     }
@@ -144,24 +144,24 @@ public class IndexController {
     @GetMapping("/go")
     public String go() {
         RSemaphore park = redisson.getSemaphore("park");
-        park.release(); // 释放一个车位
+        park.release(); // free up a parking space
         return "ok";
     }
 
 
     /**
-     * 放假，锁门
-     * 1班没人了，2
-     * 5个班全部走完，我们可以锁大门
+     * Vacation, lock the door
+     * 1There is no one left in the class.2
+     * 5After all classes have finished, we can lock the door
      */
     @ResponseBody
     @GetMapping("/lockDoor")
     public String lockDoor() throws InterruptedException {
         RCountDownLatch door = redisson.getCountDownLatch("door");
         door.trySetCount(5);
-        door.await(); // 等待闭锁都完成
+        door.await(); // Wait for latching to complete
 
-        return "放假了";
+        return "It's holiday";
     }
 
 
@@ -169,9 +169,9 @@ public class IndexController {
     @GetMapping("/gogogo/{id}")
     public String gogogo(@PathVariable("id") Long id) {
         RCountDownLatch door = redisson.getCountDownLatch("door");
-        door.countDown(); // 计数减一
+        door.countDown(); // count minus one
 
-        return id + "班的人都走完。。";
+        return id + "Everyone in the class has left. .";
     }
 
 }

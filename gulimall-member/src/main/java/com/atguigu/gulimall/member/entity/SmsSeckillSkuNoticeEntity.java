@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 秒杀商品通知订阅
+ * Seckill Product Notification Subscription
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -33,19 +33,19 @@ public class SmsSeckillSkuNoticeEntity implements Serializable {
 	 */
 	private Long skuId;
 	/**
-	 * 活动场次id
+	 * Activity session id
 	 */
 	private Long sessionId;
 	/**
-	 * 订阅时间
+	 * Subscription time
 	 */
 	private Date subcribeTime;
 	/**
-	 * 发送时间
+	 * Send time
 	 */
 	private Date sendTime;
 	/**
-	 * 通知方式[0-短信，1-邮件]
+	 * Notification method [0-SMS, 1-email]
 	 */
 	private Integer noticeType;
 

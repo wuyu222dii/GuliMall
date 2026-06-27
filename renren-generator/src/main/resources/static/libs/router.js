@@ -2,7 +2,7 @@
 	window.Router = function() {
 		var self = this;
 
-		self.hashList = {}; /* 路由表 */
+		self.hashList = {}; /* route table */
 		self.index = null;
 		self.key = '!';
 
@@ -12,9 +12,9 @@
 	};
 
 	/**
-	 * 添加路由,如果路由已经存在则会覆盖
-	 * @param addr: 地址
-	 * @param callback: 回调函数，调用回调函数的时候同时也会传入相应参数
+	 * Add route; overwrites if it already exists
+	 * @param addr: path
+	 * @param callback: callback invoked with route params
 	 */
 	Router.prototype.add = function(addr, callback) {
 		var self = this;
@@ -23,8 +23,8 @@
 	};
 
 	/**
-	 * 删除路由
-	 * @param addr: 地址
+	 * Delete route
+	 * @param addr: path
 	 */
 	Router.prototype.remove = function(addr) {
 		var self = this;
@@ -33,8 +33,8 @@
 	};
 
 	/**
-	 * 设置主页地址
-	 * @param index: 主页地址
+	 * Set home page path
+	 * @param index: home page path
 	 */
 	Router.prototype.setIndex = function(index) {
 		var self = this;
@@ -44,8 +44,8 @@
 
 
 	/**
-	 * 跳转到指定地址
-	 * @param addr: 地址值
+	 * Navigate to path
+	 * @param addr: path value
 	 */
 	Router.prototype.go = function(addr) {
 		var self = this;
@@ -54,7 +54,7 @@
 	};
 
 	/**
-	 * 重载页面
+	 * Reload page
 	 */
 	Router.prototype.reload = function() {
 		var self = this;
@@ -74,7 +74,7 @@
 	};
 
 	/**
-	 * 开始路由，实际上只是为了当直接访问路由路由地址的时候能够及时调用回调
+	 * Start routing so direct URL access triggers callbacks
 	 */
 	Router.prototype.start = function() {
 		var self = this;
@@ -83,7 +83,7 @@
 	}
 
 	/**
-	 * 获取callback
+	 * Get callback
 	 * @return false or callback
 	 */
 	function getCb(addr, hashList) {

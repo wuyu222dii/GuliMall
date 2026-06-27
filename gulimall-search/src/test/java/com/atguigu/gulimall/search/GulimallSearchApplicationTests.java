@@ -36,44 +36,44 @@ public class GulimallSearchApplicationTests {
 
     @Test
     public void searchData() throws IOException {
-        //1、创建检索请求
+        //1, create a search request
         SearchRequest searchRequest = new SearchRequest();
-        //指定索引
+        //Specify index
         searchRequest.indices("bank");
-        //指定DSL，检索条件
-        //SearchSourceBuilder sourceBuilder 封装的条件
+        //SpecifyDSL, search conditions
+        //SearchSourceBuilder sourceBuilder Encapsulation conditions
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchRequest.source(searchSourceBuilder);
-        // 1.1 构造检索条件
+        // 1.1 Construct search conditions
 //        searchSourceBuilder.query();
 //        searchSourceBuilder.from();
 //        searchSourceBuilder.size();
 //        searchSourceBuilder.aggregations();
         searchSourceBuilder.query(QueryBuilders.matchQuery("address", "mill"));
 
-        // 1.2 按照年龄的值分布进行聚合
+        // 1.2 Aggregate by age distribution of values
         TermsAggregationBuilder ageAgg = AggregationBuilders.terms("ageAgg")
                 .field("age")
                 .size(10);
         searchSourceBuilder.aggregation(ageAgg);
 
-        // 1.3 计算平均薪资
+        // 1.3 Calculate average salary
         AvgAggregationBuilder balanceAvg = AggregationBuilders.avg("balanceAvg")
                 .field("balance");
-        System.out.println("检索条件" + searchSourceBuilder.toString());
+        System.out.println("Search conditions" + searchSourceBuilder.toString());
         searchSourceBuilder.aggregation(balanceAvg);
 
         System.out.println(searchSourceBuilder.toString());
         searchRequest.source(searchSourceBuilder);
 
 
-        // 2、执行检索
+        // 2, execute search
         SearchResponse searchResponse = client.search(searchRequest, GulimallElasticSearchConfig.COMMON_OPTIONS);
 
-        // 3、分析结果 searchResponse
+        // 3, analysis results searchResponse
         System.out.println(searchResponse.toString());
         Map map = JSON.parseObject(searchResponse.toString(), Map.class);
-        // 3.1 获取所有查到的数据
+        // 3.1 Get all found data
         SearchHits hits = searchResponse.getHits();
         SearchHit[] searchHits = hits.getHits();
         for (SearchHit hit : searchHits) {
@@ -90,24 +90,24 @@ public class GulimallSearchApplicationTests {
     }
 
     /**
-     * 测试存储数据到es
+     * Test storage data toes
      */
     @Test
     public void indexData() throws IOException {
         IndexRequest indexRequest = new IndexRequest("users");
-        indexRequest.id("1"); // 数据的id
-//        indexRequest.source("userName","zhangsan","age",18,"gender,","男");
+        indexRequest.id("1"); // dataid
+//        indexRequest.source("userName","zhangsan","age",18,"gender,","male");
         User user = new User();
         user.setUserName("zhangsan");
         user.setAge(18);
-        user.setGender("男");
+        user.setGender("male");
         String jsonString = JSON.toJSONString(user);
-        indexRequest.source(jsonString, XContentType.JSON); // 要保存的内容
+        indexRequest.source(jsonString, XContentType.JSON); // What to save
 
-        // 执行操作
+        // perform operations
         IndexResponse index = client.index(indexRequest, GulimallElasticSearchConfig.COMMON_OPTIONS);
 
-        // 提取有用的响应数据
+        // Extract useful response data
         System.out.println(index);
 
 

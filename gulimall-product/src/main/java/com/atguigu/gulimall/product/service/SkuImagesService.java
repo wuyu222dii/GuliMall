@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * sku图片
+ * skupicture
  *
  * @author liurui
  * @email liurui@gmail.com

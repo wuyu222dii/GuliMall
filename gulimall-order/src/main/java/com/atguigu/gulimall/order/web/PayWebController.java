@@ -22,7 +22,7 @@ public class PayWebController {
     @ResponseBody
     @GetMapping(value = "/aliPayOrder",produces = "text/html")
     public String aliPayOrder(@RequestParam("orderSn") String orderSn) throws AlipayApiException {
-        System.out.println("接收到订单信息orderSn："+orderSn);
+        System.out.println("Received order info orderSn: "+orderSn);
         PayVo payVo = orderService.getOrderPay(orderSn);
         String pay = alipayTemplate.pay(payVo);
         return pay;

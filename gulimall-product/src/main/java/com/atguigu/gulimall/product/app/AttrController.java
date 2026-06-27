@@ -17,7 +17,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品属性
+ * Product attributes
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -48,7 +48,7 @@ public class AttrController {
     }
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:attr:list")
@@ -60,7 +60,7 @@ public class AttrController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{attrId}")
     //@RequiresPermissions("product:attr:info")
@@ -72,7 +72,7 @@ public class AttrController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:attr:save")
@@ -85,7 +85,7 @@ public class AttrController {
     // /product/attrgroup/attr/relation/delete
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:attr:update")
@@ -106,7 +106,7 @@ public class AttrController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:attr:delete")

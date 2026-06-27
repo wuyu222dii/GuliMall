@@ -10,18 +10,18 @@ import org.springframework.context.annotation.Configuration;
 public class MyRedissonConfig {
 
     /**
-     * 所有对redisson的使用都是通过RedissonClient对象
+     * all pairsredissonare used throughRedissonClientobject
      *
      * @return
      * @throws Exception
      */
     @Bean(destroyMethod = "shutdown")
     RedissonClient redisson() throws Exception {
-        // 1、创建配置
+        // 1, create configuration
         Config config = new Config();
         config.useSingleServer()
                 .setAddress("redis://127.0.0.1:6379");
-        // 2、根据Config创建出RedissonClient实例
+        // 2,according toConfigcreateRedissonClientExample
         RedissonClient redissonClient = Redisson.create(config);
         return redissonClient;
     }

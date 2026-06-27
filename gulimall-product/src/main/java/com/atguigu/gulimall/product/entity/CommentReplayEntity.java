@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 商品评价回复关系
+ * Product evaluation reply relationship
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,11 +25,11 @@ public class CommentReplayEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 评论id
+	 * Commentid
 	 */
 	private Long commentId;
 	/**
-	 * 回复id
+	 * replyid
 	 */
 	private Long replyId;
 

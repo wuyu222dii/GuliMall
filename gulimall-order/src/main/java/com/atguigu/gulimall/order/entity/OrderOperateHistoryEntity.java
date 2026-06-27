@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 订单操作历史记录
+ * Order operation history
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,23 +25,23 @@ public class OrderOperateHistoryEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 订单id
+	 * Order id
 	 */
 	private Long orderId;
 	/**
-	 * 操作人[用户；系统；后台管理员]
+	 * Operator [user; system; admin]
 	 */
 	private String operateMan;
 	/**
-	 * 操作时间
+	 * Operation time
 	 */
 	private Date createTime;
 	/**
-	 * 订单状态【0->待付款；1->待发货；2->已发货；3->已完成；4->已关闭；5->无效订单】
+	 * Order status [0->Pending payment; 1->Pending shipment; 2->Shipped; 3->Completed; 4->Closed; 5->Invalid order]
 	 */
 	private Integer orderStatus;
 	/**
-	 * 备注
+	 * Remark
 	 */
 	private String note;
 

@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
- * 商品三级分类
+ * Three-level classification of goods
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -25,46 +25,46 @@ public class CategoryEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 分类id
+     * Classificationid
      */
     @TableId
     private Long catId;
     /**
-     * 分类名称
+     * Category name
      */
     private String name;
     /**
-     * 父分类id
+     * Parent categoryid
      */
     private Long parentCid;
     /**
-     * 层级
+     * Hierarchy
      */
     private Integer catLevel;
     /**
-     * 是否显示[0-不显示，1显示]
+     * Whether to display[0-Not displayed,1show]
      */
     @TableLogic(value = "1",delval = "0")
     private Integer showStatus;
     /**
-     * 排序
+     * sort
      */
     private Integer sort;
     /**
-     * 图标地址
+     * Icon address
      */
     private String icon;
     /**
-     * 计量单位
+     * unit of measurement
      */
     private String productUnit;
     /**
-     * 商品数量
+     * Product quantity
      */
     private Integer productCount;
 
     /**
-     * 自定义属性
+     * Custom properties
      */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @TableField(exist = false)

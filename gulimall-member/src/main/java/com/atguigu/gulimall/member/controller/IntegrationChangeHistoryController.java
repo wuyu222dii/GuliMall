@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 积分变化历史记录
+ * Integration Change History
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class IntegrationChangeHistoryController {
     private IntegrationChangeHistoryService integrationChangeHistoryService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:integrationchangehistory:list")
@@ -43,7 +43,7 @@ public class IntegrationChangeHistoryController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:integrationchangehistory:info")
@@ -54,7 +54,7 @@ public class IntegrationChangeHistoryController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:integrationchangehistory:save")
@@ -65,7 +65,7 @@ public class IntegrationChangeHistoryController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:integrationchangehistory:update")
@@ -76,7 +76,7 @@ public class IntegrationChangeHistoryController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:integrationchangehistory:delete")

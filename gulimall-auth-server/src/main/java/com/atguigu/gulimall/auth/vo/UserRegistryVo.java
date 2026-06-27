@@ -9,19 +9,19 @@ import javax.validation.constraints.Pattern;
 @Data
 public class UserRegistryVo {
 
-    @NotEmpty(message = "用户名必须提交")
-    @Length(min = 6, max = 18, message = "用户名长度必须在6-18位之间")
+    @NotEmpty(message = "Username is required")
+    @Length(min = 6, max = 18, message = "Username must be 6-18 characters")
     private String userName;
 
-    @NotEmpty(message = "密码必须提交")
-    @Length(min = 6, max = 18, message = "用户名长度必须在6-18位之间")
+    @NotEmpty(message = "Password is required")
+    @Length(min = 6, max = 18, message = "Password must be 6-18 characters")
     private String password;
 
-    @NotEmpty(message = "手机号必须提交")
-    @Pattern(regexp = "^[1]([3-9])[0-9]{9}$", message = "手机号码格式不正确")
+    @NotEmpty(message = "Phone number is required")
+    @Pattern(regexp = "^[1]([3-9])[0-9]{9}$", message = "Invalid phone number format")
     private String phone;
 
-    @NotEmpty(message = "验证码必须提交")
+    @NotEmpty(message = "Verification code is required")
     private String code;
 
 }

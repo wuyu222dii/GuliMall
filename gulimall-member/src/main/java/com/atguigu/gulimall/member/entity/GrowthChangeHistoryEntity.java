@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 成长值变化历史记录
+ * Growth Change History
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -33,15 +33,15 @@ public class GrowthChangeHistoryEntity implements Serializable {
 	 */
 	private Date createTime;
 	/**
-	 * 改变的值（正负计数）
+	 * Changed value (positive/negative count)
 	 */
 	private Integer changeCount;
 	/**
-	 * 备注
+	 * Remark
 	 */
 	private String note;
 	/**
-	 * 积分来源[0-购物，1-管理员修改]
+	 * Points source [0-shopping, 1-admin modification]
 	 */
 	private Integer sourceType;
 

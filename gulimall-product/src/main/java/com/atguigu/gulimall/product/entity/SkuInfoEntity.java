@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * sku信息
+ * skuinformation
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -30,39 +30,39 @@ public class SkuInfoEntity implements Serializable {
 	 */
 	private Long spuId;
 	/**
-	 * sku名称
+	 * skuname
 	 */
 	private String skuName;
 	/**
-	 * sku介绍描述
+	 * skuIntroduction description
 	 */
 	private String skuDesc;
 	/**
-	 * 所属分类id
+	 * Categoryid
 	 */
 	private Long catalogId;
 	/**
-	 * 品牌id
+	 * brandid
 	 */
 	private Long brandId;
 	/**
-	 * 默认图片
+	 * Default picture
 	 */
 	private String skuDefaultImg;
 	/**
-	 * 标题
+	 * title
 	 */
 	private String skuTitle;
 	/**
-	 * 副标题
+	 * subtitle
 	 */
 	private String skuSubtitle;
 	/**
-	 * 价格
+	 * price
 	 */
 	private BigDecimal price;
 	/**
-	 * 销量
+	 * Sales volume
 	 */
 	private Long saleCount;
 

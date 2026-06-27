@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 会员收货地址
+ * Member Receive Address
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -29,39 +29,39 @@ public class MemberReceiveAddressEntity implements Serializable {
 	 */
 	private Long memberId;
 	/**
-	 * 收货人姓名
+	 * Consignee name
 	 */
 	private String name;
 	/**
-	 * 电话
+	 * Phone
 	 */
 	private String phone;
 	/**
-	 * 邮政编码
+	 * Postal code
 	 */
 	private String postCode;
 	/**
-	 * 省份/直辖市
+	 * Province/municipality
 	 */
 	private String province;
 	/**
-	 * 城市
+	 * City
 	 */
 	private String city;
 	/**
-	 * 区
+	 * District
 	 */
 	private String region;
 	/**
-	 * 详细地址(街道)
+	 * Detailed address (street)
 	 */
 	private String detailAddress;
 	/**
-	 * 省市区代码
+	 * Province/city/district code
 	 */
 	private String areacode;
 	/**
-	 * 是否默认
+	 * Whether default
 	 */
 	private Integer defaultStatus;
 

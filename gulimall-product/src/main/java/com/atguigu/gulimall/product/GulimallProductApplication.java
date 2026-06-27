@@ -7,51 +7,51 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 /**
- * 1、整合MyBatis-Plus
- *      1）、导入依赖
+ * 1, integrationMyBatis-Plus
+ *      1), import dependencies
  *      <dependency>
  *             <groupId>com.baomidou</groupId>
  *             <artifactId>mybatis-plus-boot-starter</artifactId>
  *             <version>3.2.0</version>
  *      </dependency>
- *      2）、配置
- *          1、配置数据源；
- *              1）、导入数据库的驱动。https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-versions.html
- *              2）、在application.yml配置数据源相关信息
- *          2、配置MyBatis-Plus；
- *              1）、使用@MapperScan
- *              2）、告诉MyBatis-Plus，sql映射文件位置
+ *      2), configuration
+ *          1, configure the data source;
+ *              1), import the driver of the database.https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-versions.html
+ *              2),existapplication.ymlConfigure data source related information
+ *          2, configurationMyBatis-Plus;
+ *              1),use@MapperScan
+ *              2),TellMyBatis-Plus,sqlMap file location
  *
- * 2、逻辑删除
- *  1）、配置全局的逻辑删除规则（省略）
- *  2）、配置逻辑删除的组件Bean（省略）
- *  3）、给Bean加上逻辑删除注解@TableLogic
+ * 2, logical deletion
+ *  1), configure global tombstone rules (omitted)
+ *  2), configure logically deleted componentsBean(omitted)
+ *  3),GiveBeanAdd logical deletion annotation@TableLogic
  *
- * 3、JSR303
- *   1）、给Bean添加校验注解:javax.validation.constraints，并定义自己的message提示
- *   2)、开启校验功能@Valid
- *      效果：校验错误以后会有默认的响应；
- *   3）、给校验的bean后紧跟一个BindingResult，就可以获取到校验的结果
- *   4）、分组校验（多场景的复杂校验）
- *         1)、	@NotBlank(message = "品牌名必须提交",groups = {AddGroup.class,UpdateGroup.class})
- *          给校验注解标注什么情况需要进行校验
- *         2）、@Validated({AddGroup.class})
- *         3)、默认没有指定分组的校验注解@NotBlank，在分组校验情况@Validated({AddGroup.class})下不生效，只会在@Validated生效；
+ * 3,JSR303
+ *   1),GiveBeanAdd verification annotation:javax.validation.constraints, and define your ownmessagehint
+ *   2), turn on the verification function@Valid
+ *      Effect: There will be a default response after verification error;
+ *   3), for verificationbeanfollowed by oneBindingResult, you can get the verification result
+ *   4), group verification (complex verification of multiple scenarios)
+ *         1),	@NotBlank(message = "Brand name is required",groups = {AddGroup.class,UpdateGroup.class})
+ *          Mark the verification annotation as to what situations need to be verified.
+ *         2),@Validated({AddGroup.class})
+ *         3), by default there is no verification annotation for the specified group.@NotBlank, in the case of group verification@Validated({AddGroup.class})It will not take effect under@Validatedtake effect;
  *
- *   5）、自定义校验
- *      1）、编写一个自定义的校验注解
- *      2）、编写一个自定义的校验器 ConstraintValidator
- *      3）、关联自定义的校验器和自定义的校验注解
+ *   5), custom verification
+ *      1), write a custom verification annotation
+ *      2), write a custom validator ConstraintValidator
+ *      3), associate custom validators and custom validation annotations
  *      @Documented
- * @Constraint(validatedBy = { ListValueConstraintValidator.class【可以指定多个不同的校验器，适配不同类型的校验】 })
+ * @Constraint(validatedBy = { ListValueConstraintValidator.class[You can specify multiple different validators to adapt to different types of verification] })
  * @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
  * @Retention(RUNTIME)
  * public @interface ListValue {
  *
- * 4、统一的异常处理
+ * 4, unified exception handling
  * @ControllerAdvice
- *  1）、编写异常处理类，使用@ControllerAdvice。
- *  2）、使用@ExceptionHandler标注方法可以处理的异常。
+ *  1), write exception handling class, use@ControllerAdvice.
+ *  2),use@ExceptionHandlerAnnotation methods can handle exceptions.
  */
 @EnableCaching
 @EnableFeignClients(basePackages = "com.atguigu.gulimall.product.feign")

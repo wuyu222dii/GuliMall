@@ -15,7 +15,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品满减信息
+ * SKU full reduction info
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -36,7 +36,7 @@ public class SkuFullReductionController {
     }
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:skufullreduction:list")
@@ -48,7 +48,7 @@ public class SkuFullReductionController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:skufullreduction:info")
@@ -59,7 +59,7 @@ public class SkuFullReductionController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("coupon:skufullreduction:save")
@@ -70,7 +70,7 @@ public class SkuFullReductionController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:skufullreduction:update")
@@ -81,7 +81,7 @@ public class SkuFullReductionController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:skufullreduction:delete")

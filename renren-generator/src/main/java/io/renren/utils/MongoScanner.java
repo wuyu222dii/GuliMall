@@ -49,12 +49,12 @@ public class MongoScanner {
     }
 
     private void scan() {
-        // 初始化
+        // Initialize
         initColNames();
-        // 解析属性值
+        // Parse property values
         mongoDefinition = scanType();
         MongoManager.putInfo(collection.getNamespace().getCollectionName(), mongoDefinition);
-        // 解析完成之后释放链接资源
+        // Release connection after parsing
         this.collection = null;
 
     }
@@ -65,7 +65,7 @@ public class MongoScanner {
 
 
     /**
-     * 功能描述:分组发送聚合函数(获得一级属性名)
+     * Send aggregation pipeline to get top-level property names
      *
      * @author : gxz
      */
@@ -81,7 +81,7 @@ public class MongoScanner {
         filed.append("allkeys", new BasicDBObject("$addToSet", "$arrayofkeyvalue.k"));
         BasicDBObject $group = new BasicDBObject("$group", filed);
         List<BasicDBObject> dbStages = Arrays.asList($project, $skip, $limit, $unwind, $group);
-        // System.out.println(dbStages);  发送的聚合函数   获得所有参数名称
+        // System.out.println(dbStages); aggregation pipeline to get all property names
         AggregateIterable<Document> aggregate = collection.aggregate(dbStages);
         Document document = aggregate.first();
         if (document == null) {
@@ -102,12 +102,12 @@ public class MongoScanner {
 
 
     /**
-     * 如果一个文档是对象类型  获得这个属性的下一级的属性名的集合
-     * 例子: user:{name:"张三",age:12}  传入user  返回[name,age]
+     * If document field is object type, get nested property names
+     * Example: user:{name:"John",age:12} pass user, returns [name,age]
      *
-     * @param parameterName 上层参数名  这个参数名可以包含一个或多个.
-     *                      注: 参数传递之前需确认:  1.上层属性一定是对象类型
-     * @return 返回这个属性内的所有属性名
+     * @param parameterName parent property name, may contain dots
+     *                      Note: parent property must be object type
+     * @return all nested property names
      */
     public Set<String> getNextParameterNames(String parameterName) {
         Document condition = new Document(parameterName, new Document("$exists", true));
@@ -129,17 +129,17 @@ public class MongoScanner {
                 names.addAll(documentNames);
             }
         }
-        logger.info("解析" + parameterName + "有" + names.size() + "个子属性");
+        logger.info("Parsed " + parameterName + " has " + names.size() + " child properties");
         return names;
     }
 
 
     /**
-     * 功能描述:提供属性名 解析属性类型
-     * 获取相应的属性信息  封装成generator对象
+     * Parse property type by property name
+     * Wrap property info into generator object
      *
-     * @return : 解析之后的Model {@see #MongoDefinition}
-     * @param: propertyName 属性名 可以是层级名  比如 name 也可以是info.name
+     * @return parsed model {@see #MongoDefinition}
+     * @param propertyName property name, flat or dotted e.g. info.name
      * @see MongoDefinition
      */
 
@@ -161,9 +161,9 @@ public class MongoScanner {
                     if (i == 3) {
                         result.setChild(this.produceChildList(propertyName));
                     }
-                    //1是double 2是string 3是对象 4是数组 16是int 18 是long
+                    // 1=double 2=string 3=object 4=array 16=int 18=long
                     result.setType(i);
-                    logger.info("解析[" + propertyName + "]是[List][" + Type.typeInfo(result.getType()) + "]");
+                    logger.info("Parsed [" + propertyName + "] as [List][" + Type.typeInfo(result.getType()) + "]");
                     return result;
                 }
             }
@@ -174,16 +174,16 @@ public class MongoScanner {
                     if (i == 3) {
                         result.setChild(this.produceChildList(propertyName));
                     }
-                    //1是double 2是string 3是对象 4是数组 16是int 18 是long
-                    //到这里就是数组了
+                    // 1=double 2=string 3=object 4=array 16=int 18=long
+                    // Reached array branch
                     result.setType(i);
-                    logger.info("解析[" + propertyName + "]是[" + Type.typeInfo(result.getType()) + "]");
+                    logger.info("Parsed [" + propertyName + "] as [" + Type.typeInfo(result.getType()) + "]");
                     return result;
                 }
             }
             result.setType(2);
         }
-        logger.info("解析[" + propertyName + "]是[" + Type.typeInfo(result.getType()) + "]");
+        logger.info("Parsed [" + propertyName + "] as [" + Type.typeInfo(result.getType()) + "]");
         return result;
     }
 
@@ -205,7 +205,7 @@ public class MongoScanner {
 
 
     /**
-     * 功能描述:解析这个集合的列名  用ForkJoin框架实现
+     * Parse collection column names using ForkJoin
      */
     private void initColNames() {
         long start = System.currentTimeMillis();
@@ -220,7 +220,7 @@ public class MongoScanner {
         }
         this.colNames = pool.invoke(task);
         logger.info("collection[" + this.collection.getNamespace().getCollectionName() +
-                "]初始化列名成功.....     用时: " + (System.currentTimeMillis() - start) + "毫秒");
+                "] column init succeeded..... elapsed: " + (System.currentTimeMillis() - start) + " ms");
     }
 
     private MongoDefinition scanType() {
@@ -233,7 +233,7 @@ public class MongoScanner {
     }
 
     /**
-     * 功能描述:forkJoin多线程框架的实现  通过业务拆分解析类型
+     * ForkJoin implementation: split type parsing by workload
      */
     class ForkJoinProcessType extends RecursiveTask<List<MongoDefinition>> {
         List<String> names;
@@ -267,10 +267,10 @@ public class MongoScanner {
     }
 
     /**
-     * 功能描述:forkJoin多线程框架的实现  通过业务拆分获得属性名
+     * ForkJoin implementation: split property name resolution
      */
     class ForkJoinGetProcessName extends RecursiveTask<List<String>> {
-        private int begin; //查询开始位置
+        private int begin; // Query start offset
         private int end;
         private final int THRESHOLD = 5000;
 
@@ -290,7 +290,7 @@ public class MongoScanner {
                 pre.fork();
                 ForkJoinGetProcessName next = new ForkJoinGetProcessName(middle + 1, end);
                 next.fork();
-                return distinctAndJoin(pre.join(), next.join()); //去重合并
+                return distinctAndJoin(pre.join(), next.join()); // Dedupe and merge
             }
         }
     }

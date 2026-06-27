@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * 退款信息
+ * Refund info
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,23 +25,23 @@ public class RefundInfoEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 退款的订单
+	 * Refund order
 	 */
 	private Long orderReturnId;
 	/**
-	 * 退款金额
+	 * Refund amount
 	 */
 	private BigDecimal refund;
 	/**
-	 * 退款交易流水号
+	 * Refund transaction serial number
 	 */
 	private String refundSn;
 	/**
-	 * 退款状态
+	 * Refund status
 	 */
 	private Integer refundStatus;
 	/**
-	 * 退款渠道[1-支付宝，2-微信，3-银联，4-汇款]
+	 * Refund channel [1-Alipay, 2-WeChat, 3-UnionPay, 4-Wire transfer]
 	 */
 	private Integer refundChannel;
 	/**

@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 会员统计信息
+ * Member Statistics Info
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class MemberStatisticsInfoController {
     private MemberStatisticsInfoService memberStatisticsInfoService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:memberstatisticsinfo:list")
@@ -43,7 +43,7 @@ public class MemberStatisticsInfoController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:memberstatisticsinfo:info")
@@ -54,7 +54,7 @@ public class MemberStatisticsInfoController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:memberstatisticsinfo:save")
@@ -65,7 +65,7 @@ public class MemberStatisticsInfoController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:memberstatisticsinfo:update")
@@ -76,7 +76,7 @@ public class MemberStatisticsInfoController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:memberstatisticsinfo:delete")

@@ -59,7 +59,7 @@
             <artifactId>jedis</artifactId>
         </dependency>
 
-        <!-- 以后使用redisson作为所有分布式锁，分布式对象等功能框架       -->
+        <!-- Use Redisson as the framework for all distributed locks, distributed objects, etc. -->
         <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson</artifactId>

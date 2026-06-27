@@ -6,26 +6,26 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
- * 1)、命名空间：配置隔离；
- * 默认：public(保留空间)；默认新增的所有配置都在public空间
- * 1、开发，测试，生产：利用命名空间来做环境隔离
- * 注意：在bootstrap.properties配置上，需要使用那个命名空间下的配置
+ * 1) Namespace: configuration isolation;
+ * Default: public (reserved); all new configs go in the public namespace
+ * Use namespaces to isolate dev, test, and prod environments
+ * Note: in bootstrap.properties, specify which namespace to load
  * spring.cloud.nacos.config.namespace=6cf1e1fa-0e6b-4009-8150-2fe051f6904d
- * 2、每一个微服务之间相互隔离配置，每一个微服务都创建自己的命名空间，只加载自己命名空间
- * 2）、配置集：所有的配置的集合
- * 3）、配置集ID：类似文件名。
- * Data ID：类似文件名
- * 4）、配置分组：
- * 默认所有配置集都属于：DEFAULT_GROUP
+ * 2) Each microservice creates its own namespace and loads only its configs
+ * 2) Configuration set: collection of all configs
+ * 3) Configuration set ID: like a filename.
+ * Data ID: like a filename
+ * 4) Configuration group:
+ * By default all config sets belong to DEFAULT_GROUP
  * 1111，618，1212
- * 每个微服务创建自己的命名空间，使用配置分组区分环境，dev，test，prod
+ * Each microservice uses its namespace; use groups for dev, test, prod
  *
- * 3、同时加载多个配置集
- * 1）、微服务任何配置信息，任何配置文件都可以放在配置中心中
- * 2）、只需要在bootstrap.properties说明加载配置中心中那些配置文件即可
+ * 3) Load multiple configuration sets at once
+ * 1) Any microservice config can live in the config center
+ * 2) Declare which config-center files to load in bootstrap.properties
  * 3）、@Value，@ConfigurationProperties..
- * 以前SpringBoot任何方法从配置文件中获取值，都能使用。
- * 配置中心有的优先使用配置中心的
+ * Values can still be read the same way as from local Spring Boot config.
+ * Config center values take precedence when present
  *
  *
  */

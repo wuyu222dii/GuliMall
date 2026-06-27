@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * 商品库存
+ * Product SKU stock
  * 
  * @author liurui
  * @email liurui@gmail.com

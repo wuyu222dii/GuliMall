@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 库存工作单
+ * Warehouse order task
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -33,19 +33,19 @@ public class WareOrderTaskDetailEntity implements Serializable {
 	 */
 	private String skuName;
 	/**
-	 * 购买个数
+	 * Quantity purchased
 	 */
 	private Integer skuNum;
 	/**
-	 * 工作单id
+	 * Task id
 	 */
 	private Long taskId;
 	/**
-	 * 仓库id
+	 * Warehouse id
 	 */
 	private Long wareId;
 	/**
-	 * 1-已锁定  2-已解锁  3-扣减
+	 * 1-locked  2-unlocked  3-deducted
 	 */
 	private Integer lockStatus;
 

@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 秒杀商品通知订阅
+ * Seckill Product Notification Subscription
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsSeckillSkuNoticeController {
     private SmsSeckillSkuNoticeService smsSeckillSkuNoticeService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smsseckillskunotice:list")
@@ -43,7 +43,7 @@ public class SmsSeckillSkuNoticeController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smsseckillskunotice:info")
@@ -54,7 +54,7 @@ public class SmsSeckillSkuNoticeController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smsseckillskunotice:save")
@@ -65,7 +65,7 @@ public class SmsSeckillSkuNoticeController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smsseckillskunotice:update")
@@ -76,7 +76,7 @@ public class SmsSeckillSkuNoticeController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smsseckillskunotice:delete")

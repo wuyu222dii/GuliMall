@@ -7,7 +7,7 @@ import com.atguigu.gulimall.coupon.entity.MemberPriceEntity;
 import java.util.Map;
 
 /**
- * 商品会员价格
+ * Member price
  *
  * @author liurui
  * @email liurui@gmail.com

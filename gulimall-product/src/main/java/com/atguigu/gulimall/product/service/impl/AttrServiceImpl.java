@@ -67,9 +67,9 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         AttrEntity attrEntity = new AttrEntity();
 //        attrEntity.setAttrName(attr.getAttrName());
         BeanUtils.copyProperties(attr, attrEntity);
-        // 保存基本数据
+        // Save basic data
         this.save(attrEntity);
-        // 保存关联关系
+        // Save association
         if (attr.getAttrType() == ProductConstant.AttrEnum.ATTR_TYPE_BASE.getCode() && attr.getAttrGroupId() != null) {
             AttrAttrgroupRelationEntity relationEntity = new AttrAttrgroupRelationEntity();
             relationEntity.setAttrGroupId(attr.getAttrGroupId());
@@ -102,7 +102,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
             AttrRespVo attrRespVo = new AttrRespVo();
             BeanUtils.copyProperties(attrEntity, attrRespVo);
 
-            // 设置分类和分组的名字
+            // Set category and group names
             if ("base".equalsIgnoreCase(type)) {
                 AttrAttrgroupRelationEntity attrId = relationDao.selectOne(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id", attrEntity.getAttrId()));
                 if (attrId != null && attrId.getAttrGroupId() != null) {
@@ -129,7 +129,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         BeanUtils.copyProperties(attrEntity, respVo);
 
         if (attrEntity.getAttrType() == ProductConstant.AttrEnum.ATTR_TYPE_BASE.getCode()) {
-            // 设置分组信息
+            // Set group information
             AttrAttrgroupRelationEntity attrgroupRelation = relationDao.selectOne(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id", attrId));
             if (attrgroupRelation != null) {
                 respVo.setAttrGroupId(attrgroupRelation.getAttrGroupId());
@@ -140,7 +140,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
             }
         }
 
-        //设置分类信息
+        //Set classification information
         Long catelogId = attrEntity.getCatelogId();
         Long[] catelogPath = categoryService.findCatelogPath(catelogId);
         respVo.setCatelogPath(catelogPath);
@@ -161,7 +161,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         this.updateById(attrEntity);
 
         if (attrEntity.getAttrType() == ProductConstant.AttrEnum.ATTR_TYPE_BASE.getCode()) {
-            // 修改分组关联
+            // Modify group association
             AttrAttrgroupRelationEntity relationEntity = new AttrAttrgroupRelationEntity();
             UpdateWrapper<AttrAttrgroupRelationEntity> updateWrapper = new UpdateWrapper<>();
             updateWrapper.eq("attr_id", attr.getAttrId());
@@ -182,7 +182,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     }
 
     /**
-     * 根据分组id查找关联的所有基本属性
+     * According to groupidFind all basic properties of an association
      *
      * @param attrgroupId
      * @return
@@ -215,7 +215,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     }
 
     /**
-     * 获取当前分组没有关联的所有属性
+     * Get all attributes not associated with the current group
      *
      * @param params
      * @param attrgroupId
@@ -223,13 +223,13 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
      */
     @Override
     public PageUtils getNoRelationAttr(Map<String, Object> params, Long attrgroupId) {
-        // 1. 当前分组只能关联自己所属的分类里面的所有属性
+        // 1. The current group can only be associated with all attributes in the category to which it belongs.
         AttrGroupEntity attrGroupEntity = attrGroupDao.selectById(attrgroupId);
         Long catelogId = attrGroupEntity.getCatelogId();
 
 
-        // 2. 当前分组只能关联别的分组没有引用的属性
-        // 2.1 当前分类下的其他分组
+        // 2. The current group can only be associated with attributes that are not referenced by other groups.
+        // 2.1 Other groups under the current category
         QueryWrapper<AttrGroupEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("catelog_id", catelogId);
         List<AttrGroupEntity> group = attrGroupDao.selectList(queryWrapper);
@@ -238,7 +238,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         }).collect(Collectors.toList());
 
 
-        // 2.2 这些分组关联的属性
+        // 2.2 The properties associated with these groups
         QueryWrapper<AttrAttrgroupRelationEntity> entityQueryWrapper = new QueryWrapper<>();
         entityQueryWrapper.in("attr_group_id", collect);
         List<AttrAttrgroupRelationEntity> groupId = relationDao.selectList(entityQueryWrapper);
@@ -247,7 +247,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         }).collect(Collectors.toList());
 
 
-        // 2.3 从当前分类的所有属性中移除这些属性；
+        // 2.3 Remove these attributes from all attributes in the current category;
         QueryWrapper<AttrEntity> wrapper = new QueryWrapper<>();
         wrapper.eq("catelog_id", catelogId)
                 .eq("attr_type", ProductConstant.AttrEnum.ATTR_TYPE_BASE.getCode());

@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品spu积分设置
+ * Product SPU Points Settings
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsSpuBoundsController {
     private SmsSpuBoundsService smsSpuBoundsService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smsspubounds:list")
@@ -43,7 +43,7 @@ public class SmsSpuBoundsController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smsspubounds:info")
@@ -54,7 +54,7 @@ public class SmsSpuBoundsController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smsspubounds:save")
@@ -65,7 +65,7 @@ public class SmsSpuBoundsController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smsspubounds:update")
@@ -76,7 +76,7 @@ public class SmsSpuBoundsController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smsspubounds:delete")

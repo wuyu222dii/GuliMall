@@ -12,11 +12,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * 异常处理器
+ * Exception handler
  * 
  * @author chenshun
  * @email sunlightcs@gmail.com
- * @date 2016年10月27日 下午10:16:19
+ * @date Oct 27, 2016
  */
 @Component
 public class RRExceptionHandler implements HandlerExceptionResolver {
@@ -34,18 +34,18 @@ public class RRExceptionHandler implements HandlerExceptionResolver {
 				r.put("code", ((RRException) ex).getCode());
 				r.put("msg", ((RRException) ex).getMessage());
 			}else if(ex instanceof DuplicateKeyException){
-				r = R.error("数据库中已存在该记录");
+				r = R.error("Record already exists in database");
 			}else{
 				r = R.error();
 			}
 			
-			//记录异常日志
+			// Log exception
 			logger.error(ex.getMessage(), ex);
 			
 			String json = JSON.toJSONString(r);
 			response.getWriter().print(json);
 		} catch (Exception e) {
-			logger.error("RRExceptionHandler 异常处理失败", e);
+			logger.error("RRExceptionHandler failed to handle exception", e);
 		}
 		return new ModelAndView();
 	}

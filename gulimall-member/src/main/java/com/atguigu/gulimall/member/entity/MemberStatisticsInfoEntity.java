@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 会员统计信息
+ * Member Statistics Info
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -26,59 +26,59 @@ public class MemberStatisticsInfoEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 会员id
+	 * Member id
 	 */
 	private Long memberId;
 	/**
-	 * 累计消费金额
+	 * Total consumption amount
 	 */
 	private BigDecimal consumeAmount;
 	/**
-	 * 累计优惠金额
+	 * Total discount amount
 	 */
 	private BigDecimal couponAmount;
 	/**
-	 * 订单数量
+	 * Order count
 	 */
 	private Integer orderCount;
 	/**
-	 * 优惠券数量
+	 * Coupon count
 	 */
 	private Integer couponCount;
 	/**
-	 * 评价数
+	 * Review count
 	 */
 	private Integer commentCount;
 	/**
-	 * 退货数量
+	 * Return count
 	 */
 	private Integer returnOrderCount;
 	/**
-	 * 登录次数
+	 * Login count
 	 */
 	private Integer loginCount;
 	/**
-	 * 关注数量
+	 * Following count
 	 */
 	private Integer attendCount;
 	/**
-	 * 粉丝数量
+	 * Follower count
 	 */
 	private Integer fansCount;
 	/**
-	 * 收藏的商品数量
+	 * Number of collected products
 	 */
 	private Integer collectProductCount;
 	/**
-	 * 收藏的专题活动数量
+	 * Number of collected subject activities
 	 */
 	private Integer collectSubjectCount;
 	/**
-	 * 收藏的评论数量
+	 * Number of collected comments
 	 */
 	private Integer collectCommentCount;
 	/**
-	 * 邀请的朋友数量
+	 * Number of invited friends
 	 */
 	private Integer inviteFriendCount;
 

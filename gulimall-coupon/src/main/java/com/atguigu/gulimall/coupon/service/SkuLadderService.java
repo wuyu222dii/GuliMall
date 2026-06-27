@@ -7,7 +7,7 @@ import com.atguigu.gulimall.coupon.entity.SkuLadderEntity;
 import java.util.Map;
 
 /**
- * 商品阶梯价格
+ * SKU tiered pricing
  *
  * @author liurui
  * @email liurui@gmail.com

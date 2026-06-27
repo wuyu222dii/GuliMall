@@ -1,6 +1,6 @@
 import request from './request'
 
-/** 收货地址列表 */
+/** Shipping address list */
 export function getAddressList(params = { page: 1, limit: 20 }) {
   return request.get('/api/member/memberreceiveaddress/list', { params })
 }

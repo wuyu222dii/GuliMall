@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 秒杀商品通知订阅
+ * Seckill Product Notification Subscription
  * 
  * @author liurui
  * @email liurui@gmail.com

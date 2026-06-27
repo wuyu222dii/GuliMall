@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.MemberEntity;
 import java.util.Map;
 
 /**
- * 会员
+ * Member
  *
  * @author liurui
  * @email liurui@gmail.com

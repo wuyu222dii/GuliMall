@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.MemberCollectSpuEntity;
 import java.util.Map;
 
 /**
- * 会员收藏的商品
+ * Member Collected Products
  *
  * @author liurui
  * @email liurui@gmail.com

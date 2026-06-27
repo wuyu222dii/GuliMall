@@ -1,51 +1,51 @@
 *{margin: 0;padding: 0;list-style: none;}
 /*
 KISSY CSS Reset
-理念：1. reset 的目的不是清除浏览器的默认样式，这仅是部分工作。清除和重置是紧密不可分的。
-2. reset 的目的不是让默认样式在所有浏览器下一致，而是减少默认样式有可能带来的问题。
-3. reset 期望提供一套普适通用的基础样式。但没有银弹，推荐根据具体需求，裁剪和修改后再使用。
-特色：1. 适应中文；2. 基于最新主流浏览器。
-维护：玉伯<lifesinger@gmail.com>, 正淳<ragecarrier@gmail.com>
+idea:1. reset The purpose is not to clear the browser's default styles, that's only part of the job. Clear and reset are inseparable.
+2. reset The purpose is not to make the default style consistent in all browsers, but to reduce the problems that the default style may cause.
+3. reset We hope to provide a universal basic style. But there is no silver bullet. It is recommended to cut and modify it according to specific needs before use.
+feature:1. Adapt to Chinese;2. Based on the latest mainstream browsers.
+Maintenance: Yu Bo<lifesinger@gmail.com>, Zhengchun<ragecarrier@gmail.com>
  */
 
-/** 清除内外边距 **/
-body, h1, h2, h3, h4, h5, h6, hr, p, blockquote, /* structural elements 结构元素 */
-dl, dt, dd, ul, ol, li, /* list elements 列表元素 */
-pre, /* text formatting elements 文本格式元素 */
-form, fieldset, legend, button, input, textarea, /* form elements 表单元素 */
-th, td /* table elements 表格元素 */ {
+/** clear inner and outer margins **/
+body, h1, h2, h3, h4, h5, h6, hr, p, blockquote, /* structural elements Structural elements */
+dl, dt, dd, ul, ol, li, /* list elements List elements */
+pre, /* text formatting elements text formatting element */
+form, fieldset, legend, button, input, textarea, /* form elements form elements */
+th, td /* table elements table element */ {
   margin: 0;
   padding: 0;
 }
 
-/** 设置默认字体 **/
+/** Set default font **/
 body,
 button, input, select, textarea /* for ie */ {
   font: 12px/1.5 tahoma, arial, \5b8b\4f53, sans-serif;
 }
 h1, h2, h3, h4, h5, h6 { font-size: 100%; }
-address, cite, dfn, em, var { font-style: normal; } /* 将斜体扶正 */
-code, kbd, pre, samp { font-family: courier new, courier, monospace; } /* 统一等宽字体 */
-small { font-size: 12px; } /* 小于 12px 的中文很难阅读，让 small 正常化 */
+address, cite, dfn, em, var { font-style: normal; } /* straighten italics */
+code, kbd, pre, samp { font-family: courier new, courier, monospace; } /* Unified monospaced font */
+small { font-size: 12px; } /* less than 12px Chinese is difficult to read, making small normalization */
 
-/** 重置列表元素 **/
+/** Reset list elements **/
 ul, ol { list-style: none; }
 
-/** 重置文本格式元素 **/
+/** Reset text formatting elements **/
 a { text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 
-/** 重置表单元素 **/
+/** Reset form elements **/
 legend { color: #000; } /* for ie6 */
-fieldset, img { border: 0; } /* img 搭车：让链接里的 img 无边框 */
-button, input, select, textarea { font-size: 100%; } /* 使得表单元素在 ie 下能继承字体大小 */
-/* 注：optgroup 无法扶正 */
+fieldset, img { border: 0; } /* img Ride: let the link img No borders */
+button, input, select, textarea { font-size: 100%; } /* Make the form element in ie Font size can be inherited */
+/* Note:optgroup Unable to correct */
 
-/** 重置表格元素 **/
+/** Reset table elements **/
 table { border-collapse: collapse; border-spacing: 0; }
 
-/* 清除浮动 */
+/* clear float */
 .ks-clear:after, .clear:after {
   content: '\20';
   display: block;

@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.Map;
 
 /**
- * 订单配置信息
+ * Order settings
  *
  * @author liurui
  * @email liurui@gmail.com

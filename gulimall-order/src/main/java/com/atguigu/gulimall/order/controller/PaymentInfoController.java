@@ -13,7 +13,7 @@ import java.util.Map;
 
 
 /**
- * 支付信息表
+ * Payment info
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -26,7 +26,7 @@ public class PaymentInfoController {
     private PaymentInfoService paymentInfoService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("order:paymentinfo:list")
@@ -38,7 +38,7 @@ public class PaymentInfoController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("order:paymentinfo:info")
@@ -49,7 +49,7 @@ public class PaymentInfoController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("order:paymentinfo:save")
@@ -60,7 +60,7 @@ public class PaymentInfoController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("order:paymentinfo:update")
@@ -71,7 +71,7 @@ public class PaymentInfoController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("order:paymentinfo:delete")

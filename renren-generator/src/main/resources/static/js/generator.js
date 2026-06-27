@@ -3,10 +3,10 @@ $(function () {
         url: 'sys/generator/list',
         datatype: "json",
         colModel: [			
-			{ label: '表名', name: 'tableName', width: 100, key: true },
+			{ label: 'Table', name: 'tableName', width: 100, key: true },
 			{ label: 'Engine', name: 'engine', width: 70},
-			{ label: '表备注', name: 'tableComment', width: 100 },
-			{ label: '创建时间', name: 'createTime', width: 100 }
+			{ label: 'Comment', name: 'tableComment', width: 100 },
+			{ label: 'Created', name: 'createTime', width: 100 }
         ],
 		viewrecords: true,
         height: 385,
@@ -29,7 +29,7 @@ $(function () {
             order: "order"
         },
         gridComplete:function(){
-        	//隐藏grid底部滚动条
+        	// Hide grid bottom scrollbar
         	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
         }
     });

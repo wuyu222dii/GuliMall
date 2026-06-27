@@ -7,7 +7,7 @@ import com.atguigu.gulimall.product.entity.CommentReplayEntity;
 import java.util.Map;
 
 /**
- * 商品评价回复关系
+ * Product evaluation reply relationship
  *
  * @author liurui
  * @email liurui@gmail.com

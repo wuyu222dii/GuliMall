@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 首页专题表【jd首页下面很多专题，每个专题链接新的页面，展示专题商品信息】
+ * Home Subject [JD homepage has many subjects below; each subject links to a new page showing subject product info]
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsHomeSubjectController {
     private SmsHomeSubjectService smsHomeSubjectService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smshomesubject:list")
@@ -43,7 +43,7 @@ public class SmsHomeSubjectController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smshomesubject:info")
@@ -54,7 +54,7 @@ public class SmsHomeSubjectController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smshomesubject:save")
@@ -65,7 +65,7 @@ public class SmsHomeSubjectController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smshomesubject:update")
@@ -76,7 +76,7 @@ public class SmsHomeSubjectController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smshomesubject:delete")

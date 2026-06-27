@@ -3,7 +3,7 @@
 
 <mapper namespace="com.atguigu.gulimall.member.dao.SmsCouponSpuRelationDao">
 
-	<!-- 可根据自己的需求，是否要使用 -->
+	<!-- Customize as needed for your requirements -->
     <resultMap type="com.atguigu.gulimall.member.entity.SmsCouponSpuRelationEntity" id="smsCouponSpuRelationMap">
         <result property="id" column="id"/>
         <result property="couponId" column="coupon_id"/>

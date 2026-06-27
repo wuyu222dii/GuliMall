@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 成长值变化历史记录
+ * Growth Change History
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class GrowthChangeHistoryController {
     private GrowthChangeHistoryService growthChangeHistoryService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:growthchangehistory:list")
@@ -43,7 +43,7 @@ public class GrowthChangeHistoryController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:growthchangehistory:info")
@@ -54,7 +54,7 @@ public class GrowthChangeHistoryController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:growthchangehistory:save")
@@ -65,7 +65,7 @@ public class GrowthChangeHistoryController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:growthchangehistory:update")
@@ -76,7 +76,7 @@ public class GrowthChangeHistoryController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:growthchangehistory:delete")

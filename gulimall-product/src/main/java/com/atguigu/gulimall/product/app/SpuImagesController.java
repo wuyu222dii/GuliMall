@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * spu图片
+ * spupicture
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SpuImagesController {
     private SpuImagesService spuImagesService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:spuimages:list")
@@ -43,7 +43,7 @@ public class SpuImagesController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:spuimages:info")
@@ -54,7 +54,7 @@ public class SpuImagesController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:spuimages:save")
@@ -65,7 +65,7 @@ public class SpuImagesController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:spuimages:update")
@@ -76,7 +76,7 @@ public class SpuImagesController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:spuimages:delete")

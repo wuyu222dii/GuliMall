@@ -30,29 +30,29 @@ public class LoginController {
     StringRedisTemplate redisTemplate;
 
     /**
-     * 登录请求
-     * 发送一个请求跳转到一个页面
-     * SpringMVC viewcontroller：将请求和页面映射过来
+     * Login request
+     * Send a request to redirect to a page
+     * SpringMVC ViewController: maps requests to pages
      *
      * @return
      */
     @ResponseBody
     @GetMapping("/sms/sendcode")
     public R sendCode(@RequestParam("phone") String phone) {
-        // todo 1、接口防刷
+        // todo 1. Rate limiting for the API
         String redisCode = redisTemplate.opsForValue().get(AuthServerConstant.SMS_CODE_CACHE_PREFIX + phone);
         if (StringUtils.isEmpty(redisCode)) {
             long l = Long.parseLong(redisCode.split("_")[1]);
             if (System.currentTimeMillis() - l < 60000) {
-                // 60秒内不能再发
+                // Cannot resend within 60 seconds
                 return R.error(BizCodeEnume.SMS_CODE_EXCEPTION.getCode(), BizCodeEnume.SMS_CODE_EXCEPTION.getMsg());
             }
         }
 
-        // 2、验证码的再次校验.redis存key-phone, value-code
+        // 2. Re-validate verification code. Redis stores key-phone, value-code
         String code = UUID.randomUUID().toString().substring(0, 5) + "_" + System.currentTimeMillis();
         String minutes = "10";
-        // redis 缓存验证码，防止同一个phone在60秒内再次发送验证码
+        // Cache verification code in Redis to prevent resending within 60 seconds for the same phone
         redisTemplate.opsForValue().set(AuthServerConstant.SMS_CODE_CACHE_PREFIX + phone, code, 10, TimeUnit.MINUTES);
 
         thirdPartyFeignService.sendCode(phone, code, minutes);
@@ -62,21 +62,21 @@ public class LoginController {
     @PostMapping("/registry")
     public String registry(@Valid UserRegistryVo vo, BindingResult result, Model model) {
         if (result.hasErrors()) {
-            // 1、效验出错，则转发到注册页面
+            // 1. If validation fails, forward to registration page
             Map<String, String> errors = new HashMap<>();
-            // 获取校验的错误信息
+            // Get validation error messages
             result.getFieldErrors().forEach((item) -> {
-                // fieldError 获取到错误提示
+                // fieldError gets the error message
                 String message = item.getDefaultMessage();
-                // 获取错误字段
+                // Get the error field
                 String field = item.getField();
                 errors.put(field, message);
             });
             model.addAttribute("errors", errors);
         }
-        // 2、效验成功，则注册
-        
-        // 注册成功后跳转到登录页面
+        // 2. If validation succeeds, register
+
+        // Redirect to login page after successful registration
         return "redirect:/login.html";
     }
 }

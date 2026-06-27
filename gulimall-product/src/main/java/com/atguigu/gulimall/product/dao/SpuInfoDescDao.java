@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * spu信息介绍
+ * spuInformation introduction
  * 
  * @author liurui
  * @email liurui@gmail.com

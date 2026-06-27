@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * spu属性值
+ * spuattribute value
  *
  * @author liurui
  * @email liurui@gmail.com

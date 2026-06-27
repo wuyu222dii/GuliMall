@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 商品spu积分设置
+ * SPU points settings
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -30,15 +30,15 @@ public class SpuBoundsEntity implements Serializable {
 	 */
 	private Long spuId;
 	/**
-	 * 成长积分
+	 * Growth points
 	 */
 	private BigDecimal growBounds;
 	/**
-	 * 购物积分
+	 * Shopping points
 	 */
 	private BigDecimal buyBounds;
 	/**
-	 * 优惠生效情况[1111（四个状态位，从右到左）;0 - 无优惠，成长积分是否赠送;1 - 无优惠，购物积分是否赠送;2 - 有优惠，成长积分是否赠送;3 - 有优惠，购物积分是否赠送【状态位0：不赠送，1：赠送】]
+	 * Promo flags [4 bits R-to-L: 0-no promo growth pts; 1-no promo shopping pts; 2-promo growth pts; 3-promo shopping pts; 0=none, 1=grant]
 	 */
 	private Integer work;
 

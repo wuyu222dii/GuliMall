@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 属性分组
+ * Attribute grouping
  *
  * @author liurui
  * @email liurui@gmail.com

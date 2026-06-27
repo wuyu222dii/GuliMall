@@ -57,7 +57,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
 
     @Override
     public void addStock(Long skuId, Long wareId, Integer skuNum) {
-        // 判断如果还没有这个库存记录新增
+        // Add a stock record if none exists yet
         QueryWrapper<WareSkuEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("sku_id", skuId)
                 .eq("ware_id", wareId);
@@ -68,9 +68,9 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
             skuEntity.setStock(skuNum);
             skuEntity.setWareId(wareId);
             skuEntity.setStockLocked(0);
-            // todo 远程查询sku的名字,如果失败，整个事务无需回滚
-            // 1、自己catch异常
-            //2 TODO 还可以用什么办法让异常部分不回滚？
+            // TODO: Remote lookup of SKU name; if it fails, the whole transaction need not roll back
+            // 1. Catch the exception locally
+            // 2. TODO: What else can prevent partial rollback on exception?
             try {
                 R info = productFeignService.info(skuId);
                 Map<String, Object> data = (Map<String, Object>) info.get("skuInfo");
@@ -91,7 +91,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
         List<SkuHasStockVo> collect = skuIds.stream().map(skuId -> {
             SkuHasStockVo vo = new SkuHasStockVo();
 
-            // 查询当前sku的总库存量
+            // Query total stock for the current SKU
             // select sum(stock-stock_locked) from wms_ware_sku where sku_id = 1
             Long count = baseMapper.getSkuStock(skuId);
 

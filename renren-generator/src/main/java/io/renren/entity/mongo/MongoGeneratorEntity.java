@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * mysql一张表只需要一个表信息和列名信息
- * 但是mongo一张表可能需要多个实体类  所以单独用一个bean封装
+ * MySQL needs one table info and column list per table
+ * MongoDB may need multiple entity classes per collection, so they are wrapped in a bean
  *
  * @author gxz
  * @date 2020/5/10 0:14
  */
 public class MongoGeneratorEntity {
-    /***表信息**/
+    /** Table info */
     private Map<String, String> tableInfo;
-    /***主类的列名信息**/
+    /** Main class column info */
     private List<Map<String, String>> columns;
 
 

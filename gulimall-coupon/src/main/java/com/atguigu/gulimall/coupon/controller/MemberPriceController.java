@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品会员价格
+ * Member price
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class MemberPriceController {
     private MemberPriceService memberPriceService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:memberprice:list")
@@ -43,7 +43,7 @@ public class MemberPriceController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:memberprice:info")
@@ -54,7 +54,7 @@ public class MemberPriceController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("coupon:memberprice:save")
@@ -65,7 +65,7 @@ public class MemberPriceController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:memberprice:update")
@@ -76,7 +76,7 @@ public class MemberPriceController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:memberprice:delete")

@@ -19,13 +19,13 @@ public class MyCacheConfig {
 //    CacheProperties cacheProperties;
 
     /**
-     * 配置文件中的东西没有用上
-     * 1、原来和配置文件绑定的配置类是这样
+     * Nothing in the configuration file is used
+     * 1, the original configuration class bound to the configuration file is like this
      *
      * @return
      * @ConfigurationProperties(prefix = "spring.cache")
      * public class CacheProperties
-     * 2、要让他生效
+     * 2, let him take effect
      * @EnableConfigurationProperties(CacheProperties.class)
      */
     @Bean
@@ -37,7 +37,7 @@ public class MyCacheConfig {
         config = config.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
 
         CacheProperties.Redis redisProperties = cacheProperties.getRedis();
-        // 将配置文件中的所有配置都生效
+        // Make all configurations in the configuration file effective
         if (redisProperties.getTimeToLive() != null) {
             config = config.entryTtl(redisProperties.getTimeToLive());
         }

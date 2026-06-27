@@ -10,8 +10,8 @@ export default function Cart() {
     return (
       <div className="container" style={{ paddingTop: 40 }}>
         <div className="empty-state card" style={{ padding: 60 }}>
-          <p style={{ fontSize: 18, marginBottom: 16 }}>购物车是空的</p>
-          <Link to="/" className="btn btn-primary">去逛逛</Link>
+          <p style={{ fontSize: 18, marginBottom: 16 }}>Your cart is empty</p>
+          <Link to="/" className="btn btn-primary">Start shopping</Link>
         </div>
       </div>
     )
@@ -19,16 +19,16 @@ export default function Cart() {
 
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
-      <h1 className="page-title">我的购物车</h1>
+      <h1 className="page-title">My cart</h1>
 
       <table className="cart-table">
         <thead>
           <tr>
-            <th>商品</th>
-            <th>单价</th>
-            <th>数量</th>
-            <th>小计</th>
-            <th>操作</th>
+            <th>Product</th>
+            <th>Unit price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -59,7 +59,7 @@ export default function Cart() {
                   style={{ padding: '4px 12px', fontSize: 12 }}
                   onClick={() => removeItem(item.skuId)}
                 >
-                  删除
+                  Remove
                 </button>
               </td>
             </tr>
@@ -68,15 +68,15 @@ export default function Cart() {
       </table>
 
       <div className="cart-footer">
-        <button className="btn btn-outline" onClick={clearCart}>清空购物车</button>
+        <button className="btn btn-outline" onClick={clearCart}>Clear cart</button>
         <div className="cart-total">
-          共 <strong>{totalCount()}</strong> 件商品，合计：
+          <strong>{totalCount()}</strong> items, total:
           <span className="price">
             <span className="price-symbol">¥</span>
             <span className="price-value">{totalPrice().toFixed(2)}</span>
           </span>
         </div>
-        <Link to="/checkout" className="btn btn-primary btn-lg">去结算</Link>
+        <Link to="/checkout" className="btn btn-primary btn-lg">Checkout</Link>
       </div>
     </div>
   )

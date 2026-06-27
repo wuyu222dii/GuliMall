@@ -8,7 +8,7 @@ const request = axios.create({
 request.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const msg = error.response?.data?.msg || error.message || '网络请求失败'
+    const msg = error.response?.data?.msg || error.message || 'Network request failed'
     return Promise.reject(new Error(msg))
   }
 )

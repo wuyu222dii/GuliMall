@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品评价回复关系
+ * Product evaluation reply relationship
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class CommentReplayController {
     private CommentReplayService commentReplayService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:commentreplay:list")
@@ -43,7 +43,7 @@ public class CommentReplayController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:commentreplay:info")
@@ -54,7 +54,7 @@ public class CommentReplayController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:commentreplay:save")
@@ -65,7 +65,7 @@ public class CommentReplayController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:commentreplay:update")
@@ -76,7 +76,7 @@ public class CommentReplayController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:commentreplay:delete")

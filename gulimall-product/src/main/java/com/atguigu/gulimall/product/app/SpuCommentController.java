@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品评价
+ * Product evaluation
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SpuCommentController {
     private SpuCommentService spuCommentService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:spucomment:list")
@@ -43,7 +43,7 @@ public class SpuCommentController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:spucomment:info")
@@ -54,7 +54,7 @@ public class SpuCommentController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:spucomment:save")
@@ -65,7 +65,7 @@ public class SpuCommentController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:spucomment:update")
@@ -76,7 +76,7 @@ public class SpuCommentController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:spucomment:delete")

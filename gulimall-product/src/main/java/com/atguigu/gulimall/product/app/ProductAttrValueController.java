@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * spu属性值
+ * spuattribute value
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class ProductAttrValueController {
     private ProductAttrValueService productAttrValueService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:productattrvalue:list")
@@ -43,7 +43,7 @@ public class ProductAttrValueController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:productattrvalue:info")
@@ -54,7 +54,7 @@ public class ProductAttrValueController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:productattrvalue:save")
@@ -65,7 +65,7 @@ public class ProductAttrValueController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:productattrvalue:update")
@@ -76,7 +76,7 @@ public class ProductAttrValueController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:productattrvalue:delete")

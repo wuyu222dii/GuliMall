@@ -8,7 +8,7 @@ import java.util.Set;
 public class ListValueConstraintValidator implements ConstraintValidator<ListValue, Integer> {
     private Set<Integer> set = new HashSet<>();
 
-    // 1. 初始化
+    // 1. Initialize
     @Override
     public void initialize(ListValue constraintAnnotation) {
         int[] vals = constraintAnnotation.vals();
@@ -17,10 +17,10 @@ public class ListValueConstraintValidator implements ConstraintValidator<ListVal
         }
     }
 
-    // 2. 判断是否校验成功
+    // 2. Determine whether validation succeeds
 
     /**
-     * @param value   需要校验的值
+     * @param value   Value to validate
      * @param context
      * @return
      */

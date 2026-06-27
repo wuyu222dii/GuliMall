@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.SmsMemberPriceEntity;
 import java.util.Map;
 
 /**
- * 商品会员价格
+ * Product Member Price
  *
  * @author liurui
  * @email liurui@gmail.com

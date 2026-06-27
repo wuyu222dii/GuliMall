@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 优惠券与产品关联
+ * Coupon and Product Relation
  * 
  * @author liurui
  * @email liurui@gmail.com

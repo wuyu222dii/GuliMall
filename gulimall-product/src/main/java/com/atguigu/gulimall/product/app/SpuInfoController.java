@@ -13,7 +13,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * spu信息
+ * spuinformation
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -34,7 +34,7 @@ public class SpuInfoController {
     }
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:spuinfo:list")
@@ -46,7 +46,7 @@ public class SpuInfoController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:spuinfo:info")
@@ -57,7 +57,7 @@ public class SpuInfoController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:spuinfo:save")
@@ -68,7 +68,7 @@ public class SpuInfoController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:spuinfo:update")
@@ -79,7 +79,7 @@ public class SpuInfoController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:spuinfo:delete")

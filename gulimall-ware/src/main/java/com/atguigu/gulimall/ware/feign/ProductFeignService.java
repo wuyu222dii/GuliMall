@@ -10,10 +10,10 @@ public interface ProductFeignService {
 
     /**
      *
-     * 1）、让所有请求过网关：
-     *        1、@FeignClient("gulimall-gateway")：给gulimall-gateway所在机器发送请求
+     * 1) Route all requests through the gateway:
+     *        1. @FeignClient("gulimall-gateway"): send requests to the gateway instance
      *        2、"/api/product/skuinfo/info/{skuId}"
-     * 2）、直接让后台指定服务器处理
+     * 2) Or have a specific backend server handle the request directly
      *        1、@FeignClient("gulimall-product")：
      *        2、"/product/skuinfo/info/{skuId}"
      *

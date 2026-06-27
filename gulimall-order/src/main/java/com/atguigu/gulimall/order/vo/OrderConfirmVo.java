@@ -11,19 +11,19 @@ public class OrderConfirmVo {
 
     @Getter
     @Setter
-    /** 会员收获地址列表 **/
+    /** Member shipping address list **/
     private List<MemberAddressVo> memberAddressVos;
 
     @Getter @Setter
-    /** 所有选中的购物项 **/
+    /** All selected cart items **/
     private List<OrderItemVo> items;
 
-    /** 发票记录 **/
+    /** Invoice record **/
     @Getter @Setter
-    /** 优惠券（会员积分） **/
+    /** Coupons (member integration points) **/
     private Integer integration;
 
-    /** 防止重复提交的令牌 **/
+    /** Token to prevent duplicate submission **/
     @Getter @Setter
     private String orderToken;
 
@@ -41,16 +41,16 @@ public class OrderConfirmVo {
     }
 
 
-    /** 订单总额 **/
+    /** Order total amount **/
     //BigDecimal total;
-    //计算订单总额
+    // Calculate order total amount
     public BigDecimal getTotal() {
         BigDecimal totalNum = BigDecimal.ZERO;
         if (items != null && items.size() > 0) {
             for (OrderItemVo item : items) {
-                //计算当前商品的总价格
+                // Calculate total price for current item
                 BigDecimal itemPrice = item.getPrice().multiply(new BigDecimal(item.getCount().toString()));
-                //再计算全部商品的总价格
+                // Then calculate total price for all items
                 totalNum = totalNum.add(itemPrice);
             }
         }
@@ -58,7 +58,7 @@ public class OrderConfirmVo {
     }
 
 
-    /** 应付价格 **/
+    /** Payable amount **/
     //BigDecimal payPrice;
     public BigDecimal getPayPrice() {
         return getTotal();

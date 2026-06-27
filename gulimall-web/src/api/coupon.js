@@ -1,11 +1,11 @@
 import request from './request'
 
-/** 首页轮播广告 */
+/** Home page carousel ads */
 export function getHomeAdvList(params = { page: 1, limit: 10 }) {
   return request.get('/coupon-api/coupon/homeadv/list', { params })
 }
 
-/** 首页专题 */
+/** Home page featured topics */
 export function getHomeSubjectList(params = { page: 1, limit: 10 }) {
   return request.get('/coupon-api/coupon/homesubject/list', { params })
 }

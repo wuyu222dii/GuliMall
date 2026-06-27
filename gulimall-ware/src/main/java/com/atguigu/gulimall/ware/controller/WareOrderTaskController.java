@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 库存工作单
+ * Warehouse order task
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class WareOrderTaskController {
     private WareOrderTaskService wareOrderTaskService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("ware:wareordertask:list")
@@ -43,7 +43,7 @@ public class WareOrderTaskController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("ware:wareordertask:info")
@@ -54,7 +54,7 @@ public class WareOrderTaskController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("ware:wareordertask:save")
@@ -65,7 +65,7 @@ public class WareOrderTaskController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("ware:wareordertask:update")
@@ -76,7 +76,7 @@ public class WareOrderTaskController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:wareordertask:delete")

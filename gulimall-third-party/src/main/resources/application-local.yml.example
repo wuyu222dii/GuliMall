@@ -1,4 +1,4 @@
-# 复制此文件为 application-local.yml 并填入真实密钥（application-local.yml 已加入 .gitignore，不会提交）
+# Copy this file to application-local.yml and fill in real credentials (application-local.yml is gitignored)
 spring:
   cloud:
     alicloud:

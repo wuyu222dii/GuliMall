@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 商品评价
+ * Product evaluation
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -33,55 +33,55 @@ public class SpuCommentEntity implements Serializable {
 	 */
 	private Long spuId;
 	/**
-	 * 商品名字
+	 * Product name
 	 */
 	private String spuName;
 	/**
-	 * 会员昵称
+	 * Member nickname
 	 */
 	private String memberNickName;
 	/**
-	 * 星级
+	 * star rating
 	 */
 	private Integer star;
 	/**
-	 * 会员ip
+	 * memberip
 	 */
 	private String memberIp;
 	/**
-	 * 创建时间
+	 * creation time
 	 */
 	private Date createTime;
 	/**
-	 * 显示状态[0-不显示，1-显示]
+	 * Show status[0-Not displayed,1-show]
 	 */
 	private Integer showStatus;
 	/**
-	 * 购买时属性组合
+	 * Attribute combination at the time of purchase
 	 */
 	private String spuAttributes;
 	/**
-	 * 点赞数
+	 * Number of likes
 	 */
 	private Integer likesCount;
 	/**
-	 * 回复数
+	 * Number of replies
 	 */
 	private Integer replyCount;
 	/**
-	 * 评论图片/视频[json数据；[{type:文件类型,url:资源路径}]]
+	 * Comment on pictures/video[jsondata;[{type:File type,url:Resource path}]]
 	 */
 	private String resources;
 	/**
-	 * 内容
+	 * content
 	 */
 	private String content;
 	/**
-	 * 用户头像
+	 * User avatar
 	 */
 	private String memberIcon;
 	/**
-	 * 评论类型[0 - 对商品的直接评论，1 - 对评论的回复]
+	 * Comment type[0 - Direct reviews of products,1 - Reply to comment]
 	 */
 	private Integer commentType;
 

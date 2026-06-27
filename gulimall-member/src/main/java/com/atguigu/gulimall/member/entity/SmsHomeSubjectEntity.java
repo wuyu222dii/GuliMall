@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 首页专题表【jd首页下面很多专题，每个专题链接新的页面，展示专题商品信息】
+ * Home Subject [JD homepage has many subjects below; each subject links to a new page showing subject product info]
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,31 +25,31 @@ public class SmsHomeSubjectEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 专题名字
+	 * Subject name
 	 */
 	private String name;
 	/**
-	 * 专题标题
+	 * Subject title
 	 */
 	private String title;
 	/**
-	 * 专题副标题
+	 * Subject subtitle
 	 */
 	private String subTitle;
 	/**
-	 * 显示状态
+	 * Display status
 	 */
 	private Integer status;
 	/**
-	 * 详情连接
+	 * Detail link
 	 */
 	private String url;
 	/**
-	 * 排序
+	 * Sort order
 	 */
 	private Integer sort;
 	/**
-	 * 专题图片地址
+	 * Subject image URL
 	 */
 	private String img;
 

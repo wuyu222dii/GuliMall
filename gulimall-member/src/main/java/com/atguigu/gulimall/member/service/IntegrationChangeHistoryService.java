@@ -7,7 +7,7 @@ import com.atguigu.gulimall.member.entity.IntegrationChangeHistoryEntity;
 import java.util.Map;
 
 /**
- * 积分变化历史记录
+ * Integration Change History
  *
  * @author liurui
  * @email liurui@gmail.com

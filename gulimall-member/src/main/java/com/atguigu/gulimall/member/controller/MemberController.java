@@ -19,7 +19,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 会员
+ * Member
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -42,7 +42,7 @@ public class MemberController {
     }
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:member:list")
@@ -54,7 +54,7 @@ public class MemberController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:member:info")
@@ -65,7 +65,7 @@ public class MemberController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:member:save")
@@ -76,7 +76,7 @@ public class MemberController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:member:update")
@@ -87,7 +87,7 @@ public class MemberController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:member:delete")

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 退款信息
+ * Refund info
  * 
  * @author liurui
  * @email liurui@gmail.com

@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 首页轮播广告
+ * Home Carousel Advertisement
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,47 +25,47 @@ public class SmsHomeAdvEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 名字
+	 * Name
 	 */
 	private String name;
 	/**
-	 * 图片地址
+	 * Image URL
 	 */
 	private String pic;
 	/**
-	 * 开始时间
+	 * Start time
 	 */
 	private Date startTime;
 	/**
-	 * 结束时间
+	 * End time
 	 */
 	private Date endTime;
 	/**
-	 * 状态
+	 * Status
 	 */
 	private Integer status;
 	/**
-	 * 点击数
+	 * Click count
 	 */
 	private Integer clickCount;
 	/**
-	 * 广告详情连接地址
+	 * Advertisement detail link URL
 	 */
 	private String url;
 	/**
-	 * 备注
+	 * Remark
 	 */
 	private String note;
 	/**
-	 * 排序
+	 * Sort order
 	 */
 	private Integer sort;
 	/**
-	 * 发布者
+	 * Publisher
 	 */
 	private Long publisherId;
 	/**
-	 * 审核者
+	 * Reviewer
 	 */
 	private Long authId;
 

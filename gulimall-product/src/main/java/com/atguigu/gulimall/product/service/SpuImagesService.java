@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * spu图片
+ * spupicture
  *
  * @author liurui
  * @email liurui@gmail.com

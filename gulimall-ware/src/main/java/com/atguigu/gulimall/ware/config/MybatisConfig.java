@@ -10,13 +10,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 @MapperScan("com.atguigu.gulimall.ware.dao")
 public class MybatisConfig {
-    // 引入分页插件
+    // Enable pagination plugin
     @Bean
     public PaginationInterceptor paginationInterceptor() {
         PaginationInterceptor paginationInterceptor = new PaginationInterceptor();
-        // 设置请求的页面大于最大页后操作，true调回首页，false继续请求 默认false
+        // When page exceeds max: true returns to first page, false continues; default false
         paginationInterceptor.setOverflow(true);
-        // 设置最大单页限制数量，默认500条，-1 不受限制
+        // Max records per page; default 500, -1 for unlimited
         paginationInterceptor.setLimit(1000);
         return paginationInterceptor;
     }

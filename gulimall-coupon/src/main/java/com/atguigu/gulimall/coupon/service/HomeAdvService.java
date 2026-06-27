@@ -7,7 +7,7 @@ import com.atguigu.gulimall.coupon.entity.HomeAdvEntity;
 import java.util.Map;
 
 /**
- * 首页轮播广告
+ * Home carousel ad
  *
  * @author liurui
  * @email liurui@gmail.com

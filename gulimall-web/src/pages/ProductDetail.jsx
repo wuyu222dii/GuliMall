@@ -35,7 +35,7 @@ export default function ProductDetail() {
             setHasStock(null)
           }
         } else {
-          setError(res.msg || '商品不存在')
+          setError(res.msg || 'Product not found')
         }
       } catch (e) {
         setError(e.message)
@@ -49,7 +49,7 @@ export default function ProductDetail() {
   const handleAddCart = () => {
     if (!sku) return
     addItem(sku, qty)
-    alert('已加入购物车')
+    alert('Added to cart')
   }
 
   const handleBuyNow = () => {
@@ -58,17 +58,17 @@ export default function ProductDetail() {
     navigate('/cart')
   }
 
-  if (loading) return <div className="loading container">加载中...</div>
-  if (error || !sku) return <div className="empty-state container">{error || '商品不存在'}</div>
+  if (loading) return <div className="loading container">Loading...</div>
+  if (error || !sku) return <div className="empty-state container">{error || 'Product not found'}</div>
 
   const img = sku.skuDefaultImg?.startsWith('http') ? sku.skuDefaultImg : PLACEHOLDER
 
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
       <div className="breadcrumb">
-        <a href="/">首页</a>
+        <a href="/">Home</a>
         <span>&gt;</span>
-        <a href="/search">商品搜索</a>
+        <a href="/search">Product search</a>
         <span>&gt;</span>
         {sku.skuTitle || sku.skuName}
       </div>
@@ -88,7 +88,7 @@ export default function ProductDetail() {
           {sku.skuSubtitle && <p className="detail-subtitle">{sku.skuSubtitle}</p>}
 
           <div className="detail-price-box">
-            <span style={{ color: '#999', marginRight: 12 }}>价格</span>
+            <span style={{ color: '#999', marginRight: 12 }}>Price</span>
             <span className="price">
               <span className="price-symbol">¥</span>
               <span className="price-value">{sku.price}</span>
@@ -96,13 +96,13 @@ export default function ProductDetail() {
           </div>
 
           <div className="detail-stock">
-            库存状态：
+            Stock status:
             {hasStock === null ? (
-              <span>查询中...</span>
+              <span>Checking...</span>
             ) : hasStock ? (
-              <span className="stock-yes">有货</span>
+              <span className="stock-yes">In stock</span>
             ) : (
-              <span className="stock-no">无货</span>
+              <span className="stock-no">Out of stock</span>
             )}
           </div>
 
@@ -111,7 +111,7 @@ export default function ProductDetail() {
           )}
 
           <div className="qty-control">
-            <span style={{ marginRight: 8 }}>数量</span>
+            <span style={{ marginRight: 8 }}>Quantity</span>
             <button onClick={() => setQty(Math.max(1, qty - 1))}>-</button>
             <input
               type="number"
@@ -124,10 +124,10 @@ export default function ProductDetail() {
 
           <div className="detail-actions">
             <button className="btn btn-primary btn-lg" onClick={handleAddCart} disabled={hasStock === false}>
-              加入购物车
+              Add to cart
             </button>
             <button className="btn btn-outline btn-lg" onClick={handleBuyNow} disabled={hasStock === false}>
-              立即购买
+              Buy now
             </button>
           </div>
         </div>

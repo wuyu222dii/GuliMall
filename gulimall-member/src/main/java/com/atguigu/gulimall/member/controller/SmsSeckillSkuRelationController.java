@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 秒杀活动商品关联
+ * Seckill Activity Product Relation
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsSeckillSkuRelationController {
     private SmsSeckillSkuRelationService smsSeckillSkuRelationService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smsseckillskurelation:list")
@@ -43,7 +43,7 @@ public class SmsSeckillSkuRelationController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smsseckillskurelation:info")
@@ -54,7 +54,7 @@ public class SmsSeckillSkuRelationController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smsseckillskurelation:save")
@@ -65,7 +65,7 @@ public class SmsSeckillSkuRelationController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smsseckillskurelation:update")
@@ -76,7 +76,7 @@ public class SmsSeckillSkuRelationController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smsseckillskurelation:delete")

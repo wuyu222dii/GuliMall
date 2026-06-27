@@ -35,7 +35,7 @@ export default function MemberAddress() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.name || !form.phone || !form.detailAddress) {
-      setError('请填写完整信息')
+      setError('Please fill in all required fields')
       return
     }
     setError('')
@@ -46,7 +46,7 @@ export default function MemberAddress() {
         setForm(EMPTY_FORM)
         loadAddresses()
       } else {
-        setError(res.msg || '保存失败')
+        setError(res.msg || 'Failed to save')
       }
     } catch (e) {
       setError(e.message)
@@ -54,7 +54,7 @@ export default function MemberAddress() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('确定删除该地址？')) return
+    if (!confirm('Are you sure you want to delete this address?')) return
     try {
       await deleteAddress([id])
       loadAddresses()
@@ -66,36 +66,36 @@ export default function MemberAddress() {
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 className="page-title" style={{ margin: 0, border: 'none' }}>收货地址</h1>
+        <h1 className="page-title" style={{ margin: 0, border: 'none' }}>Shipping addresses</h1>
         <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? '取消' : '+ 新增地址'}
+          {showForm ? 'Cancel' : '+ Add address'}
         </button>
       </div>
 
       {showForm && (
         <form className="address-form" onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
           <div className="form-group">
-            <label>收货人</label>
+            <label>Recipient</label>
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>手机号</label>
+            <label>Phone</label>
             <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>省</label>
+            <label>Province</label>
             <input className="input" value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>市</label>
+            <label>City</label>
             <input className="input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>区</label>
+            <label>District</label>
             <input className="input" value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>详细地址</label>
+            <label>Street address</label>
             <input className="input" value={form.detailAddress} onChange={(e) => setForm({ ...form, detailAddress: e.target.value })} />
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, marginBottom: 16 }}>
@@ -104,15 +104,15 @@ export default function MemberAddress() {
               checked={form.defaultStatus === 1}
               onChange={(e) => setForm({ ...form, defaultStatus: e.target.checked ? 1 : 0 })}
             />
-            设为默认地址
+            Set as default address
           </label>
           {error && <div className="error-msg">{error}</div>}
-          <button type="submit" className="btn btn-primary">保存</button>
+          <button type="submit" className="btn btn-primary">Save</button>
         </form>
       )}
 
       {loading ? (
-        <div className="loading">加载中...</div>
+        <div className="loading">Loading...</div>
       ) : addresses.length > 0 ? (
         <div className="address-list">
           {addresses.map((addr) => (
@@ -120,7 +120,7 @@ export default function MemberAddress() {
               <div>
                 <strong>{addr.name}</strong> {addr.phone}
                 {addr.defaultStatus === 1 && (
-                  <span style={{ marginLeft: 8, color: '#e4393c', fontSize: 12 }}>[默认]</span>
+                  <span style={{ marginLeft: 8, color: '#e4393c', fontSize: 12 }}>[Default]</span>
                 )}
                 <div style={{ color: '#666', fontSize: 13, marginTop: 4 }}>
                   {addr.province}{addr.city}{addr.region} {addr.detailAddress}
@@ -131,13 +131,13 @@ export default function MemberAddress() {
                 style={{ padding: '4px 12px', fontSize: 12 }}
                 onClick={() => handleDelete(addr.id)}
               >
-                删除
+                Delete
               </button>
             </div>
           ))}
         </div>
       ) : (
-        <div className="empty-state card" style={{ padding: 40 }}>暂无收货地址</div>
+        <div className="empty-state card" style={{ padding: 40 }}>No shipping addresses yet</div>
       )}
     </div>
   )

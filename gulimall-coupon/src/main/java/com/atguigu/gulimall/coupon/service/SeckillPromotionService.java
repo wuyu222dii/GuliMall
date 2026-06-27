@@ -7,7 +7,7 @@ import com.atguigu.gulimall.coupon.entity.SeckillPromotionEntity;
 import java.util.Map;
 
 /**
- * 秒杀活动
+ * Seckill promotion
  *
  * @author liurui
  * @email liurui@gmail.com

@@ -55,7 +55,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     public PayVo getOrderPay(String orderSn) {
         OrderEntity order = this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
         if (order == null) {
-            throw new RuntimeException("订单不存在: " + orderSn);
+            throw new RuntimeException("Order does not exist: " + orderSn);
         }
         PayVo payVo = new PayVo();
         payVo.setOut_trade_no(order.getOrderSn());
@@ -67,7 +67,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             payVo.setSubject(item.getSkuName());
             payVo.setBody(item.getSkuAttrsVals());
         } else {
-            payVo.setSubject("谷粒商城订单");
+            payVo.setSubject("Gulimall Order");
         }
         return payVo;
     }

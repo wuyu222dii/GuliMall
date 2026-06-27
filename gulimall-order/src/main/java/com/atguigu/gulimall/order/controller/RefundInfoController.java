@@ -13,7 +13,7 @@ import java.util.Map;
 
 
 /**
- * 退款信息
+ * Refund info
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -26,7 +26,7 @@ public class RefundInfoController {
     private RefundInfoService refundInfoService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("order:refundinfo:list")
@@ -38,7 +38,7 @@ public class RefundInfoController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("order:refundinfo:info")
@@ -49,7 +49,7 @@ public class RefundInfoController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("order:refundinfo:save")
@@ -60,7 +60,7 @@ public class RefundInfoController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("order:refundinfo:update")
@@ -71,7 +71,7 @@ public class RefundInfoController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("order:refundinfo:delete")

@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 会员等级
+ * Member Level
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class MemberLevelController {
     private MemberLevelService memberLevelService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:memberlevel:list")
@@ -43,7 +43,7 @@ public class MemberLevelController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:memberlevel:info")
@@ -54,7 +54,7 @@ public class MemberLevelController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:memberlevel:save")
@@ -65,7 +65,7 @@ public class MemberLevelController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:memberlevel:update")
@@ -76,7 +76,7 @@ public class MemberLevelController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:memberlevel:delete")

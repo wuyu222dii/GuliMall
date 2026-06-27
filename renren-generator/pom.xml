@@ -99,30 +99,30 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<!-- mysql驱动 -->
+		<!-- MySQL driver -->
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>${mysql.version}</version>
 		</dependency>
-		<!-- oracle驱动 -->
+		<!-- Oracle driver -->
 		<dependency>
 			<groupId>com.oracle</groupId>
 			<artifactId>ojdbc6</artifactId>
 			<version>${oracle.version}</version>
 		</dependency>
-		<!-- sqlserver驱动 -->
+		<!-- SQL Server driver -->
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>sqljdbc4</artifactId>
 			<version>${mssql.version}</version>
 		</dependency>
-		<!-- postgresql驱动 -->
+		<!-- PostgreSQL driver -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 		</dependency>
-		<!-- mongo驱动 -->
+		<!-- MongoDB driver -->
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>

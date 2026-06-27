@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.Map;
 
 /**
- * 退款信息
+ * Refund info
  *
  * @author liurui
  * @email liurui@gmail.com

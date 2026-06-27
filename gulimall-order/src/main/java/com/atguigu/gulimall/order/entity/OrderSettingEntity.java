@@ -7,7 +7,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * 订单配置信息
+ * Order settings
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -24,27 +24,27 @@ public class OrderSettingEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 秒杀订单超时关闭时间(分)
+	 * Flash sale order timeout (minutes)
 	 */
 	private Integer flashOrderOvertime;
 	/**
-	 * 正常订单超时时间(分)
+	 * Normal order timeout (minutes)
 	 */
 	private Integer normalOrderOvertime;
 	/**
-	 * 发货后自动确认收货时间（天）
+	 * Auto confirm receipt time after shipment (days)
 	 */
 	private Integer confirmOvertime;
 	/**
-	 * 自动完成交易时间，不能申请退货（天）
+	 * Auto complete transaction time, no returns allowed (days)
 	 */
 	private Integer finishOvertime;
 	/**
-	 * 订单完成后自动好评时间（天）
+	 * Auto positive review time after order completion (days)
 	 */
 	private Integer commentOvertime;
 	/**
-	 * 会员等级【0-不限会员等级，全部通用；其他-对应的其他会员等级】
+	 * Member level [0-All levels; other-corresponding member level]
 	 */
 	private Integer memberLevel;
 

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 属性&属性分组关联
+ * property&attribute group association
  *
  * @author liurui
  * @email liurui@gmail.com

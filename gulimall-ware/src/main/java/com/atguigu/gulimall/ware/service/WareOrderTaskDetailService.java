@@ -7,7 +7,7 @@ import com.atguigu.gulimall.ware.entity.WareOrderTaskDetailEntity;
 import java.util.Map;
 
 /**
- * 库存工作单
+ * Warehouse order task
  *
  * @author liurui
  * @email liurui@gmail.com

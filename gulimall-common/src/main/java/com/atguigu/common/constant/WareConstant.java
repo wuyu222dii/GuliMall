@@ -3,9 +3,9 @@ package com.atguigu.common.constant;
 public class WareConstant {
 
     public enum PurchaseStatusEnum {
-        CREATED(0, "新建"), ASSIGNED(1, "已分配"),
-        RECEIVE(2, "已领取"), FINISH(3, "已完成"),
-        HASERROR(4, "有异常");
+        CREATED(0, "Created"), ASSIGNED(1, "Assigned"),
+        RECEIVE(2, "Received"), FINISH(3, "Completed"),
+        HASERROR(4, "Has error");
 
         private int code;
         private String msg;
@@ -26,9 +26,9 @@ public class WareConstant {
 
 
     public enum PurchaseDetailStatusEnum {
-        CREATED(0, "新建"), ASSIGNED(1, "已分配"),
-        BUYING(2, "正在采购"), FINISH(3, "已完成"),
-        FAILURE(4, "采购失败");
+        CREATED(0, "Created"), ASSIGNED(1, "Assigned"),
+        BUYING(2, "Purchasing"), FINISH(3, "Completed"),
+        FAILURE(4, "Purchase failed");
 
         private int code;
         private String msg;

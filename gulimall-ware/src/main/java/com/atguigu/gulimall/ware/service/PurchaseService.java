@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 采购信息
+ * Purchase info
  *
  * @author liurui
  * @email liurui@gmail.com

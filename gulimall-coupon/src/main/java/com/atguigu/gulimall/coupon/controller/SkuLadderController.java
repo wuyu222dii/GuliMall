@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品阶梯价格
+ * SKU tiered pricing
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SkuLadderController {
     private SkuLadderService skuLadderService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:skuladder:list")
@@ -43,7 +43,7 @@ public class SkuLadderController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:skuladder:info")
@@ -54,7 +54,7 @@ public class SkuLadderController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("coupon:skuladder:save")
@@ -65,7 +65,7 @@ public class SkuLadderController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:skuladder:update")
@@ -76,7 +76,7 @@ public class SkuLadderController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:skuladder:delete")

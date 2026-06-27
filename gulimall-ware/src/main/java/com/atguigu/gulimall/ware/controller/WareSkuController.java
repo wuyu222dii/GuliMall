@@ -15,7 +15,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 商品库存
+ * Product SKU stock
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -27,7 +27,7 @@ public class WareSkuController {
     @Autowired
     private WareSkuService wareSkuService;
 
-    //查询sku是否有库存
+    // Query whether SKU has stock
     @PostMapping("/hasstock")
     public R getSkuHasStock(@RequestBody List<Long> skuIds) {
 
@@ -39,7 +39,7 @@ public class WareSkuController {
     }
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("ware:waresku:list")
@@ -51,7 +51,7 @@ public class WareSkuController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("ware:waresku:info")
@@ -62,7 +62,7 @@ public class WareSkuController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("ware:waresku:save")
@@ -73,7 +73,7 @@ public class WareSkuController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("ware:waresku:update")
@@ -84,7 +84,7 @@ public class WareSkuController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:waresku:delete")

@@ -21,7 +21,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 优惠券信息
+ * Coupon info
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -51,7 +51,7 @@ public class CouponController {
         return R.ok().put("coupons", Collections.singletonList(couponEntity));
     }
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:coupon:list")
@@ -63,7 +63,7 @@ public class CouponController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:coupon:info")
@@ -74,7 +74,7 @@ public class CouponController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("coupon:coupon:save")
@@ -85,7 +85,7 @@ public class CouponController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:coupon:update")
@@ -96,7 +96,7 @@ public class CouponController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:coupon:delete")

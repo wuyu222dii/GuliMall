@@ -9,19 +9,19 @@ import java.util.Date;
 public class SpuInfoTo {
     private Long id;
     /**
-     * 商品名称
+     * Product name
      */
     private String spuName;
     /**
-     * 商品描述
+     * Product description
      */
     private String spuDescription;
     /**
-     * 所属分类id
+     * Category id
      */
     private Long catalogId;
     /**
-     * 品牌id
+     * Brand id
      */
     private Long brandId;
 
@@ -31,7 +31,7 @@ public class SpuInfoTo {
      */
     private BigDecimal weight;
     /**
-     * 上架状态[0 - 下架，1 - 上架]
+     * Publish status [0 - Off shelf, 1 - On shelf]
      */
     private Integer publishStatus;
     /**

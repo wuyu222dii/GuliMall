@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 /**
- * 属性&属性分组关联
+ * property&attribute group association
  * 
  * @author liurui
  * @email liurui@gmail.com

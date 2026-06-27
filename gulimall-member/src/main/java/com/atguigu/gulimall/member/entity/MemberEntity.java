@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 会员
+ * Member
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,83 +25,83 @@ public class MemberEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 会员等级id
+	 * Member level id
 	 */
 	private Long levelId;
 	/**
-	 * 用户名
+	 * Username
 	 */
 	private String username;
 	/**
-	 * 密码
+	 * Password
 	 */
 	private String password;
 	/**
-	 * 昵称
+	 * Nickname
 	 */
 	private String nickname;
 	/**
-	 * 手机号码
+	 * Mobile phone number
 	 */
 	private String mobile;
 	/**
-	 * 邮箱
+	 * Email
 	 */
 	private String email;
 	/**
-	 * 头像
+	 * Avatar
 	 */
 	private String header;
 	/**
-	 * 性别
+	 * Gender
 	 */
 	private Integer gender;
 	/**
-	 * 生日
+	 * Birthday
 	 */
 	private Date birth;
 	/**
-	 * 所在城市
+	 * City
 	 */
 	private String city;
 	/**
-	 * 职业
+	 * Occupation
 	 */
 	private String job;
 	/**
-	 * 个性签名
+	 * Personal signature
 	 */
 	private String sign;
 	/**
-	 * 用户来源
+	 * User source
 	 */
 	private Integer sourceType;
 	/**
-	 * 积分
+	 * Integration points
 	 */
 	private Integer integration;
 	/**
-	 * 成长值
+	 * Growth value
 	 */
 	private Integer growth;
 	/**
-	 * 启用状态
+	 * Enable status
 	 */
 	private Integer status;
 	/**
-	 * 注册时间
+	 * Registration time
 	 */
 	private Date createTime;
 	/**
-	 * 社交用户的唯一id
+	 * Social user unique id
 	 */
 	private String socialUid;
 	/**
-	 * 访问令牌
+	 * Access token
 	 */
 	private String accessToken;
 	/**
-	 * 访问令牌的时间
+	 * Access token expiration time
 	 */
 	private String expiresIn;
 

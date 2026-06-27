@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 秒杀活动
+ * Seckill promotion
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SeckillPromotionController {
     private SeckillPromotionService seckillPromotionService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("coupon:seckillpromotion:list")
@@ -43,7 +43,7 @@ public class SeckillPromotionController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("coupon:seckillpromotion:info")
@@ -54,7 +54,7 @@ public class SeckillPromotionController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("coupon:seckillpromotion:save")
@@ -65,7 +65,7 @@ public class SeckillPromotionController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("coupon:seckillpromotion:update")
@@ -76,7 +76,7 @@ public class SeckillPromotionController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("coupon:seckillpromotion:delete")

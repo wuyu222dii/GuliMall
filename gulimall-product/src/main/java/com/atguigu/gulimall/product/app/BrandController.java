@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 品牌
+ * brand
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class BrandController {
     private BrandService brandService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:brand:list")
@@ -43,7 +43,7 @@ public class BrandController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{brandId}")
     //@RequiresPermissions("product:brand:info")
@@ -61,22 +61,22 @@ public class BrandController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:brand:save")
     public R save(@Validated({AddGroup.class}) @RequestBody BrandEntity brand /*, BindingResult result */) {
 //        if (result.hasErrors()) {
 //            Map<String, String> map = new HashMap<>();
-//            // 获取校验的错误信息
+//            // Get verification error information
 //            result.getFieldErrors().forEach((item) -> {
-//                // fieldError 获取到错误提示
+//                // fieldError Get error message
 //                String message = item.getDefaultMessage();
-//                // 获取错误字段
+//                // Get error field
 //                String field = item.getField();
 //                map.put(field, message);
 //            });
-//            R.error(400, "提交的数据不合法").put("data", map);
+//            R.error(400, "The data submitted is illegal").put("data", map);
 //        } else {
 //            brandService.save(brand);
 //        }
@@ -85,7 +85,7 @@ public class BrandController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:brand:update")
@@ -95,7 +95,7 @@ public class BrandController {
         return R.ok();
     }
     /**
-     * 修改状态
+     * Modify status
      */
     @RequestMapping("/update/status")
     //@RequiresPermissions("product:brand:update")
@@ -106,7 +106,7 @@ public class BrandController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:brand:delete")

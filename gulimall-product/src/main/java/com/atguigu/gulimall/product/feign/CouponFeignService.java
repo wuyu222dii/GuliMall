@@ -13,12 +13,12 @@ public interface CouponFeignService {
 
     /**
      * CouponFeignService.saveSpuBounds(spuBoundTo)
-     * 1 @RequestBody 将这个对象转为json
-     * 2 找到gulimall-coupon服务，给/couponspubounds/save发送请求，
-     * 将上一步转的json放在请求体位置，发送请求
-     * 3 对方服务收到请求。请求体里由json数据
-     * （@RequestBody SpuBoundsEntity spuBounds）：将请求体的json转为SpuBoundsEntity；
-     * 只要json数据模型是兼容的，双方服务无需使用同一个to
+     * 1 @RequestBody Convert this object tojson
+     * 2 turn upgulimall-couponservice, give/couponspubounds/saveSend a request,
+     * Redirect the previous stepjsonPlace it in the request body and send the request
+     * 3 The other party service received the request. Request body reasonjsondata
+     * (@RequestBody SpuBoundsEntity spuBounds): Convert the request body tojsonconvert toSpuBoundsEntity;
+     * if onlyjsonThe data model is compatible, and both services do not need to use the sameto
      *
      * @param spuBoundTo
      * @return

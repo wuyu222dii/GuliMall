@@ -4,7 +4,7 @@
       "must": [
         {
           "match": {
-            "skuTitle": "华为"
+            "skuTitle": "Huawei"
           }
         }
       ],

@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 优惠券分类关联
+ * Coupon Category Relation
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsCouponSpuCategoryRelationController {
     private SmsCouponSpuCategoryRelationService smsCouponSpuCategoryRelationService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smscouponspucategoryrelation:list")
@@ -43,7 +43,7 @@ public class SmsCouponSpuCategoryRelationController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smscouponspucategoryrelation:info")
@@ -54,7 +54,7 @@ public class SmsCouponSpuCategoryRelationController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smscouponspucategoryrelation:save")
@@ -65,7 +65,7 @@ public class SmsCouponSpuCategoryRelationController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smscouponspucategoryrelation:update")
@@ -76,7 +76,7 @@ public class SmsCouponSpuCategoryRelationController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smscouponspucategoryrelation:delete")

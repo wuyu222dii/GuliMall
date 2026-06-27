@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * sku图片
+ * skupicture
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SkuImagesController {
     private SkuImagesService skuImagesService;
 
     /**
-     * 列表
+     * list
      */
     @RequestMapping("/list")
     //@RequiresPermissions("product:skuimages:list")
@@ -43,7 +43,7 @@ public class SkuImagesController {
 
 
     /**
-     * 信息
+     * information
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:skuimages:info")
@@ -54,7 +54,7 @@ public class SkuImagesController {
     }
 
     /**
-     * 保存
+     * save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:skuimages:save")
@@ -65,7 +65,7 @@ public class SkuImagesController {
     }
 
     /**
-     * 修改
+     * Revise
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:skuimages:update")
@@ -76,7 +76,7 @@ public class SkuImagesController {
     }
 
     /**
-     * 删除
+     * delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("product:skuimages:delete")

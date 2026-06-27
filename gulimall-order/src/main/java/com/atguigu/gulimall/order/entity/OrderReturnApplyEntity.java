@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 订单退货申请
+ * Order return application
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -30,107 +30,107 @@ public class OrderReturnApplyEntity implements Serializable {
 	 */
 	private Long orderId;
 	/**
-	 * 退货商品id
+	 * Return product id
 	 */
 	private Long skuId;
 	/**
-	 * 订单编号
+	 * Order number
 	 */
 	private String orderSn;
 	/**
-	 * 申请时间
+	 * Application time
 	 */
 	private Date createTime;
 	/**
-	 * 会员用户名
+	 * Member username
 	 */
 	private String memberUsername;
 	/**
-	 * 退款金额
+	 * Refund amount
 	 */
 	private BigDecimal returnAmount;
 	/**
-	 * 退货人姓名
+	 * Returner name
 	 */
 	private String returnName;
 	/**
-	 * 退货人电话
+	 * Returner phone
 	 */
 	private String returnPhone;
 	/**
-	 * 申请状态[0->待处理；1->退货中；2->已完成；3->已拒绝]
+	 * Application status [0->Pending; 1->Returning; 2->Completed; 3->Rejected]
 	 */
 	private Integer status;
 	/**
-	 * 处理时间
+	 * Processing time
 	 */
 	private Date handleTime;
 	/**
-	 * 商品图片
+	 * Product image
 	 */
 	private String skuImg;
 	/**
-	 * 商品名称
+	 * Product name
 	 */
 	private String skuName;
 	/**
-	 * 商品品牌
+	 * Product brand
 	 */
 	private String skuBrand;
 	/**
-	 * 商品销售属性(JSON)
+	 * Product sale attributes (JSON)
 	 */
 	private String skuAttrsVals;
 	/**
-	 * 退货数量
+	 * Return quantity
 	 */
 	private Integer skuCount;
 	/**
-	 * 商品单价
+	 * Product unit price
 	 */
 	private BigDecimal skuPrice;
 	/**
-	 * 商品实际支付单价
+	 * Actual unit price paid
 	 */
 	private BigDecimal skuRealPrice;
 	/**
-	 * 原因
+	 * Reason
 	 */
 	private String reason;
 	/**
-	 * 描述
+	 * Description
 	 */
-	private String description述;
+	private String description;
 	/**
-	 * 凭证图片，以逗号隔开
+	 * Proof images, comma-separated
 	 */
 	private String descPics;
 	/**
-	 * 处理备注
+	 * Processing remark
 	 */
 	private String handleNote;
 	/**
-	 * 处理人员
+	 * Processor
 	 */
 	private String handleMan;
 	/**
-	 * 收货人
+	 * Receiver
 	 */
 	private String receiveMan;
 	/**
-	 * 收货时间
+	 * Receipt time
 	 */
 	private Date receiveTime;
 	/**
-	 * 收货备注
+	 * Receipt remark
 	 */
 	private String receiveNote;
 	/**
-	 * 收货电话
+	 * Receipt phone
 	 */
 	private String receivePhone;
 	/**
-	 * 公司收货地址
+	 * Company receiving address
 	 */
 	private String companyAddress;
 

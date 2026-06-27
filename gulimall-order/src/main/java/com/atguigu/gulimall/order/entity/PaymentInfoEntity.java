@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 支付信息表
+ * Payment info
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -26,43 +26,43 @@ public class PaymentInfoEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 订单号（对外业务号）
+	 * Order number (external business number)
 	 */
 	private String orderSn;
 	/**
-	 * 订单id
+	 * Order id
 	 */
 	private Long orderId;
 	/**
-	 * 支付宝交易流水号
+	 * Alipay transaction serial number
 	 */
 	private String alipayTradeNo;
 	/**
-	 * 支付总金额
+	 * Total payment amount
 	 */
 	private BigDecimal totalAmount;
 	/**
-	 * 交易内容
+	 * Transaction content
 	 */
 	private String subject;
 	/**
-	 * 支付状态
+	 * Payment status
 	 */
 	private String paymentStatus;
 	/**
-	 * 创建时间
+	 * Creation time
 	 */
 	private Date createTime;
 	/**
-	 * 确认时间
+	 * Confirmation time
 	 */
 	private Date confirmTime;
 	/**
-	 * 回调内容
+	 * Callback content
 	 */
 	private String callbackContent;
 	/**
-	 * 回调时间
+	 * Callback time
 	 */
 	private Date callbackTime;
 

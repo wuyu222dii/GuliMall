@@ -28,7 +28,7 @@ public class BrandServiceImpl extends ServiceImpl<BrandDao, BrandEntity> impleme
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
-        // 1. 获取key
+        // 1. Getkey
         String key = (String) params.get("key");
         QueryWrapper<BrandEntity> queryWrapper = new QueryWrapper<>();
         if (StringUtils.isEmpty(key)) {
@@ -47,13 +47,13 @@ public class BrandServiceImpl extends ServiceImpl<BrandDao, BrandEntity> impleme
     @Transactional
     @Override
     public void updateDetail(BrandEntity brand) {
-        // 保证冗余字段的数据一致
+        // Ensure data consistency in redundant fields
         this.updateById(brand);
         if (StringUtils.isEmpty(brand.getName())) {
-            // 同步更新其他关联表中的数据
+            // Synchronously update data in other related tables
             categoryBrandRelationService.updateBrand(brand.getBrandId(), brand.getName());
 
-            //TODO 更新其他关联
+            //TODO Update other associations
         }
     }
 

@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * spu属性值
+ * spuattribute value
  * 
  * @author liurui
  * @email liurui@gmail.com
@@ -25,27 +25,27 @@ public class ProductAttrValueEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 商品id
+	 * commodityid
 	 */
 	private Long spuId;
 	/**
-	 * 属性id
+	 * propertyid
 	 */
 	private Long attrId;
 	/**
-	 * 属性名
+	 * attribute name
 	 */
 	private String attrName;
 	/**
-	 * 属性值
+	 * attribute value
 	 */
 	private String attrValue;
 	/**
-	 * 顺序
+	 * order
 	 */
 	private Integer attrSort;
 	/**
-	 * 快速展示【是否展示在介绍上；0-否 1-是】
+	 * Quick display [whether to display on the introduction;0-no 1-yes】
 	 */
 	private Integer quickShow;
 

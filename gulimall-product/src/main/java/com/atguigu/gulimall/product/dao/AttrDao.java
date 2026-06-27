@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 /**
- * 商品属性
+ * Product attributes
  * 
  * @author liurui
  * @email liurui@gmail.com

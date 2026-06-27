@@ -43,9 +43,9 @@ export default function Checkout() {
       return
     }
     setSubmitting(true)
-    // 后端 submitOrder 为占位实现，前端模拟下单成功
+    // Backend submitOrder is a placeholder; frontend simulates successful order submission
     setTimeout(() => {
-      alert('订单提交功能需后端完善 submitOrder 接口。当前为演示模式。')
+      alert('Order submission requires the backend submitOrder API to be implemented. Currently in demo mode.')
       clearCart()
       setSubmitting(false)
       navigate('/member/orders')
@@ -56,12 +56,12 @@ export default function Checkout() {
 
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
-      <h1 className="page-title">确认订单</h1>
+      <h1 className="page-title">Confirm order</h1>
 
       <div className="card" style={{ padding: 20, marginBottom: 16 }}>
-        <h3 style={{ marginBottom: 12, fontSize: 16 }}>收货地址</h3>
+        <h3 style={{ marginBottom: 12, fontSize: 16 }}>Shipping address</h3>
         {loading ? (
-          <div className="loading">加载地址...</div>
+          <div className="loading">Loading addresses...</div>
         ) : addresses.length > 0 ? (
           <div className="address-list">
             {addresses.map((addr) => (
@@ -78,21 +78,21 @@ export default function Checkout() {
                   </div>
                 </div>
                 {addr.defaultStatus === 1 && (
-                  <span style={{ color: '#e4393c', fontSize: 12 }}>默认</span>
+                  <span style={{ color: '#e4393c', fontSize: 12 }}>Default</span>
                 )}
               </div>
             ))}
           </div>
         ) : (
           <div>
-            <p style={{ color: '#999', marginBottom: 12 }}>暂无收货地址</p>
-            <Link to="/member/address" className="btn btn-outline">添加地址</Link>
+            <p style={{ color: '#999', marginBottom: 12 }}>No shipping addresses yet</p>
+            <Link to="/member/address" className="btn btn-outline">Add address</Link>
           </div>
         )}
       </div>
 
       <div className="card" style={{ padding: 20, marginBottom: 16 }}>
-        <h3 style={{ marginBottom: 12, fontSize: 16 }}>商品清单</h3>
+        <h3 style={{ marginBottom: 12, fontSize: 16 }}>Order items</h3>
         {items.map((item) => (
           <div key={item.skuId} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
             <span>{item.skuName} × {item.count}</span>
@@ -103,7 +103,7 @@ export default function Checkout() {
 
       <div className="cart-footer">
         <div className="cart-total">
-          应付总额：
+          Total due:
           <span className="price">
             <span className="price-symbol">¥</span>
             <span className="price-value">{totalPrice().toFixed(2)}</span>
@@ -114,7 +114,7 @@ export default function Checkout() {
           onClick={handleSubmit}
           disabled={submitting}
         >
-          {submitting ? '提交中...' : '提交订单'}
+          {submitting ? 'Submitting...' : 'Place order'}
         </button>
       </div>
     </div>

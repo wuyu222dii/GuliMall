@@ -43,7 +43,7 @@ export default function Home() {
         <div className="category-sidebar">
           {catalogEntries.slice(0, 10).map(([cat1Id, cat2List]) => (
             <div key={cat1Id} className="category-item">
-              分类 {cat1Id}
+              Category {cat1Id}
               <div className="category-popup">
                 {(cat2List || []).map((cat2) => (
                   <div key={cat2.id} className="cat2-group">
@@ -64,24 +64,24 @@ export default function Home() {
             </div>
           ))}
           {catalogEntries.length === 0 && !loading && (
-            <div className="category-item">暂无分类数据</div>
+            <div className="category-item">No category data available</div>
           )}
         </div>
 
         <div style={{ flex: 1 }}>
           {banners.length > 0 ? (
             <div className="home-banner" style={{ background: '#e4393c' }}>
-              {banners[0].name || '谷粒商城 品质好物'}
+              {banners[0].name || 'Gulimall — Quality Products'}
             </div>
           ) : (
-            <div className="home-banner">谷粒商城 · 品质生活</div>
+            <div className="home-banner">Gulimall · Quality Living</div>
           )}
         </div>
       </div>
 
-      <h2 className="section-title">热门推荐</h2>
+      <h2 className="section-title">Hot Picks</h2>
       {loading ? (
-        <div className="loading">加载中...</div>
+        <div className="loading">Loading...</div>
       ) : products.length > 0 ? (
         <div className="product-grid">
           {products.map((p) => (
@@ -90,7 +90,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="empty-state">
-          暂无商品数据，请确认 gulimall-product 服务已启动（端口 10000）
+          No product data available. Please ensure the gulimall-product service is running (port 10000).
         </div>
       )}
     </div>

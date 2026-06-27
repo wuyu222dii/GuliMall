@@ -18,7 +18,7 @@ import com.atguigu.common.utils.R;
 
 
 /**
- * 专题商品
+ * Subject Product
  *
  * @author liurui
  * @email liurui@gmail.com
@@ -31,7 +31,7 @@ public class SmsHomeSubjectSpuController {
     private SmsHomeSubjectSpuService smsHomeSubjectSpuService;
 
     /**
-     * 列表
+     * List
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:smshomesubjectspu:list")
@@ -43,7 +43,7 @@ public class SmsHomeSubjectSpuController {
 
 
     /**
-     * 信息
+     * Info
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:smshomesubjectspu:info")
@@ -54,7 +54,7 @@ public class SmsHomeSubjectSpuController {
     }
 
     /**
-     * 保存
+     * Save
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:smshomesubjectspu:save")
@@ -65,7 +65,7 @@ public class SmsHomeSubjectSpuController {
     }
 
     /**
-     * 修改
+     * Update
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:smshomesubjectspu:update")
@@ -76,7 +76,7 @@ public class SmsHomeSubjectSpuController {
     }
 
     /**
-     * 删除
+     * Delete
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:smshomesubjectspu:delete")

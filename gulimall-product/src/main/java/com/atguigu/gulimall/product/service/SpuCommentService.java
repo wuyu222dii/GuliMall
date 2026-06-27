@@ -7,7 +7,7 @@ import com.atguigu.gulimall.product.entity.SpuCommentEntity;
 import java.util.Map;
 
 /**
- * 商品评价
+ * Product evaluation
  *
  * @author liurui
  * @email liurui@gmail.com

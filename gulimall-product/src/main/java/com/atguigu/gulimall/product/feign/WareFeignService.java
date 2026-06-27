@@ -12,9 +12,9 @@ import java.util.List;
 public interface WareFeignService {
 
     /**
-     * 1、R设计的时候可以加上范型
-     * 2、直接返回我们想要的结果
-     * 3、自己封装解析结果
+     * 1,RYou can add paradigms when designing
+     * 2, directly return the results we want
+     * 3, encapsulate the analysis results yourself
      *
      * @param skuIds
      * @return

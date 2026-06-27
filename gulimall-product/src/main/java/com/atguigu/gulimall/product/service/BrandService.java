@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 品牌
+ * brand
  *
  * @author liurui
  * @email liurui@gmail.com

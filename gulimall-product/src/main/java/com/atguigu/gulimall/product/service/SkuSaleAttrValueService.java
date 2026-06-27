@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * sku销售属性&值
+ * skuSales attributes&value
  *
  * @author liurui
  * @email liurui@gmail.com
