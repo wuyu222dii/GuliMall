@@ -19,7 +19,7 @@ export default function Login() {
     try {
       await login(form, admin)
       const redirect = params.get('redirect')
-      navigate(admin ? redirect?.startsWith('/admin/') && !redirect.startsWith('/admin/login') ? redirect : '/admin/products' : ['/member/orders', '/member/address', '/checkout'].includes(redirect) ? redirect : '/')
+      navigate(admin ? redirect?.startsWith('/admin/') && !redirect.startsWith('/admin/login') ? redirect : '/admin/products' : ['/member/orders', '/member/address', '/checkout', '/cart'].includes(redirect) ? redirect : '/')
     } catch (e) { setError(e.message) }
     finally { setBusy(false) }
   }

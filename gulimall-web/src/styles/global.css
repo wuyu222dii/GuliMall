@@ -863,3 +863,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .admin-table { min-width: 650px; }
   .admin-nav { gap: 16px; }
 }
+.cart-table { min-width: 760px; }
+.cart-table .qty-control { justify-content: center; }
+.cart-table .error-msg { margin: 6px 0 0; font-size: 13px; }

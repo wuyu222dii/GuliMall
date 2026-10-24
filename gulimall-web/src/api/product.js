@@ -23,14 +23,4 @@ export function checkPurchase(skuId) {
   return request.get(`/api/product/items/${skuId}/purchase-check`)
 }
 
-export async function checkCartItems(items) {
-  if (items.some((item) => !Number.isInteger(item.count) || item.count < 1 || item.count > 999)) {
-    throw new Error('Quantity must be a whole number from 1 to 999.')
-  }
-  return Promise.all(items.map(async (item) => {
-    try { return { ...item, ...(await checkPurchase(item.skuId)).skuInfo } }
-    catch (error) { throw new Error(`${item.skuName}: ${error.message}`) }
-  }))
-}
-
 export const searchProducts = (params) => request.get('/api/search', { params })

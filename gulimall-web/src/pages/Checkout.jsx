@@ -1,34 +1,29 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { getAddressList } from '../api/member'
-import { checkCartItems } from '../api/product'
 import { useCartStore } from '../store/cartStore'
 import { useAuthStore } from '../store/authStore'
 
 export default function Checkout() {
-  const navigate = useNavigate()
-  const { items } = useCartStore()
+  const selected = useCartStore((s) => s.selected)
   const user = useAuthStore((s) => s.user)
 
   const [addresses, setAddresses] = useState([])
   const [selectedAddr, setSelectedAddr] = useState(null)
   const [loading, setLoading] = useState(true)
   const [confirmedItems, setConfirmedItems] = useState([])
+  const [confirmedTotal, setConfirmedTotal] = useState(null)
   const [error, setError] = useState('')
   const [retry, setRetry] = useState(0)
 
   useEffect(() => {
     let active = true
-    if (items.length === 0) {
-      navigate('/cart')
-      return
-    }
     async function load() {
       setLoading(true); setError(''); setConfirmedItems([])
       try {
-        const [res, freshItems] = await Promise.all([getAddressList({ page: 1, limit: 20 }), checkCartItems(items)])
+        const [res, cart] = await Promise.all([getAddressList({ page: 1, limit: 20 }), selected()])
         if (!active) return
-        setConfirmedItems(freshItems)
+        setConfirmedItems(cart.items); setConfirmedTotal(cart.totalAmount)
         if (res.code === 0) {
           const list = res.page?.list || []
           setAddresses(list)
@@ -43,9 +38,8 @@ export default function Checkout() {
     }
     load()
     return () => { active = false }
-  }, [items, navigate, retry, user?.id])
+  }, [selected, retry, user?.id])
 
-  if (items.length === 0) return null
 
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
@@ -100,7 +94,7 @@ export default function Checkout() {
           Total due:
           <span className="price">
             <span className="price-symbol">¥</span>
-            <span className="price-value">{loading || error ? 'Unavailable' : confirmedItems.reduce((sum, item) => sum + Number(item.price) * item.count, 0).toFixed(2)}</span>
+            <span className="price-value">{loading || error ? 'Unavailable' : Number(confirmedTotal).toFixed(2)}</span>
           </span>
         </div>
         <button

@@ -1,0 +1,10 @@
+import request from './request'
+const config = (owner) => ({ headers: { 'X-Cart-Owner': String(owner) } })
+export const getCart = (owner) => request.get('/api/cart', config(owner))
+export const getSelected = (owner) => request.get('/api/cart/selected', config(owner))
+export const addCart = (owner, skuId, count) => request.post('/api/cart/items', { skuId, count }, config(owner))
+export const updateCartCount = (owner, skuId, count) => request.put('/api/cart/items/count', { skuId, count }, config(owner))
+export const checkCart = (owner, skuId, checked) => request.put('/api/cart/items/checked', { skuId, checked }, config(owner))
+export const removeCart = (owner, skuId) => request.delete(`/api/cart/items/${skuId}`, config(owner))
+export const clearCart = (owner) => request.delete('/api/cart', config(owner))
+export const mergeCart = (owner, batch) => request.post('/api/cart/merge', { mergeId: batch.id, items: batch.items.map(({ skuId, count, checked }) => ({ skuId, count, checked })) }, config(owner))

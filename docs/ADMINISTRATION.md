@@ -65,7 +65,7 @@ SHOW COLUMNS FROM gulimall_wms_demo.wms_purchase_detail LIKE 'failure_reason';
 
 ## 可重复验收
 
-先构建并通过 `scripts/services.ps1 Start` 启动九个业务服务，等待 Nacos 注册和 Smoke 成功。Windows 重建 jar 前先 Stop。加载本机工具与 `.env` 后：
+先构建并通过 `scripts/services.ps1 Start` 启动十个业务服务，等待 Nacos 注册和 Smoke 成功。Windows 重建 jar 前先 Stop。加载本机工具与 `.env` 后：
 
 ```powershell
 node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs

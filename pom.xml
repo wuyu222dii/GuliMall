@@ -14,6 +14,7 @@
 		<module>gulimall-coupon</module>
 		<module>gulimall-member</module>
 		<module>gulimall-order</module>
+        <module>gulimall-cart</module>
 		<module>gulimall-search</module>
 		<module>gulimall-ware</module>
 		<module>renren-generator</module>

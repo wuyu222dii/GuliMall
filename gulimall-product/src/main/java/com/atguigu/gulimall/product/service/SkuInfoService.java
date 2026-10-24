@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
  * @date 2023-10-18 13:34:55
  */
 public interface SkuInfoService extends IService<SkuInfoEntity> {
+    java.util.List<com.atguigu.common.to.CartProductTo> cartProducts(java.util.List<Long> ids);
 
     PageUtils queryPage(Map<String, Object> params);
 

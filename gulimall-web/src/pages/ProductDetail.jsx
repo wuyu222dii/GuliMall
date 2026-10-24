@@ -33,7 +33,7 @@ export default function ProductDetail() {
     setBusy(true); setNotice(''); setPurchaseError('')
     try {
       const fresh = await checkPurchase(skuId)
-      addItem(fresh.skuInfo, qty)
+      await addItem(fresh.skuInfo, qty)
       if (buyNow) navigate('/cart')
       else setNotice('Added to cart.')
     } catch (e) { setPurchaseError(e.message) }

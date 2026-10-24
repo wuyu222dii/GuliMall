@@ -67,8 +67,8 @@ node --test scripts/baseline.test.mjs
 
 新增检查包括：
 
-- Java：短信 Feign POST/参数契约、默认不加载付费云组件、BCrypt 与安全响应、开发验证码开关、分类大 ID 回归、Mapper 离线解析、详情缺失与库存失败处理、本地图像验证/路径边界/持久化，以及搜索返回值、nested 配对、零价格上限与参数边界，共 14 项。
-- Node：实体/SQL 覆盖、种子数据列匹配、数据库和凭据隔离。
+- Java：认证/安全响应、云组件开关、分类/详情、图片、搜索，以及购物车合并归一化、BigDecimal 勾选合计和服务失败保留数据，共 17 项。
+- Node：实体/SQL 覆盖、种子列、凭据隔离、商品展示校验，以及访客迁移/pending 绑定和金额数量边界，共 7 项。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
 这些默认检查不连接数据库。阶段 1–3 的运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；阶段 3 已验证采购入库并发与幂等，尚未实现下单锁库或支付。
@@ -97,11 +97,13 @@ Windows 也可统一后台启动，使用已构建的 jar，日志写入 `.tools
 ./scripts/services.ps1 Stop
 # 仅操作单个服务：
 ./scripts/services.ps1 Start -Modules ware
+# 购物车服务：
+./scripts/services.ps1 Start -Modules cart
 ```
 
 Start 只表示进程已创建，需等待 Nacos 注册与 Smoke 成功。Stop 仅匹配本工作区标记与完整 jar 路径，不停止其他项目/IDE JVM；通过 IDE 或 dev.ps1 Run 启动的进程应在各自终端停止。阶段 2 的自动故障验收要求仓储服务由 services.ps1 启动。
 
-模块参数使用完整名称，如 `gulimall-member`。默认业务端口：商品 **10001**（`.env` 的 PRODUCT_PORT，避开已发现的 10000 端口占用）、会员 8000、营销 7001、库存 11000、搜索 12000、订单 9000、认证 20000、第三方 30000、网关 88。业务服务默认仅监听本机。生成器为 8088，不是必要启动项。
+模块参数使用完整名称，如 `gulimall-member`。默认业务端口：商品 **10001**（`.env` 的 PRODUCT_PORT，避开已发现的 10000 端口占用）、会员 8000、营销 7001、库存 11000、搜索 12000、订单 9000、购物车 18000、认证 20000、第三方 30000、网关 88。业务服务默认仅监听本机。生成器为 8088，不是必要启动项。
 
 ```powershell
 cd gulimall-web
@@ -115,6 +117,8 @@ npm run dev
 阶段 3 已有库必须先核对重复库存，再执行一次 `infra/migrations/002-procurement.sql`；当前机器已迁移，不要重复运行。空库基线已包含该变更。录入、采购流程和验收命令见 [ADMINISTRATION.md](ADMINISTRATION.md)。
 
 阶段 4 新增商品库同步任务表，已有库确认表不存在并备份后执行一次 `infra/migrations/003-search-sync.sql`，当前机器已完成；当前演示库共 69 张表。运行 `./scripts/search-index.ps1` 创建/检查映射，再由管理员在 `/admin/products/sync` 排入全量重建任务。脚本保留已有文档；索引丢失可重建，不删除商品数据。搜索故障验收会停止 ES 并删除/恢复本项目派生索引，限独立本机演示环境，详见 [SEARCH.md](SEARCH.md)。
+
+阶段 5 新增 `gulimall-cart`：当前聚合构建十三个项目、后台启动十个业务服务；购物车使用已有 Redis AOF 卷，无新增 SQL 表。共享 Session 和网关保护，详情/加购/结算按最新商品状态处理。合并协议、运行验收及恢复边界见 [CART.md](CART.md)。
 
 Windows 上重建 jar 前须先停止对应业务服务，避免正在运行的 jar 被占用。当前机器可使用 `. ./.tools/enter-dev.ps1` 加载工具；启动和停止统一使用已提交的 `scripts/services.ps1`。`.tools/enter-dev.ps1` 仅供此机器使用，其他机器应配置自己的 JAVA_HOME 和 PATH。
 

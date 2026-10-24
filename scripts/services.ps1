@@ -1,13 +1,13 @@
 param(
     [ValidateSet('Start', 'Stop')][string]$Action = 'Start',
-    [ValidateSet('product','member','coupon','ware','order','search','auth-server','third-party','gateway')][string[]]$Modules
+    [ValidateSet('product','member','coupon','ware','order','search','auth-server','third-party','cart','gateway')][string[]]$Modules
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'env.ps1')
 if (-not $env:JAVA_HOME -or -not (Test-Path -LiteralPath (Join-Path $env:JAVA_HOME 'bin/java.exe'))) { throw 'Set JAVA_HOME to JDK 8 first.' }
 $taskWorkspace = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $taskMarker = '-Dgulimall.workspace=' + $taskWorkspace.Replace('\', '/')
-if (-not $Modules) { $Modules = @('product','member','coupon','ware','order','search','auth-server','third-party','gateway') }
+if (-not $Modules) { $Modules = @('product','member','coupon','ware','order','search','auth-server','third-party','cart','gateway') }
 $taskLogs = Join-Path $taskWorkspace '.tools/runtime'
 New-Item -ItemType Directory -Force $taskLogs | Out-Null
 foreach ($taskModule in $Modules) {

@@ -1,7 +1,7 @@
 param(
     [ValidateSet('Check', 'Up', 'Down', 'Status', 'Build', 'Run', 'Smoke')]
     [string]$Action = 'Check',
-    [ValidateSet('gulimall-product', 'gulimall-member', 'gulimall-coupon', 'gulimall-ware', 'gulimall-search', 'gulimall-order', 'gulimall-auth-server', 'gulimall-third-party', 'gulimall-gateway', 'renren-generator')]
+    [ValidateSet('gulimall-product', 'gulimall-member', 'gulimall-coupon', 'gulimall-ware', 'gulimall-search', 'gulimall-order', 'gulimall-auth-server', 'gulimall-third-party', 'gulimall-cart', 'gulimall-gateway', 'renren-generator')]
     [string]$Module
 )
 $ErrorActionPreference = 'Stop'

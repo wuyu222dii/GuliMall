@@ -1,11 +1,14 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useCartStore } from '../../store/cartStore'
 import { useAuthStore } from '../../store/authStore'
 
 export default function Header() {
   const navigate = useNavigate()
-  const totalCount = useCartStore((s) => s.totalCount())
+  const totalCount = useCartStore((s) => s.items.reduce((sum, item) => sum + item.count, 0))
+  const cartError = useCartStore((s) => s.error)
+  const pendingCount = useCartStore((s) => s.pendingCount)
+  const location = useLocation()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const [error, setError] = useState('')
@@ -47,6 +50,7 @@ export default function Header() {
       </div>
 
       {error && <div className="error-msg container" role="alert">{error}</div>}
+      {user && !user.admin && location.pathname !== '/cart' && (cartError || pendingCount > 0) && <div className="error-msg container" role="alert">Cart needs attention; your saved data is kept. <Link to="/cart">View cart / retry merge</Link></div>}
 
       <div className="header-main">
         <div className="container">

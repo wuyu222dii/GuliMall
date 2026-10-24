@@ -69,6 +69,7 @@ public class ServletSecurityConfiguration implements WebMvcConfigurer {
                 if (!publicPath) {
                     if (user == null) { return deny(response, 401, "请先登录"); }
                     boolean memberPath = path.startsWith("/member/addresses") || path.startsWith("/order/mine")
+                            || path.equals("/cart") || path.startsWith("/cart/")
                             || path.equals("/auth/logout") || path.equals("/aliPayOrder");
                     if (!memberPath && !user.isAdmin()) { return deny(response, 403, "需要管理员权限"); }
                     if (memberPath && !path.equals("/auth/logout") && user.isAdmin()) { return deny(response, 403, "需要会员身份"); }

@@ -52,7 +52,7 @@ SHOW INDEX FROM gulimall_ums_demo.ums_member;
 
 ## 可重复验收
 
-默认 Maven 测试不连接演示库；包含 BCrypt、私密字段序列化、开发配置限制和 Feign 契约检查。额外运行验收须启动五个容器与九个业务服务，再在项目根目录：
+默认 Maven 测试不连接演示库；包含 BCrypt、私密字段序列化、开发配置限制和 Feign 契约检查。额外运行验收须启动五个容器与十个业务服务，再在项目根目录：
 
 ```powershell
 . ./scripts/env.ps1

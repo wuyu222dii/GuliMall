@@ -33,6 +33,30 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
     @Autowired private WareFeignService wareFeignService;
 
     @Override
+    public java.util.List<com.atguigu.common.to.CartProductTo> cartProducts(java.util.List<Long> ids) {
+        if (ids == null || ids.isEmpty() || ids.size() > 100 || ids.stream().anyMatch(id -> id == null || id < 1) || new java.util.HashSet<>(ids).size() != ids.size()) throw new ApiProblem(400, "SKU 编号不正确");
+        java.util.Collection<SkuInfoEntity> skus = listByIds(ids);
+        java.util.Map<Long,SpuInfoEntity> spus = new java.util.HashMap<>();
+        if (!skus.isEmpty()) for (SpuInfoEntity spu : spuInfoService.listByIds(skus.stream().map(SkuInfoEntity::getSpuId).collect(java.util.stream.Collectors.toSet()))) spus.put(spu.getId(),spu);
+        java.util.Map<Long,Boolean> stocks = new java.util.HashMap<>();
+        try {
+            R response = wareFeignService.getSkuHasStock(ids);
+            if (response.getCode() == 0) {
+                java.util.List<SkuHasStockVo> values = response.getData("data",new TypeReference<java.util.List<SkuHasStockVo>>(){});
+                if (values != null) for (SkuHasStockVo value : values) stocks.put(value.getSkuId(),value.getHasStock());
+            }
+        } catch (Exception unavailable) { /* Unknown inventory must remain unknown. */ }
+        java.util.List<com.atguigu.common.to.CartProductTo> result = new java.util.ArrayList<>();
+        for (SkuInfoEntity sku : skus) {
+            SpuInfoEntity spu = spus.get(sku.getSpuId()); if (spu == null) continue;
+            com.atguigu.common.to.CartProductTo item = new com.atguigu.common.to.CartProductTo();
+            item.setSkuId(sku.getSkuId()); item.setSkuName(sku.getSkuTitle() == null ? sku.getSkuName() : sku.getSkuTitle()); item.setSkuDefaultImg(sku.getSkuDefaultImg());
+            item.setPrice(sku.getPrice()); item.setOnSale(Integer.valueOf(1).equals(spu.getPublishStatus())); item.setHasStock(stocks.get(sku.getSkuId())); result.add(item);
+        }
+        return result;
+    }
+
+    @Override
     public PageUtils queryPage(Map<String, Object> params) {
         return queryPageByCondition(params);
     }

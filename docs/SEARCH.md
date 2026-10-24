@@ -69,7 +69,7 @@ ES 使用相同 SKU ID、外部版本及批量写入，批量任一项失败保�
 
 ## 可重复验收
 
-启动九个业务服务与前端，并通过 Smoke 后运行：
+启动十个业务服务与前端，并通过 Smoke 后运行：
 
 ```powershell
 $env:GULIMALL_ACCEPTANCE='1'
