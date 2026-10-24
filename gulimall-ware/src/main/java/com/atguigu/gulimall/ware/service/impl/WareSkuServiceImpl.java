@@ -32,6 +32,9 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
+        int pageNumber = Integer.parseInt((String) params.getOrDefault("page", "1"));
+        int pageSize = Integer.parseInt((String) params.getOrDefault("limit", "20"));
+        if (pageNumber < 1 || pageSize < 1 || pageSize > 100) throw new com.atguigu.common.security.ApiProblem(400, "分页参数不正确");
         /**
          * skuId
          * wareId
@@ -49,7 +52,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
 
         IPage<WareSkuEntity> page = this.page(
                 new Query<WareSkuEntity>().getPage(params),
-                new QueryWrapper<WareSkuEntity>()
+                queryWrapper
         );
 
         return new PageUtils(page);
@@ -57,35 +60,14 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
 
     @Override
     public void addStock(Long skuId, Long wareId, Integer skuNum) {
-        // Add a stock record if none exists yet
-        QueryWrapper<WareSkuEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("sku_id", skuId)
-                .eq("ware_id", wareId);
-        List<WareSkuEntity> entities = wareSkuDao.selectList(queryWrapper);
-        if (entities == null || entities.size() == 0) {
-            WareSkuEntity skuEntity = new WareSkuEntity();
-            skuEntity.setSkuId(skuId);
-            skuEntity.setStock(skuNum);
-            skuEntity.setWareId(wareId);
-            skuEntity.setStockLocked(0);
-            // TODO: Remote lookup of SKU name; if it fails, the whole transaction need not roll back
-            // 1. Catch the exception locally
-            // 2. TODO: What else can prevent partial rollback on exception?
-            try {
-                R info = productFeignService.info(skuId);
-                Map<String, Object> data = (Map<String, Object>) info.get("skuInfo");
-                if (info.getCode() == 0) {
-                    skuEntity.setSkuName((String) data.get("skuName"));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            wareSkuDao.insert(skuEntity);
-        } else {
-            wareSkuDao.addStock(skuId, wareId, skuNum);
-        }
+        if (skuId == null || wareId == null || skuNum == null || skuNum < 1 || skuNum > 1000000) throw new com.atguigu.common.security.ApiProblem(400, "入库数量不正确");
+        String name = null;
+        try {
+            R info = productFeignService.info(skuId);
+            if (info.getCode() == 0 && info.get("skuInfo") instanceof Map) name = (String) ((Map<?,?>) info.get("skuInfo")).get("skuName");
+        } catch (Exception ignored) { /* SKU name is optional; inventory does not depend on the lookup. */ }
+        wareSkuDao.addStock(skuId, wareId, skuNum, name);
     }
-
     @Override
     public List<SkuHasStockVo> getSkuHasStock(List<Long> skuIds) {
         List<SkuHasStockVo> collect = skuIds.stream().map(skuId -> {

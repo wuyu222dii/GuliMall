@@ -15,6 +15,7 @@ import java.util.List;
  */
 @Data
 public class Skus {
+    private Long skuId;
 
     private List<Attr> attr;
     private String skuName;

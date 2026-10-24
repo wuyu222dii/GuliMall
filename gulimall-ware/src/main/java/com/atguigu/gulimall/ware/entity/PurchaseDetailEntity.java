@@ -50,4 +50,6 @@ public class PurchaseDetailEntity implements Serializable {
 	 */
 	private Integer status;
 
+    private String failureReason;
+
 }

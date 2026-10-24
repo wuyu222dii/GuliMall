@@ -64,8 +64,7 @@ public class SkuInfoController {
     //@RequiresPermissions("product:skuinfo:save")
     public R save(@RequestBody SpuSaveVo vo) {
 //		skuInfoService.save(skuInfo);
-        spuInfoService.saveSpuInfo(vo);
-        return R.ok();
+        return R.ok().put("id", spuInfoService.saveSpuInfo(vo));
     }
 
     /**
@@ -74,7 +73,7 @@ public class SkuInfoController {
     @RequestMapping("/update")
     //@RequiresPermissions("product:skuinfo:update")
     public R update(@RequestBody SkuInfoEntity skuInfo) {
-        skuInfoService.updateById(skuInfo);
+        skuInfoService.updateManagedSku(skuInfo);
 
         return R.ok();
     }
@@ -85,9 +84,7 @@ public class SkuInfoController {
     @RequestMapping("/delete")
     //@RequiresPermissions("product:skuinfo:delete")
     public R delete(@RequestBody Long[] skuIds) {
-        skuInfoService.removeByIds(Arrays.asList(skuIds));
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409, "已有 SKU 不能直接删除，请下架所属商品");
     }
 
 }

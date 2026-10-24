@@ -2,12 +2,13 @@
 
 Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / Vite 前端。
 
-阶段 0–2 已验收。已接入真实认证、会员隔离、管理员保护、消费者商品筛选、完整详情与可售性检查；服务端购物车、真实下单及沙箱支付仍待后续阶段完成。
+阶段 0–3 已验收。已接入真实认证、会员隔离、管理员保护、商品浏览与详情，以及多 SKU 商品管理、本地图片上传和幂等采购入库；ES 同步、服务端购物车、真实下单及沙箱支付仍待后续阶段完成。
 
 - [开发环境、构建与启动说明](docs/DEVELOPMENT.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
 - [认证接口、管理员配置与安全验收](docs/AUTHENTICATION.md)
 - [商品浏览接口与阶段 2 验收](docs/CATALOG.md)
+- [商品管理、图片上传与采购入库](docs/ADMINISTRATION.md)
 - [前端现状](gulimall-web/README.md)
 
 ## 快速开始
@@ -37,7 +38,7 @@ services.ps1 在后台启动本项目的九个 jar，日志在 .tools/runtime；
 | gulimall-order | 订单、支付和售后数据；下单仍为占位 | 9000 |
 | gulimall-search | Elasticsearch 索引与检索 | 12000 |
 | gulimall-auth-server | 注册、会员/管理员登录、Session 和开发验证码 | 20000 |
-| gulimall-third-party | 云短信/OSS，默认关闭 | 30000 |
+| gulimall-third-party | 本地图片上传；云短信/OSS 默认关闭 | 30000 |
 | gulimall-gateway | API 网关 | 88 |
 | gulimall-common | 公共工具及传输对象，不能独立启动 | — |
 | renren-generator | 代码生成工具，非商城必要启动项 | 8088 |

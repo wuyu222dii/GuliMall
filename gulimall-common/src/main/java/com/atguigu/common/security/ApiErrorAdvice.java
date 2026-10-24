@@ -11,9 +11,14 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class ApiErrorAdvice {
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<R> tooLarge(Exception e) {
+        return ResponseEntity.status(413).contentType(MediaType.APPLICATION_JSON).body(R.error(413, "图片不能超过 2 MB"));
+    }
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<R> method(Exception e) {
         return ResponseEntity.status(405).contentType(MediaType.APPLICATION_JSON).body(R.error(405, "请求方法不支持"));

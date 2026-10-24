@@ -15,6 +15,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -38,6 +39,24 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
     @Override
     public void saveSkuInfo(SkuInfoEntity skuInfoEntity) {
         baseMapper.insert(skuInfoEntity);
+    }
+
+    @Override
+    @Transactional
+    public void updateManagedSku(SkuInfoEntity change) {
+        SkuInfoEntity old = getById(change.getSkuId());
+        if (old == null) throw new ApiProblem(404, "SKU 不存在");
+        spuInfoService.getOne(new QueryWrapper<SpuInfoEntity>().eq("id", old.getSpuId()).last("FOR UPDATE"));
+        if (change.getSpuId() != null && !change.getSpuId().equals(old.getSpuId())
+                || change.getCatalogId() != null && !change.getCatalogId().equals(old.getCatalogId())
+                || change.getBrandId() != null && !change.getBrandId().equals(old.getBrandId())) throw new ApiProblem(400, "请通过完整商品编辑修改分类或品牌，不能移动 SKU");
+        SkuInfoEntity value = new SkuInfoEntity(); value.setSkuId(old.getSkuId());
+        if (change.getPrice() != null) { ProductInputs.amount(change.getPrice(), "售价"); value.setPrice(change.getPrice()); }
+        if (change.getSkuName() != null) value.setSkuName(ProductInputs.text(change.getSkuName(), 200, "SKU 名称"));
+        if (change.getSkuTitle() != null) value.setSkuTitle(ProductInputs.text(change.getSkuTitle(), 200, "SKU 标题"));
+        if (change.getSkuSubtitle() != null) { if (change.getSkuSubtitle().length() > 500) throw new ApiProblem(400, "副标题过长"); value.setSkuSubtitle(change.getSkuSubtitle()); }
+        if (change.getSkuDefaultImg() != null) { ProductInputs.image(change.getSkuDefaultImg()); value.setSkuDefaultImg(change.getSkuDefaultImg()); }
+        updateById(value);
     }
 
     @Override

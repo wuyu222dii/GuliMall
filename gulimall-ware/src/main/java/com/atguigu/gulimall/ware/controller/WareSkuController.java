@@ -67,9 +67,7 @@ public class WareSkuController {
     @RequestMapping("/save")
     //@RequiresPermissions("ware:waresku:save")
     public R save(@RequestBody WareSkuEntity wareSku) {
-        wareSkuService.save(wareSku);
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409, "库存变更必须通过采购入库业务");
     }
 
     /**
@@ -78,9 +76,7 @@ public class WareSkuController {
     @RequestMapping("/update")
     //@RequiresPermissions("ware:waresku:update")
     public R update(@RequestBody WareSkuEntity wareSku) {
-        wareSkuService.updateById(wareSku);
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409, "库存变更必须通过采购入库业务");
     }
 
     /**
@@ -89,9 +85,7 @@ public class WareSkuController {
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:waresku:delete")
     public R delete(@RequestBody Long[] ids) {
-        wareSkuService.removeByIds(Arrays.asList(ids));
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409, "库存记录不能直接删除");
     }
 
 }

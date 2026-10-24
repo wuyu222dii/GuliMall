@@ -22,7 +22,7 @@ public interface PurchaseService extends IService<PurchaseEntity> {
 
     PageUtils queryPageUnreceive(Map<String, Object> params);
 
-    void mergePurchase(MergeVo mergeVo);
+    Long mergePurchase(MergeVo mergeVo);
 
     void received(List<Long> ids);
 

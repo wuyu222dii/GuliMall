@@ -59,9 +59,9 @@ public class WareInfoController {
     @RequestMapping("/save")
     //@RequiresPermissions("ware:wareinfo:save")
     public R save(@RequestBody WareInfoEntity wareInfo){
-		wareInfoService.save(wareInfo);
-
-        return R.ok();
+        if (wareInfo.getName() == null || wareInfo.getName().trim().isEmpty() || wareInfo.getName().length() > 100 || wareInfo.getAddress() == null || wareInfo.getAddress().trim().isEmpty() || wareInfo.getAddress().length() > 255) throw new com.atguigu.common.security.ApiProblem(400, "仓库名称或地址不正确");
+        wareInfo.setId(null); wareInfoService.save(wareInfo);
+        return R.ok().put("id", wareInfo.getId());
     }
 
     /**
@@ -81,9 +81,7 @@ public class WareInfoController {
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:wareinfo:delete")
     public R delete(@RequestBody Long[] ids){
-		wareInfoService.removeByIds(Arrays.asList(ids));
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409, "仓库须保留采购和库存引用，本阶段不提供直接删除");
     }
 
 }

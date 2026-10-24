@@ -25,6 +25,14 @@ public class SpuInfoController {
     @Autowired
     private SpuInfoService spuInfoService;
 
+    @GetMapping("/editor/{id}")
+    public R editor(@PathVariable Long id) { return R.ok().put("product", spuInfoService.getEditor(id)); }
+
+    @PostMapping("/editor")
+    public R saveEditor(@RequestBody com.atguigu.gulimall.product.vo.SpuSaveVo product) {
+        return R.ok().put("id", spuInfoService.saveSpuInfo(product));
+    }
+
     // /product/spuinfo/{spuId}/up
     @PostMapping("/{spuId}/up")
     public R spuUp(@PathVariable("spuId") Long spuId) {
@@ -84,9 +92,7 @@ public class SpuInfoController {
     @RequestMapping("/delete")
     //@RequiresPermissions("product:spuinfo:delete")
     public R delete(@RequestBody Long[] ids) {
-        spuInfoService.removeByIds(Arrays.asList(ids));
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409, "商品保留库存和订单引用，不能直接删除，请下架商品");
     }
 
 }

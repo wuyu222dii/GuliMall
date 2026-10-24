@@ -61,6 +61,7 @@ public class ServletSecurityConfiguration implements WebMvcConfigurer {
                         || read && (path.equals("/index/catalog.json") || path.equals("/product/category/list/tree")
                         || path.equals("/product/items") || path.matches("/product/items/[^/]+(/purchase-check)?")
                         || path.equals("/product/categories") || path.equals("/product/brands")
+                        || path.matches("/media/[a-f0-9]{32}\\.(png|jpg)")
                         || path.equals("/coupon/homeadv/list") || path.equals("/coupon/homesubject/list")
                         || path.equals("/list.html") || path.equals("/search"))
                         || path.equals("/ware/waresku/hasstock") && "POST".equals(method);

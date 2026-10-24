@@ -28,6 +28,7 @@ import com.atguigu.common.utils.R;
 public class PurchaseController {
     @Autowired
     private PurchaseService purchaseService;
+    @Autowired private com.atguigu.gulimall.ware.service.PurchaseDetailService details;
 
     /**
      * Complete purchase order
@@ -58,8 +59,7 @@ public class PurchaseController {
     @PostMapping("/merge")
     public R merge(@RequestBody MergeVo mergeVo) {
 
-        purchaseService.mergePurchase(mergeVo);
-        return R.ok();
+        return R.ok().put("purchaseId", purchaseService.mergePurchase(mergeVo));
     }
 
     @RequestMapping("/unreceive/list")
@@ -89,8 +89,8 @@ public class PurchaseController {
     //@RequiresPermissions("ware:purchase:info")
     public R info(@PathVariable("id") Long id) {
         PurchaseEntity purchase = purchaseService.getById(id);
-
-        return R.ok().put("purchase", purchase);
+        if (purchase == null) throw new com.atguigu.common.security.ApiProblem(404, "采购单不存在");
+        return R.ok().put("purchase", purchase).put("items", details.listDetailByPurchaseId(id));
     }
 
     /**
@@ -99,11 +99,7 @@ public class PurchaseController {
     @RequestMapping("/save")
     //@RequiresPermissions("ware:purchase:save")
     public R save(@RequestBody PurchaseEntity purchase) {
-        purchase.setCreateTime(new Date());
-        purchase.setUpdateTime(new Date());
-        purchaseService.save(purchase);
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409, "请从采购需求合并创建采购单");
     }
 
     /**
@@ -112,9 +108,7 @@ public class PurchaseController {
     @RequestMapping("/update")
     //@RequiresPermissions("ware:purchase:update")
     public R update(@RequestBody PurchaseEntity purchase) {
-        purchaseService.updateById(purchase);
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409, "请使用领取和完成操作变更采购状态");
     }
 
     /**
@@ -123,9 +117,7 @@ public class PurchaseController {
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:purchase:delete")
     public R delete(@RequestBody Long[] ids) {
-        purchaseService.removeByIds(Arrays.asList(ids));
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409, "采购单须保留入库记录，不能直接删除");
     }
 
 }

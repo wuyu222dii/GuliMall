@@ -15,6 +15,9 @@ import java.util.Map;
  * @date 2023-10-18 15:52:12
  */
 public interface PurchaseDetailService extends IService<PurchaseDetailEntity> {
+    Long saveDemand(PurchaseDetailEntity request);
+
+    void deleteDemands(List<Long> ids);
 
     PageUtils queryPage(Map<String, Object> params);
 

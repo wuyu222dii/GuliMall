@@ -19,12 +19,12 @@ export default function Login() {
     try {
       await login(form, admin)
       const redirect = params.get('redirect')
-      navigate(admin ? '/admin' : ['/member/orders', '/member/address', '/checkout'].includes(redirect) ? redirect : '/')
+      navigate(admin ? redirect?.startsWith('/admin/') && !redirect.startsWith('/admin/login') ? redirect : '/admin/products' : ['/member/orders', '/member/address', '/checkout'].includes(redirect) ? redirect : '/')
     } catch (e) { setError(e.message) }
     finally { setBusy(false) }
   }
   if (admin && user?.admin) {
-    return <div className="container" style={{ padding: '32px 16px' }}><h1>管理员身份已验证</h1><p>当前账号：{user.username}</p><Link to="/">返回商城</Link></div>
+    return <div className="container" style={{ padding: '32px 16px' }}><h1>管理员身份已验证</h1><p>当前账号：{user.username}</p><Link className="btn btn-primary" to="/admin/products">进入管理后台</Link></div>
   }
   return (
     <div className="auth-page">

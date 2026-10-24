@@ -1,0 +1,26 @@
+import request from './request'
+
+export const getCatalog = () => request.get('/api/admin/product/admin/catalog')
+export const saveCatalog = (kind, data) => request.post(`/api/admin/product/admin/catalog/${kind}`, data)
+export const deleteCatalog = (kind, id) => request.delete(`/api/admin/product/admin/catalog/${kind}/${id}`)
+export const listProducts = (params) => request.get('/api/admin/product/spuinfo/list', { params })
+export const getProductEditor = (id) => request.get(`/api/admin/product/spuinfo/editor/${id}`)
+export const saveProduct = (data) => request.post('/api/admin/product/spuinfo/editor', data)
+export const listSkus = (params) => request.get('/api/admin/product/skuinfo/list', { params })
+export const uploadImage = (file) => {
+  const form = new FormData()
+  form.append('file', file)
+  return request.post('/api/admin/thirdparty/local/images', form)
+}
+export const warehouses = () => request.get('/api/admin/ware/wareinfo/list', { params: { page: 1, limit: 100 } })
+export const saveWarehouse = (data) => request.post('/api/admin/ware/wareinfo/save', data)
+export const listDemands = (params) => request.get('/api/admin/ware/purchasedetail/list', { params })
+export const saveDemand = (data) => request.post(`/api/admin/ware/purchasedetail/${data.id ? 'update' : 'save'}`, data)
+export const deleteDemand = (id) => request.post('/api/admin/ware/purchasedetail/delete', [id])
+export const listPurchases = (params) => request.get('/api/admin/ware/purchase/list', { params })
+export const getPurchase = (id) => request.get(`/api/admin/ware/purchase/info/${id}`)
+export const mergeDemands = (data) => request.post('/api/admin/ware/purchase/merge', data)
+export const receivePurchase = (id) => request.post('/api/admin/ware/purchase/received', [id])
+export const finishPurchase = (data) => request.post('/api/admin/ware/purchase/done', data)
+export const listStock = (params) => request.get('/api/admin/ware/waresku/list', { params })
+export const listOrders = (params) => request.get('/api/admin/order/order/list', { params })

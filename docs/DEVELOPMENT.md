@@ -67,11 +67,11 @@ node --test scripts/baseline.test.mjs
 
 新增检查包括：
 
-- Java：短信 Feign POST/参数契约、默认不加载付费云组件、BCrypt 与安全响应、开发验证码开关、分类大 ID 回归、Mapper 离线解析、详情缺失与库存失败处理，共 9 项。
+- Java：短信 Feign POST/参数契约、默认不加载付费云组件、BCrypt 与安全响应、开发验证码开关、分类大 ID 回归、Mapper 离线解析、详情缺失与库存失败处理，以及本地图像验证/路径边界/持久化，共 11 项。
 - Node：实体/SQL 覆盖、种子数据列匹配、数据库和凭据隔离。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
-这些默认检查不连接数据库。额外的阶段 1 运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；尚未验证库存并发或支付。
+这些默认检查不连接数据库。阶段 1–3 的运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；阶段 3 已验证采购入库并发与幂等，尚未实现下单锁库或支付。
 
 阶段 2 已修复 ProductCard props 校验，前端 lint 通过，未关闭规则。生成器 Oracle/SQL Server 驱动在 `legacy-database-drivers` 可选 profile 内，本次未验证该 profile。
 
@@ -110,7 +110,9 @@ npm run dev
 
 前端仅监听 `127.0.0.1:5173`，浏览器全部请求 `/api`，Vite 统一代理到网关 `127.0.0.1:88`；没有业务服务直连代理，也不加载根目录秘密到前端。请统一使用 `127.0.0.1`，避免与 localhost 的 Cookie 混用。
 
-云 OSS/真实短信默认关闭，避免启动时就要求付费账号。只有显式设置 OSS_ENABLED=true / SMS_ENABLED=true 并提供凭据才加载。阶段 1 验证码需同时启用 `dev` profile 和 `AUTH_SMS_MODE=development`，页面明确显示开发模式；真实短信和本地上传接口仍待后续阶段。
+云 OSS/真实短信默认关闭，避免启动时就要求付费账号。只有显式设置 OSS_ENABLED=true / SMS_ENABLED=true 并提供凭据才加载。阶段 1 验证码需同时启用 `dev` profile 和 `AUTH_SMS_MODE=development`，页面明确显示开发模式；真实短信仍待后续接入。本地图片上传已在阶段 3 完成，目录由 `UPLOAD_DIR` 控制，默认 `.data/uploads`，不随 jar 重建清除。
+
+阶段 3 已有库必须先核对重复库存，再执行一次 `infra/migrations/002-procurement.sql`；当前机器已迁移，不要重复运行。空库基线已包含该变更。录入、采购流程和验收命令见 [ADMINISTRATION.md](ADMINISTRATION.md)。
 
 Windows 上重建 jar 前须先停止对应业务服务，避免正在运行的 jar 被占用。当前机器可使用 `. ./.tools/enter-dev.ps1` 加载工具；启动和停止统一使用已提交的 `scripts/services.ps1`。`.tools/enter-dev.ps1` 仅供此机器使用，其他机器应配置自己的 JAVA_HOME 和 PATH。
 

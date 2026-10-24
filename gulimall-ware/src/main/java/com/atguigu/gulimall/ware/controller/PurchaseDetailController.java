@@ -59,9 +59,7 @@ public class PurchaseDetailController {
     @RequestMapping("/save")
     //@RequiresPermissions("ware:purchasedetail:save")
     public R save(@RequestBody PurchaseDetailEntity purchaseDetail){
-		purchaseDetailService.save(purchaseDetail);
-
-        return R.ok();
+        return R.ok().put("id", purchaseDetailService.saveDemand(purchaseDetail));
     }
 
     /**
@@ -70,9 +68,8 @@ public class PurchaseDetailController {
     @RequestMapping("/update")
     //@RequiresPermissions("ware:purchasedetail:update")
     public R update(@RequestBody PurchaseDetailEntity purchaseDetail){
-		purchaseDetailService.updateById(purchaseDetail);
-
-        return R.ok();
+        if (purchaseDetail == null || purchaseDetail.getId() == null) throw new com.atguigu.common.security.ApiProblem(400, "需求编号不能为空");
+        return R.ok().put("id", purchaseDetailService.saveDemand(purchaseDetail));
     }
 
     /**
@@ -81,7 +78,8 @@ public class PurchaseDetailController {
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:purchasedetail:delete")
     public R delete(@RequestBody Long[] ids){
-		purchaseDetailService.removeByIds(Arrays.asList(ids));
+        if (ids == null) throw new com.atguigu.common.security.ApiProblem(400, "需求编号不能为空");
+        purchaseDetailService.deleteDemands(Arrays.asList(ids));
 
         return R.ok();
     }

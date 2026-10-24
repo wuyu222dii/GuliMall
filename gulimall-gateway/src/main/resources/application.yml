@@ -10,6 +10,13 @@ spring:
         server-addr: ${NACOS_ADDR:127.0.0.1:18848}
     gateway:
       routes:
+        - id: local_media
+          uri: lb://gulimall-third-party
+          predicates:
+            - Path=/api/media/**
+            - Method=GET
+          filters:
+            - StripPrefix=1
         - id: authentication
           uri: lb://gulimall-auth-server
           predicates:

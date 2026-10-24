@@ -11,6 +11,12 @@ import Register from './pages/Register'
 import Checkout from './pages/Checkout'
 import MemberOrders from './pages/MemberOrders'
 import MemberAddress from './pages/MemberAddress'
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminProducts from './pages/admin/AdminProducts'
+import AdminProductEditor from './pages/admin/AdminProductEditor'
+import AdminCatalog from './pages/admin/AdminCatalog'
+import AdminProcurement from './pages/admin/AdminProcurement'
+import AdminOrders from './pages/admin/AdminOrders'
 
 export default function App() {
   const { ready, error, initialize } = useAuthStore()
@@ -28,7 +34,17 @@ export default function App() {
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="admin/login" element={<Login />} />
-          <Route path="admin" element={<Login />} />
+          <Route element={<AdminRoute />}>
+            <Route path="admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="products" replace />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="products/new" element={<AdminProductEditor />} />
+              <Route path="products/:id/edit" element={<AdminProductEditor />} />
+              <Route path="products/catalog" element={<AdminCatalog />} />
+              <Route path="procurement" element={<AdminProcurement />} />
+              <Route path="orders" element={<AdminOrders />} />
+            </Route>
+          </Route>
           <Route element={<MemberRoute />}>
             <Route path="checkout" element={<Checkout />} />
             <Route path="member/orders" element={<MemberOrders />} />
@@ -47,4 +63,10 @@ function MemberRoute() {
   if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(pathname)}`} replace />
   if (user.admin) return <Navigate to="/admin" replace />
   return <Outlet />
+}
+
+function AdminRoute() {
+  const user = useAuthStore((s) => s.user)
+  const { pathname } = useLocation()
+  return user?.admin ? <Outlet /> : <Navigate to={`/admin/login?redirect=${encodeURIComponent(pathname)}`} replace />
 }

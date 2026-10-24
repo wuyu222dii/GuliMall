@@ -830,6 +830,7 @@ CREATE TABLE `wms_purchase_detail` (
   `sku_price` DECIMAL(20,2),
   `ware_id` BIGINT,
   `status` INT,
+  `failure_reason` VARCHAR(255),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 
@@ -891,7 +892,8 @@ CREATE TABLE `wms_ware_sku` (
   `stock` INT NOT NULL DEFAULT 0,
   `sku_name` VARCHAR(255),
   `stock_locked` INT NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ware_sku` (`sku_id`, `ware_id`)
 ) ENGINE=InnoDB;
 
 GRANT ALL PRIVILEGES ON `gulimall_wms_demo`.* TO 'gulimall'@'%';
