@@ -1,6 +1,6 @@
 # 阶段 2：商品浏览、详情与可售性
 
-验收日期：2026-10-25。保留现有 Java 8 / Spring Boot 2.1.8、MyBatis Plus 和 React 分层；ES 搜索仍属于阶段 4。
+验收日期：2026-10-25。保留现有 Java 8 / Spring Boot 2.1.8、MyBatis Plus 和 React 分层。本文记录商品库浏览与详情；阶段 4 已将搜索页接入 ES，见 [SEARCH.md](SEARCH.md)。
 
 ## 消费者接口
 
@@ -91,4 +91,4 @@ Remove-Item Env:GULIMALL_FAULTS
 
 浏览器验证了筛选、SKU 价格切换、正常加购、旧页面下架拦截、购物车与直接结算拦截、最新价格预览、缺货/库存未知/不存在/服务异常与恢复。使用临时 iframe 检查 1200px 和 375px CSS 视口，修复旧页头导航与网格的窄屏溢出；临时页面和浏览器测试商品均已清理，未进行实体手机或多浏览器兼容测试。
 
-本机日志与截图位于 Git 忽略的 `.tools/stage2-*`；可运行的验收脚本保留在 scripts。下一阶段为精简商品与采购库存后台，不在本阶段扩展。
+本机日志与截图位于 Git 忽略的 `.tools/stage2-*`；可运行的验收脚本保留在 scripts。商品后台及 ES 搜索的后续实现分别见 [ADMINISTRATION.md](ADMINISTRATION.md) 与 [SEARCH.md](SEARCH.md)。

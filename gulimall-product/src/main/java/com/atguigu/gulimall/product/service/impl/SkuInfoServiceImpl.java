@@ -24,6 +24,7 @@ import java.util.Map;
 
 @Service("skuInfoService")
 public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> implements SkuInfoService {
+    @Autowired private com.atguigu.gulimall.product.service.SearchSyncService searchSync;
     @Autowired private SkuImagesService skuImagesService;
     @Autowired private SpuInfoDescService spuInfoDescService;
     @Autowired private SpuInfoService spuInfoService;
@@ -56,7 +57,7 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
         if (change.getSkuTitle() != null) value.setSkuTitle(ProductInputs.text(change.getSkuTitle(), 200, "SKU 标题"));
         if (change.getSkuSubtitle() != null) { if (change.getSkuSubtitle().length() > 500) throw new ApiProblem(400, "副标题过长"); value.setSkuSubtitle(change.getSkuSubtitle()); }
         if (change.getSkuDefaultImg() != null) { ProductInputs.image(change.getSkuDefaultImg()); value.setSkuDefaultImg(change.getSkuDefaultImg()); }
-        updateById(value);
+        updateById(value); searchSync.changed(old.getSpuId());
     }
 
     @Override

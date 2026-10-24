@@ -17,6 +17,7 @@ import AdminProductEditor from './pages/admin/AdminProductEditor'
 import AdminCatalog from './pages/admin/AdminCatalog'
 import AdminProcurement from './pages/admin/AdminProcurement'
 import AdminOrders from './pages/admin/AdminOrders'
+import AdminSearchSync from './pages/admin/AdminSearchSync'
 
 export default function App() {
   const { ready, error, initialize } = useAuthStore()
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="products/new" element={<AdminProductEditor />} />
               <Route path="products/:id/edit" element={<AdminProductEditor />} />
               <Route path="products/catalog" element={<AdminCatalog />} />
+              <Route path="products/sync" element={<AdminSearchSync />} />
               <Route path="procurement" element={<AdminProcurement />} />
               <Route path="orders" element={<AdminOrders />} />
             </Route>

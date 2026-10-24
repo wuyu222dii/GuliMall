@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getBrands, getCategoryTree, getSkuList } from '../api/product'
+import { getBrands, getCategoryTree, searchProducts } from '../api/product'
 import { leafCategories } from '../utils/product'
 import ProductCard from '../components/ProductCard'
 
@@ -21,7 +21,7 @@ export default function Search() {
   useEffect(() => {
     const params = new URLSearchParams(query)
     setForm({ keyword: params.get('keyword') || '', catalogId: params.get('catalogId') || params.get('catalog3Id') || '',
-      brandId: params.get('brandId') || '', min: params.get('min') || '', max: params.get('max') || '', sort: params.get('sort') || 'default' })
+      brandId: params.get('brandId') || '', min: params.get('min') || '', max: params.get('max') || '', sort: params.get('sort') || 'default', hasStock: params.get('hasStock') || '' })
   }, [query])
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function Search() {
     const params = Object.fromEntries(new URLSearchParams(query))
     params.catalogId ||= params.catalog3Id || ''
     delete params.catalog3Id
-    getSkuList({ ...params, limit: 12 })
+    searchProducts({ ...params, limit: 12 })
       .then((res) => { if (active) setResult(res.page) })
       .catch((e) => { if (active) setError(e.message) })
       .finally(() => { if (active) setLoading(false) })
@@ -83,6 +83,7 @@ export default function Search() {
         <label>Sort<select className="input" name="sort" value={form.sort || 'default'} onChange={change}>
           <option value="default">Default</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option>
         </select></label>
+        <label>Stock<select className="input" name="hasStock" value={form.hasStock || ''} onChange={change}><option value="">All stock states</option><option value="1">In stock</option><option value="0">Out of stock</option></select></label>
         <div className="filter-actions"><button className="btn btn-primary" type="submit">Apply filters</button><Link className="btn btn-outline" to="/search">Clear filters</Link></div>
       </form>
       {metadataError && <p className="error-msg" role="alert">{metadataError}</p>}

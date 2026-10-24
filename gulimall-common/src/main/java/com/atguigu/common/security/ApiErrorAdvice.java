@@ -27,7 +27,7 @@ public class ApiErrorAdvice {
     public ResponseEntity<R> problem(ApiProblem e) {
         return ResponseEntity.status(e.getStatus()).contentType(MediaType.APPLICATION_JSON).body(R.error(e.getStatus(), e.getMessage()));
     }
-    @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class, IllegalArgumentException.class,
+    @ExceptionHandler({org.springframework.validation.BindException.class, MethodArgumentNotValidException.class, HttpMessageNotReadableException.class, IllegalArgumentException.class,
             MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<R> invalid(Exception e) {
         return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(R.error(400, "请求参数不正确"));

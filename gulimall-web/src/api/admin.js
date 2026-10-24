@@ -24,3 +24,8 @@ export const receivePurchase = (id) => request.post('/api/admin/ware/purchase/re
 export const finishPurchase = (data) => request.post('/api/admin/ware/purchase/done', data)
 export const listStock = (params) => request.get('/api/admin/ware/waresku/list', { params })
 export const listOrders = (params) => request.get('/api/admin/order/order/list', { params })
+
+export const publishProduct = (id, status) => request.post(`/api/admin/product/search-sync/${id}/publish`, null, { params: { status }, timeout: 25000 })
+export const listSearchSync = (params) => request.get('/api/admin/product/search-sync', { params })
+export const retrySearchSync = (id) => request.post(`/api/admin/product/search-sync/${id}/retry`, null, { timeout: 25000 })
+export const rebuildSearch = () => request.post('/api/admin/product/search-sync/rebuild')

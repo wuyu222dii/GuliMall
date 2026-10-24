@@ -34,6 +34,7 @@ public class GulimallElasticSearchConfig {
         RestClientBuilder builder = null;
         // final String hostname, final int port, final String scheme
         builder = RestClient.builder(HttpHost.create(url));
+        builder.setRequestConfigCallback(config -> config.setConnectTimeout(2000).setSocketTimeout(5000).setConnectionRequestTimeout(2000));
         RestHighLevelClient client = new RestHighLevelClient(builder);
 //        RestHighLevelClient client = new RestHighLevelClient(
 //                RestClient.builder(

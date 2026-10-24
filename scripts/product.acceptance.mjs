@@ -175,6 +175,10 @@ test('stage 2 product browsing and saleability acceptance', async (t) => {
     })
   } finally {
     if (wareStopped) service('Start')
+    for (const spuId of inserted.get('pms_spu_info') || []) {
+      assert.equal((await admin.call(`/api/admin/product/search-sync/${spuId}/publish?status=0`, 'POST')).status, 200, 'Search fixture cleanup failed')
+      sql(`DELETE FROM gulimall_pms_demo.pms_search_sync WHERE spu_id=${spuId};`)
+    }
     if (ids.spu) sql(`DELETE FROM gulimall_pms_demo.pms_spu_info_desc WHERE spu_id=${ids.spu};`)
     const categories = inserted.get('pms_category') || []
     for (const [table, rowIds] of [...inserted].reverse()) {

@@ -1,17 +1,8 @@
 package com.atguigu.gulimall.product.service.impl;
 
-import com.alibaba.fastjson.TypeReference;
-import com.atguigu.common.constant.ProductConstant;
-import com.atguigu.common.to.SkuHasStockVo;
-
-
-import com.atguigu.common.to.es.SkuEsModel;
-import com.atguigu.common.utils.R;
 import com.atguigu.common.security.ApiProblem;
 import com.atguigu.gulimall.product.entity.*;
 
-import com.atguigu.gulimall.product.feign.SearchFeignService;
-import com.atguigu.gulimall.product.feign.WareFeignService;
 import com.atguigu.gulimall.product.service.*;
 import com.atguigu.gulimall.product.vo.*;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -56,9 +47,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Autowired
     CategoryService categoryService;
     @Autowired
-    WareFeignService wareFeignService;
-    @Autowired
-    SearchFeignService searchFeignService;
+    SearchSyncService searchSync;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -69,12 +58,6 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
         return new PageUtils(page);
     }
-
-    /**
-     * TODO Advanced part improved
-     *
-     * @param vo
-     */
 
     @Transactional
     @Override
@@ -153,6 +136,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 SkuSaleAttrValueEntity entity = new SkuSaleAttrValueEntity(); BeanUtils.copyProperties(attr, entity); entity.setSkuId(skuId); skuSaleAttrValueService.save(entity);
             }
         }
+        searchSync.changed(id);
         return id;
     }
 
@@ -211,122 +195,5 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     }
 
     @Override
-    public void up(Long spuId) {
-
-        // 1, find out the currentspuidcorresponding to allskuinformation, brand name
-        List<SkuInfoEntity> skus = skuInfoService.getSkusBySpuId(spuId);
-        List<Long> skuIdList = skus.stream().map(SkuInfoEntity::getSkuId).collect(Collectors.toList());
-
-        // todo 4, query the currentskuAll specification attributes that can be retrieved,
-        List<ProductAttrValueEntity> baseAttrs = attrValueService.baseAttrListforspu(spuId);
-        List<Long> attrIds = baseAttrs.stream().map(attr -> {
-            return attr.getAttrId();
-        }).collect(Collectors.toList());
-
-        List<Long> searchAttrIds = attrService.selectSearchAttrs(attrIds);
-
-        Set<Long> idSet = new HashSet<>(searchAttrIds);
-
-        List<SkuEsModel.Attrs> attrsList = baseAttrs.stream().filter(item -> {
-            return idSet.contains(item.getAttrId());
-        }).map(item -> {
-            SkuEsModel.Attrs attrs1 = new SkuEsModel.Attrs();
-            BeanUtils.copyProperties(item, attrs1);
-            return attrs1;
-        }).collect(Collectors.toList());
-
-        // todo 1, send a remote call, and the inventory system checks whether there is inventory
-        Map<Long, Boolean> stockMap = null;
-        try {
-            R r = wareFeignService.getSkuHasStock(skuIdList);
-            //
-            TypeReference<List<SkuHasStockVo>> typeReference = new TypeReference<List<SkuHasStockVo>>() {
-            };
-            // Replace the269The line of code is as follows:
-            stockMap = r.getData("data", typeReference).stream()
-                    .collect(Collectors.toMap(SkuHasStockVo::getSkuId, SkuHasStockVo::getHasStock));
-        } catch (Exception e) {
-            log.error("Inventory service query exception: reason{}", e);
-        }
-
-
-        // 2, encapsulate eachskuinformation
-        Map<Long, Boolean> finalStockMap = stockMap;
-        List<SkuEsModel> upProducts = skus.stream().map(sku -> {
-            //Assemble the required data
-            SkuEsModel esModel = new SkuEsModel();
-            BeanUtils.copyProperties(sku, esModel);
-
-            // skuPrice,skuImg
-            esModel.setSkuPrice(sku.getPrice());
-            esModel.setSkuImg(sku.getSkuDefaultImg());
-            //,hasStock,hotSource,
-            if (finalStockMap == null) {
-                esModel.setHasStock(true);
-            } else {
-                esModel.setHasStock(finalStockMap.get(sku.getSkuId()));
-            }
-            // todo 2, popularity score. 0,
-            esModel.setHotScore(0L);
-
-            // todo 3, Query name information of brands and categories
-            BrandEntity brand = brandService.getById(esModel.getBrandId());
-            esModel.setBrandName(brand.getName());
-            esModel.setBrandImg(brand.getLogo());
-
-            CategoryEntity category = categoryService.getById(esModel.getCatalogId());
-            esModel.setCatalogName(category.getName());
-
-            // Set search properties
-            esModel.setAttrs(attrsList);
-
-
-            /**
-             * private String brandName;
-             *     private String brandImg;
-             *     private String catalogName;
-             *     private List<Attrs> attrs;
-             *
-             *     @Data
-             *     static class Attrs {
-             *         private Long attrId;
-             *         private String attrName;
-             *         private String attrValue;
-             *     }
-             */
-
-
-            return esModel;
-        }).collect(Collectors.toList());
-
-        // todo 5.Send data toesTo save:gulimall-search
-        R r = searchFeignService.productStatusUp(upProducts);
-        if (r.getCode() == 0) {
-            // Remote call successful
-            // todo 6,ReviseSpustatus
-            baseMapper.updateSpuStatus(spuId, ProductConstant.StatusEnum.SPU_UP.getCode());
-        } else {
-            // Remote call failed
-            // todo 7, repeated calls? Interface idempotence: retry mechanism?xxx
-            // FeignCalling process
-            /**
-             * 1, construct the request data and convert the object intojson
-             *  RequestTemplate template = buildTemplateFromArgs.create(argv);
-             * 2, send a request for execution(Successful execution will decode the response data)
-             *  executeAndDecode(template);
-             *  3, there will be a retry mechanism for executing requests
-             *      while(true){
-             *          try(){
-             *              executeAndDecode(template)
-             *            }catch(){
-             *                 try{retryer.continueOrPropagate(e);}catch(){throw ex;}
-             *                 continue;
-             *            }
-             *          }
-             *
-             */
-        }
-
-    }
-
+    public void up(Long spuId) { searchSync.publish(spuId,1); if (!searchSync.synchronize(spuId)) throw new ApiProblem(503,"上架状态已保存，搜索同步失败，已保留重试任务"); }
 }

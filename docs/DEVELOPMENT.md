@@ -67,7 +67,7 @@ node --test scripts/baseline.test.mjs
 
 新增检查包括：
 
-- Java：短信 Feign POST/参数契约、默认不加载付费云组件、BCrypt 与安全响应、开发验证码开关、分类大 ID 回归、Mapper 离线解析、详情缺失与库存失败处理，以及本地图像验证/路径边界/持久化，共 11 项。
+- Java：短信 Feign POST/参数契约、默认不加载付费云组件、BCrypt 与安全响应、开发验证码开关、分类大 ID 回归、Mapper 离线解析、详情缺失与库存失败处理、本地图像验证/路径边界/持久化，以及搜索返回值、nested 配对、零价格上限与参数边界，共 14 项。
 - Node：实体/SQL 覆盖、种子数据列匹配、数据库和凭据隔离。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
@@ -113,6 +113,8 @@ npm run dev
 云 OSS/真实短信默认关闭，避免启动时就要求付费账号。只有显式设置 OSS_ENABLED=true / SMS_ENABLED=true 并提供凭据才加载。阶段 1 验证码需同时启用 `dev` profile 和 `AUTH_SMS_MODE=development`，页面明确显示开发模式；真实短信仍待后续接入。本地图片上传已在阶段 3 完成，目录由 `UPLOAD_DIR` 控制，默认 `.data/uploads`，不随 jar 重建清除。
 
 阶段 3 已有库必须先核对重复库存，再执行一次 `infra/migrations/002-procurement.sql`；当前机器已迁移，不要重复运行。空库基线已包含该变更。录入、采购流程和验收命令见 [ADMINISTRATION.md](ADMINISTRATION.md)。
+
+阶段 4 新增商品库同步任务表，已有库确认表不存在并备份后执行一次 `infra/migrations/003-search-sync.sql`，当前机器已完成；当前演示库共 69 张表。运行 `./scripts/search-index.ps1` 创建/检查映射，再由管理员在 `/admin/products/sync` 排入全量重建任务。脚本保留已有文档；索引丢失可重建，不删除商品数据。搜索故障验收会停止 ES 并删除/恢复本项目派生索引，限独立本机演示环境，详见 [SEARCH.md](SEARCH.md)。
 
 Windows 上重建 jar 前须先停止对应业务服务，避免正在运行的 jar 被占用。当前机器可使用 `. ./.tools/enter-dev.ps1` 加载工具；启动和停止统一使用已提交的 `scripts/services.ps1`。`.tools/enter-dev.ps1` 仅供此机器使用，其他机器应配置自己的 JAVA_HOME 和 PATH。
 

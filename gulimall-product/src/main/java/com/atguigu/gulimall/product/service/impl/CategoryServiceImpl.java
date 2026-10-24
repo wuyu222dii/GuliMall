@@ -39,6 +39,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
 //    private Map<String, Object> cache = new HashMap<>();
 
+    @Autowired private com.atguigu.gulimall.product.service.SearchSyncService searchSync;
     @Autowired
     CategoryBrandRelationService categoryBrandRelationService;
 
@@ -127,6 +128,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     @Override
     public void updateCascade(CategoryEntity category) {
         this.updateById(category);
+        searchSync.metadataChanged("catalog_id", category.getCatId());
         categoryBrandRelationService.updateCategory(category.getCatId(), category.getName());
 
         // Also update data in cache

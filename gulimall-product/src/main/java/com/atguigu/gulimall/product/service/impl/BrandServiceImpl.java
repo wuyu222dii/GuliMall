@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service("brandService")
 public class BrandServiceImpl extends ServiceImpl<BrandDao, BrandEntity> implements BrandService {
 
+    @Autowired private com.atguigu.gulimall.product.service.SearchSyncService searchSync;
     @Autowired
     CategoryBrandRelationService categoryBrandRelationService;
 
@@ -49,6 +50,7 @@ public class BrandServiceImpl extends ServiceImpl<BrandDao, BrandEntity> impleme
     public void updateDetail(BrandEntity brand) {
         // Ensure data consistency in redundant fields
         this.updateById(brand);
+        searchSync.metadataChanged("brand_id", brand.getBrandId());
         if (StringUtils.isEmpty(brand.getName())) {
             // Synchronously update data in other related tables
             categoryBrandRelationService.updateBrand(brand.getBrandId(), brand.getName());

@@ -32,3 +32,5 @@ export async function checkCartItems(items) {
     catch (error) { throw new Error(`${item.skuName}: ${error.message}`) }
   }))
 }
+
+export const searchProducts = (params) => request.get('/api/search', { params })

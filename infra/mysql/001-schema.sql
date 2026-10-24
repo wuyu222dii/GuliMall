@@ -170,6 +170,18 @@ CREATE TABLE `pms_spu_info` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 
+CREATE TABLE `pms_search_sync` (
+  `spu_id` BIGINT NOT NULL,
+  `version` BIGINT NOT NULL,
+  `state` INT NOT NULL DEFAULT 0,
+  `attempts` INT NOT NULL DEFAULT 0,
+  `last_error` VARCHAR(255),
+  `next_attempt` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL,
+  PRIMARY KEY (`spu_id`),
+  KEY `idx_search_pending` (`state`, `next_attempt`)
+) ENGINE=InnoDB;
+
 GRANT ALL PRIVILEGES ON `gulimall_pms_demo`.* TO 'gulimall'@'%';
 
 CREATE DATABASE `gulimall_sms_demo` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

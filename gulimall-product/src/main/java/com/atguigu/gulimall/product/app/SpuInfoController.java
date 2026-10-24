@@ -1,6 +1,5 @@
 package com.atguigu.gulimall.product.app;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +23,7 @@ import com.atguigu.common.utils.R;
 public class SpuInfoController {
     @Autowired
     private SpuInfoService spuInfoService;
+    @Autowired private com.atguigu.gulimall.product.service.SearchSyncService searchSync;
 
     @GetMapping("/editor/{id}")
     public R editor(@PathVariable Long id) { return R.ok().put("product", spuInfoService.getEditor(id)); }
@@ -70,9 +70,7 @@ public class SpuInfoController {
     @RequestMapping("/save")
     //@RequiresPermissions("product:spuinfo:save")
     public R save(@RequestBody SpuInfoEntity spuInfo) {
-        spuInfoService.save(spuInfo);
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409,"请通过完整商品编辑保存 SPU 与 SKU");
     }
 
     /**
@@ -81,9 +79,10 @@ public class SpuInfoController {
     @RequestMapping("/update")
     //@RequiresPermissions("product:spuinfo:update")
     public R update(@RequestBody SpuInfoEntity spuInfo) {
-        spuInfoService.updateById(spuInfo);
+        if (spuInfo == null || spuInfo.getId() == null || spuInfo.getPublishStatus() == null) throw new com.atguigu.common.security.ApiProblem(400,"请提供商品编号与上下架状态");
+        searchSync.publish(spuInfo.getId(),spuInfo.getPublishStatus());
 
-        return R.ok();
+        return R.ok().put("msg", "上下架目标已保存，搜索同步任务已排队");
     }
 
     /**

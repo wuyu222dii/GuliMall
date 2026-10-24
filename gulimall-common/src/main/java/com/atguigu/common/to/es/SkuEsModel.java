@@ -10,6 +10,7 @@ public class SkuEsModel {
     private Long skuId;
     private Long spuId;
     private String skuTitle;
+    private String skuName;
     private BigDecimal skuPrice;
     private String skuImg;
     private Long saleCount;

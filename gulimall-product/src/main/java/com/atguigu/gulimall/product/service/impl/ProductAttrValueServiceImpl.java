@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service("productAttrValueService")
 public class ProductAttrValueServiceImpl extends ServiceImpl<ProductAttrValueDao, ProductAttrValueEntity> implements ProductAttrValueService {
+    @org.springframework.beans.factory.annotation.Autowired private com.atguigu.gulimall.product.service.SearchSyncService searchSync;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -57,5 +58,6 @@ public class ProductAttrValueServiceImpl extends ServiceImpl<ProductAttrValueDao
             return item;
         }).collect(Collectors.toList());
         this.saveBatch(collect);
+        searchSync.changed(spuId);
     }
 }

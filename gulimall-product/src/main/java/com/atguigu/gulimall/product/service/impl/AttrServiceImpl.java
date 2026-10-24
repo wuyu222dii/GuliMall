@@ -39,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service("attrService")
 public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements AttrService {
 
+    @Autowired private com.atguigu.gulimall.product.service.SearchSyncService searchSync;
     @Autowired
     AttrAttrgroupRelationDao relationDao;
     @Autowired
@@ -160,6 +161,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         AttrEntity attrEntity = new AttrEntity();
         BeanUtils.copyProperties(attr, attrEntity);
         this.updateById(attrEntity);
+        searchSync.attributeChanged(attr.getAttrId());
 
         if (attrEntity.getAttrType() == ProductConstant.AttrEnum.ATTR_TYPE_BASE.getCode()) {
             // Modify group association

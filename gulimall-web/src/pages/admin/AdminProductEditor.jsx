@@ -76,14 +76,14 @@ export default function AdminProductEditor() {
       const response = await saveProduct(form); savedId = response.id
       setForm((current) => ({ ...current, id: savedId }))
       const editor = await getProductEditor(savedId)
-      setForm(hydrate(editor.product)); navigate(`/admin/products/${savedId}/edit`, { replace: true }); setNotice('商品与 SKU 已保存。')
+      setForm(hydrate(editor.product)); navigate(`/admin/products/${savedId}/edit`, { replace: true }); setNotice('商品与 SKU 已保存；已上架商品已加入搜索同步队列，请在同步页面查看结果。')
     } catch (e) { setError(savedId ? '商品已保存，但刷新失败。请重新打开此商品编辑页，避免重复创建。' : e.message); if (savedId) { setReloadRequired(true); navigate(`/admin/products/${savedId}/edit`, { replace: true }) } }
     finally { setBusy(false) }
   }
   if (loading) return <p role="status">正在加载商品编辑资料…</p>
   if (!meta) return <p className="error-msg" role="alert">{error || '基础资料加载失败，请刷新。'}</p>
   return <section>
-    <div className="admin-toolbar"><h2>{id ? `编辑商品 #${id}` : '新建商品'}</h2><Link to="/admin/products">返回列表</Link><Link to="/admin/products/catalog">维护基础资料</Link><button className="btn btn-outline" disabled={!!id || busy} onClick={example}>填入双 SKU 示例</button></div>
+    <div className="admin-toolbar"><h2>{id ? `编辑商品 #${id}` : '新建商品'}</h2><Link to="/admin/products">返回列表</Link><Link to="/admin/products/catalog">维护基础资料</Link><Link to="/admin/products/sync">查看搜索同步</Link><button className="btn btn-outline" disabled={!!id || busy} onClick={example}>填入双 SKU 示例</button></div>
     {error && <p className="error-msg" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
     <form onSubmit={save} className="admin-form">
       <fieldset disabled={busy || uploading}><legend>基本信息</legend><div className="admin-form-grid">
