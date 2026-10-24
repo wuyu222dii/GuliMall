@@ -416,7 +416,9 @@ CREATE TABLE `ums_member` (
   `social_uid` VARCHAR(255),
   `access_token` VARCHAR(1024),
   `expires_in` VARCHAR(255),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_member_username` (`username`),
+  UNIQUE KEY `uk_member_mobile` (`mobile`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `ums_member_level` (

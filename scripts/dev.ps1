@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'env.ps1')
 Push-Location $taskRoot
 try {
-    foreach ($taskKey in @('DB_PASSWORD', 'MYSQL_ROOT_PASSWORD', 'REDIS_PASSWORD', 'RABBITMQ_PASSWORD')) {
+    foreach ($taskKey in @('DB_PASSWORD', 'MYSQL_ROOT_PASSWORD', 'REDIS_PASSWORD', 'RABBITMQ_PASSWORD', 'INTERNAL_API_TOKEN')) {
         $taskValue = [Environment]::GetEnvironmentVariable($taskKey, 'Process')
         if ([string]::IsNullOrWhiteSpace($taskValue) -or $taskValue -eq 'CHANGE_ME') { throw "Configure $taskKey in .env first." }
     }

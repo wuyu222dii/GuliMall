@@ -21,6 +21,7 @@ import org.springframework.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import com.atguigu.common.security.ApiProblem;
 
 
 @Service("orderService")
@@ -52,11 +53,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     }
 
     @Override
-    public PayVo getOrderPay(String orderSn) {
+    public PayVo getOrderPay(String orderSn, Long memberId) {
         OrderEntity order = this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
         if (order == null) {
-            throw new RuntimeException("Order does not exist: " + orderSn);
+            throw new ApiProblem(404, "订单不存在");
         }
+        if (!memberId.equals(order.getMemberId())) { throw new ApiProblem(403, "不能支付其他会员的订单"); }
         PayVo payVo = new PayVo();
         payVo.setOut_trade_no(order.getOrderSn());
         payVo.setTotal_amount(order.getPayAmount().setScale(2, BigDecimal.ROUND_UP).toString());
@@ -73,8 +75,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     }
 
     @Override
-    public PageUtils getMemberOrderPage(Map<String, Object> params) {
-        return queryPage(params);
+    public PageUtils getMemberOrderPage(Map<String, Object> params, Long memberId) {
+        return new PageUtils(this.page(new Query<OrderEntity>().getPage(params),
+                new QueryWrapper<OrderEntity>().eq("member_id", memberId)));
     }
 
 }

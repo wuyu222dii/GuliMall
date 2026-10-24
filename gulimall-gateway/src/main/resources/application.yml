@@ -1,7 +1,6 @@
 server:
   address: 127.0.0.1
   port: 88
-
 spring:
   application:
     name: gulimall-gateway
@@ -11,51 +10,111 @@ spring:
         server-addr: ${NACOS_ADDR:127.0.0.1:18848}
     gateway:
       routes:
-        #        - id: baidu_route
-        #          uri: https://www.baidu.com
-        #          predicates:
-        #            - Query=url,baidu
-        #        - id: qq_route
-        #          uri: https://www.qq.com
-        #          predicates:
-        #            - Query=url,qq
-        # Route Path=/api/thirdparty/** to third-party service
-        - id: third_party_route
-          uri: lb://gulimall-third-party
+        - id: authentication
+          uri: lb://gulimall-auth-server
           predicates:
-            - Path=/api/thirdparty/**
+            - Path=/api/auth/**
           filters:
-            - RewritePath=/api/thirdparty/(?<segment>/?.*),/$\{segment}
-        # Route Path=/api/product to gulimall-product microservice
-        - id: product_route
+            - StripPrefix=1
+        - id: catalog
           uri: lb://gulimall-product
           predicates:
-            - Path=/api/product/**
+            - Path=/api/product/catalog
+            - Method=GET
           filters:
-            - RewritePath=/api/(?<segment>/?.*),/$\{segment}
-
-        - id: memeber_route
+            - RewritePath=/api/product/catalog,/index/catalog.json
+        - id: product_read
+          uri: lb://gulimall-product
+          predicates:
+            - Path=/api/product/skuinfo/list,/api/product/skuinfo/info/{id},/api/product/category/list/tree
+            - Method=GET
+          filters:
+            - StripPrefix=1
+        - id: member_addresses
           uri: lb://gulimall-member
           predicates:
-            - Path=/api/member/**
+            - Path=/api/member/addresses,/api/member/addresses/**
           filters:
-            - RewritePath=/api/(?<segment>/?.*),/$\{segment}
-
-        - id: ware_route
+            - StripPrefix=1
+        - id: member_orders
+          uri: lb://gulimall-order
+          predicates:
+            - Path=/api/order/mine,/api/order/mine/**
+            - Method=GET
+          filters:
+            - StripPrefix=1
+        - id: member_payment
+          uri: lb://gulimall-order
+          predicates:
+            - Path=/api/order/pay
+            - Method=GET
+          filters:
+            - RewritePath=/api/order/pay,/aliPayOrder
+        - id: stock_read
           uri: lb://gulimall-ware
           predicates:
-            - Path=/api/ware/**
+            - Path=/api/ware/waresku/hasstock
+            - Method=POST
           filters:
-            - RewritePath=/api/(?<segment>/?.*),/$\{segment}
-
-        - id: gulimall_host_route
-          uri: lb://gulimall-product
+            - StripPrefix=1
+        - id: marketing_read
+          uri: lb://gulimall-coupon
           predicates:
-            - Host=gulimall.com,item.gulimall.com
-
-        - id: gulimall_search_route
+            - Path=/api/coupon/homeadv/list,/api/coupon/homesubject/list
+            - Method=GET
+          filters:
+            - StripPrefix=1
+        - id: search
           uri: lb://gulimall-search
           predicates:
-            - Host=search.gulimall.com
+            - Path=/api/search
+            - Method=GET
+          filters:
+            - StripPrefix=1
+        - id: admin_product
+          uri: lb://gulimall-product
+          predicates:
+            - Path=/api/admin/product/**
+          filters:
+            - RewritePath=/api/admin/(?<segment>.*),/$\{segment}
 
+        - id: admin_member
+          uri: lb://gulimall-member
+          predicates:
+            - Path=/api/admin/member/**
+          filters:
+            - RewritePath=/api/admin/(?<segment>.*),/$\{segment}
 
+        - id: admin_ware
+          uri: lb://gulimall-ware
+          predicates:
+            - Path=/api/admin/ware/**
+          filters:
+            - RewritePath=/api/admin/(?<segment>.*),/$\{segment}
+
+        - id: admin_coupon
+          uri: lb://gulimall-coupon
+          predicates:
+            - Path=/api/admin/coupon/**
+          filters:
+            - RewritePath=/api/admin/(?<segment>.*),/$\{segment}
+
+        - id: admin_order
+          uri: lb://gulimall-order
+          predicates:
+            - Path=/api/admin/order/**
+          filters:
+            - RewritePath=/api/admin/(?<segment>.*),/$\{segment}
+
+        - id: admin_search
+          uri: lb://gulimall-search
+          predicates:
+            - Path=/api/admin/search/**
+          filters:
+            - RewritePath=/api/admin/(?<segment>.*),/$\{segment}
+        - id: admin_thirdparty
+          uri: lb://gulimall-third-party
+          predicates:
+            - Path=/api/admin/thirdparty/**
+          filters:
+            - RewritePath=/api/admin/thirdparty/(?<segment>.*),/$\{segment}

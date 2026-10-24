@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,7 +36,7 @@ public class OrderWebController {
         return "confirm";
     }
 
-    @RequestMapping("/submitOrder")
+    @PostMapping("/submitOrder")
     public String submitOrder(OrderSubmitVo submitVo, Model model, RedirectAttributes attributes) {
         try{
             SubmitOrderResponseVo responseVo=orderService.submitOrder(submitVo);
@@ -71,10 +72,10 @@ public class OrderWebController {
      */
     @RequestMapping("/memberOrder.html")
     public String memberOrder(@RequestParam(value = "pageNum",required = false,defaultValue = "0") Integer pageNum,
-                         Model model){
+                         Model model, javax.servlet.http.HttpServletRequest request){
         Map<String, Object> params = new HashMap<>();
         params.put("page", pageNum.toString());
-        PageUtils page = orderService.getMemberOrderPage(params);
+        PageUtils page = orderService.getMemberOrderPage(params, com.atguigu.common.security.RequestIdentity.memberId(request));
         model.addAttribute("pageUtil", page);
         return "list";
     }

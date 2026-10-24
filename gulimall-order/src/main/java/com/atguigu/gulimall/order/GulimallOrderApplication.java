@@ -9,6 +9,10 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @MapperScan("com.atguigu.gulimall.order.dao")
 @EnableDiscoveryClient
 public class GulimallOrderApplication {
+    @org.springframework.context.annotation.Bean
+    public com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor paginationInterceptor() {
+        return new com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor();
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(GulimallOrderApplication.class, args);

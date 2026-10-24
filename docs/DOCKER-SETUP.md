@@ -35,7 +35,7 @@ docker info
 
 4. 依照 [DEVELOPMENT.md](DEVELOPMENT.md) 启动全部业务服务，检查 Nacos 注册并执行 Smoke。
 5. 实际验证 SQL 初始化、演示数据及数据库/Redis/上传目录重启后持久化；不得删除数据卷来让检查通过。
-6. 全部通过后更新 [implementation-plan.md](implementation-plan.md)，再开始阶段 1 的真实认证和权限隔离。
+6. 阶段 0 和阶段 1 均已通过，最新结果见 [implementation-plan.md](implementation-plan.md)，无需重新初始化或安装 Docker。
 
 若重启后 `docker info` 仍失败，应先检查 `wsl --status`、`wsl --version` 和 Docker Desktop 诊断结果，不能将 CLI 版本输出当作引擎已运行。
 

@@ -6,6 +6,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+import javax.validation.constraints.Pattern;
 
 /**
  * Member Receive Address
@@ -31,10 +34,12 @@ public class MemberReceiveAddressEntity implements Serializable {
 	/**
 	 * Consignee name
 	 */
+	@NotBlank @Size(max = 100)
 	private String name;
 	/**
 	 * Phone
 	 */
+	@NotBlank @Pattern(regexp = "[+0-9 ()-]{6,32}")
 	private String phone;
 	/**
 	 * Postal code
@@ -55,6 +60,7 @@ public class MemberReceiveAddressEntity implements Serializable {
 	/**
 	 * Detailed address (street)
 	 */
+	@NotBlank @Size(max = 255)
 	private String detailAddress;
 	/**
 	 * Province/city/district code

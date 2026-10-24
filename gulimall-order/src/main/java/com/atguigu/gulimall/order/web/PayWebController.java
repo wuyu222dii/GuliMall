@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import com.atguigu.common.security.RequestIdentity;
+import javax.servlet.http.HttpServletRequest;
 
 @Controller
 public class PayWebController {
@@ -21,9 +23,9 @@ public class PayWebController {
 
     @ResponseBody
     @GetMapping(value = "/aliPayOrder",produces = "text/html")
-    public String aliPayOrder(@RequestParam("orderSn") String orderSn) throws AlipayApiException {
+    public String aliPayOrder(@RequestParam("orderSn") String orderSn, HttpServletRequest request) throws AlipayApiException {
         System.out.println("Received order info orderSn: "+orderSn);
-        PayVo payVo = orderService.getOrderPay(orderSn);
+        PayVo payVo = orderService.getOrderPay(orderSn, RequestIdentity.memberId(request));
         String pay = alipayTemplate.pay(payVo);
         return pay;
     }

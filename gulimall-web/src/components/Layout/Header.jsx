@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { useCartStore } from '../../store/cartStore'
 import { useAuthStore } from '../../store/authStore'
 
@@ -7,6 +8,12 @@ export default function Header() {
   const totalCount = useCartStore((s) => s.totalCount())
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const [error, setError] = useState('')
+  const signOut = async (e) => {
+    e.preventDefault()
+    setError('')
+    try { await logout(); navigate('/') } catch (e) { setError(e.message) }
+  }
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -23,7 +30,7 @@ export default function Header() {
               <>
                 Welcome, {user.username || user.phone}
                 <span style={{ margin: '0 8px' }}>|</span>
-                <a href="#" onClick={(e) => { e.preventDefault(); logout() }}>Sign out</a>
+                <button type="button" className="header-signout" onClick={signOut}>Sign out</button>
               </>
             ) : (
               <>
@@ -34,11 +41,12 @@ export default function Header() {
             )}
           </div>
           <div>
-            <Link to="/member/orders" style={{ marginRight: 16 }}>My orders</Link>
-            <Link to="/member/address">Shipping addresses</Link>
+            {user?.admin ? <Link to="/admin">管理入口</Link> : <><Link to="/member/orders" style={{ marginRight: 16 }}>My orders</Link><Link to="/member/address">Shipping addresses</Link></>}
           </div>
         </div>
       </div>
+
+      {error && <div className="error-msg container" role="alert">{error}</div>}
 
       <div className="header-main">
         <div className="container">
@@ -54,7 +62,7 @@ export default function Header() {
 
           <Link to="/cart" className="header-cart">
             🛒 Cart
-            {totalCount() > 0 && <span className="cart-badge">{totalCount()}</span>}
+            {totalCount > 0 && <span className="cart-badge">{totalCount}</span>}
           </Link>
         </div>
       </div>

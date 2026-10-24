@@ -2,10 +2,11 @@
 
 Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / Vite 前端。
 
-阶段 0 环境与运行验收已通过，当前开始阶段 1；真实认证、服务端购物车、下单及沙箱支付闭环尚未实现。现有前端包含模拟登录和模拟提交。
+阶段 0 环境验收和阶段 1 认证验收已通过。已接入真实注册登录、Redis Session、CSRF、会员地址/订单隔离和管理员接口保护；服务端购物车、真实下单及沙箱支付闭环仍待后续阶段完成。
 
 - [开发环境、构建与启动说明](docs/DEVELOPMENT.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
+- [认证接口、管理员配置与安全验收](docs/AUTHENTICATION.md)
 - [前端现状](gulimall-web/README.md)
 
 ## 快速开始
@@ -34,7 +35,7 @@ setup.ps1 为 .env 生成随机密码，不覆盖已有配置。默认数据库�
 | gulimall-ware | 仓库、采购和库存 | 11000 |
 | gulimall-order | 订单、支付和售后数据；下单仍为占位 | 9000 |
 | gulimall-search | Elasticsearch 索引与检索 | 12000 |
-| gulimall-auth-server | 短信和注册入口；认证待完善 | 20000 |
+| gulimall-auth-server | 注册、会员/管理员登录、Session 和开发验证码 | 20000 |
 | gulimall-third-party | 云短信/OSS，默认关闭 | 30000 |
 | gulimall-gateway | API 网关 | 88 |
 | gulimall-common | 公共工具及传输对象，不能独立启动 | — |

@@ -16,6 +16,7 @@ public class ThirdPartyFeignServiceTest {
         MethodMetadata method = new SpringMvcContract()
                 .parseAndValidatateMetadata(ThirdPartyFeignService.class).get(0);
         assertNull(method.bodyIndex());
+        assertEquals("POST", method.template().method());
         assertEquals(new HashSet<>(Arrays.asList("phone", "code", "minute")), method.template().queries().keySet());
     }
 }

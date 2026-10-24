@@ -1,6 +1,7 @@
 package com.atguigu.common.vo;
 
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.ToString;
 
 import java.io.Serializable;
@@ -24,6 +25,7 @@ public class MemberResponseVo implements Serializable {
     /**
      * Password
      */
+    @JsonIgnore @ToString.Exclude
     private String password;
     /**
      * Nickname
@@ -90,6 +92,7 @@ public class MemberResponseVo implements Serializable {
     /**
      * Social login token
      */
+    @JsonIgnore @ToString.Exclude
     private String accessToken;
 
     /**

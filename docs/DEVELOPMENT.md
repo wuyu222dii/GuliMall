@@ -1,19 +1,19 @@
-# 本地开发基线（阶段 0）
+# 本地开发与运行验收
 
-当前业务仍包含模拟登录和占位下单。构建通过不代表交易闭环已完成，进度见 [implementation-plan.md](implementation-plan.md)。
+阶段 0 和阶段 1 已验收；认证使用真实服务端会话，下单仍为占位。进度见 [implementation-plan.md](implementation-plan.md)，身份接口和验收命令见 [AUTHENTICATION.md](AUTHENTICATION.md)。
 
 ## 工具与配置
 
 需要 JDK **8**、Maven 3.6+、Node 20.19+/npm，以及 Docker Desktop Linux 容器引擎和 Compose v2（支持 `up --wait`）。设置 `JAVA_HOME`，将 Maven、Node/npm 和 Docker 加入 PATH。
 
-本次实际验证：Temurin 8u504、Maven 3.8.1、Node 24.22.1、npm 10.9.2。Docker Desktop 4.96.3（CLI 29.9.2、Compose 5.6.1）和 WSL 3.0.3 已安装，虚拟机平台需要重启后生效。系统 Java 没有改动，本机隔离工具不随 Git 分发。当前机器的续跑说明见 [DOCKER-SETUP.md](DOCKER-SETUP.md)。
+本次实际验证：Temurin 8u504、Maven 3.8.1、Node 24.22.1、npm 10.9.2。Docker Desktop 4.96.3（CLI/Engine 29.9.2、Compose 5.6.1）和 WSL 3.0.3 已安装，重启后 Linux 引擎与五个容器均正常。系统 Java 没有改动，本机隔离工具不随 Git 分发。当前机器说明见 [DOCKER-SETUP.md](DOCKER-SETUP.md)。
 
 ```powershell
 ./scripts/setup.ps1
 ./scripts/dev.ps1 Check
 ```
 
-`setup.ps1` 仅在 `.env` 不存在时创建配置，随机生成数据库、Redis、RabbitMQ 密码，再次执行不覆盖凭据。`.env`、`.tools/`、`.data/` 不进入 Git。上传目录预留为 `.data/uploads`。
+`setup.ps1` 仅在 `.env` 不存在时创建配置，随机生成数据库、Redis、RabbitMQ 密码和内部调用令牌，再次执行不覆盖凭据。旧配置需按 `.env.example` 补齐新字段。`.env`、`.tools/`、`.data/` 不进入 Git。上传目录预留为 `.data/uploads`，实际上传接口在阶段 3 实现。
 
 配置使用 `NAME=value`，不能写 shell 表达式。带 `$` 的 BCrypt 摘要用单引号包裹。加载器保留字面值；调用者已设置的进程环境变量优先于 `.env`。直接从 IDE 启动时，也必须配置这些环境变量。
 
@@ -47,7 +47,7 @@ MySQL 镜像仅在**空数据卷首次初始化**时执行：
 
 基线根据实体重建，不是原数据库的完整导出。会员模块中还存在营销表实体，因此 UMS 演示库也包含这些实体所需表；本阶段没有调整源码中的业务归属。
 
-演示 SPU 为 900001；SKU 900001 为 1999.00、库存 10，SKU 900002 为 2099.00、库存 1。演示图片在前端 `/demo-product.svg`。会员 `demo_a`、`demo_b` 的预置 BCrypt 密码均为 `Demo12345!`；真实登录仍待阶段 1 实现。
+演示 SPU 为 900001；SKU 900001 为 1999.00、库存 10，SKU 900002 为 2099.00、库存 1。演示图片在前端 `/demo-product.svg`。会员 `demo_a`、`demo_b` 的预置 BCrypt 密码均为 `Demo12345!`，可真实登录演示环境。
 
 **禁止对已有数据库执行初始化脚本。** 基线不使用 DROP、TRUNCATE、INSERT IGNORE 或 CREATE TABLE IF NOT EXISTS 掩盖冲突。已有数据必须先备份、对比真实结构，再用独立增量迁移；新增唯一约束先检查重复记录。
 
@@ -67,17 +67,17 @@ node --test scripts/baseline.test.mjs
 
 新增检查包括：
 
-- Java：短信 Feign 参数契约、默认不加载付费云组件。
+- Java：短信 Feign POST/参数契约、默认不加载付费云组件、BCrypt 与安全响应、开发验证码开关、分类大 ID 回归。
 - Node：实体/SQL 覆盖、种子数据列匹配、数据库和凭据隔离。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
-这些本地检查没有执行 MySQL SQL，也没有验证库存并发或支付。
+这些默认检查不连接数据库。额外的阶段 1 运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；尚未验证库存并发或支付。
 
 前端 lint 仍有原有的 ProductCard props 校验错误（6 条），记录为阶段 2 修复项，没有关闭规则掩盖错误。生成器 Oracle/SQL Server 驱动在 `legacy-database-drivers` 可选 profile 内，本次未验证该 profile。
 
 订单模块未使用的 Seata starter 已移除，符合本轮采用本地事务和补偿的决策，不要求额外启动 Seata 服务。
 
-已在禁用服务发现、使用随机本机端口的条件下验证网关、搜索、第三方服务能启动，随后停止进程，未发起业务请求。认证服务已越过原有 Feign 参数错误，但因为 Redis 尚未启动而失败；这不构成完整服务链验收。
+2026-10-24 已验证九个业务服务实际启动、Nacos 健康注册、网关商品查询、真实注册登录与权限隔离；MySQL、Redis 和上传目录的专用标记在容器停止重建后保留。
 
 ## 启动业务服务
 
@@ -96,9 +96,11 @@ cd gulimall-web
 npm run dev
 ```
 
-前端为 5173。Vite 分类代理只读取根目录 `.env` 的 PRODUCT_ 前缀，避免将数据库秘密加载到前端；各服务直连代理在阶段 1 统一收口。
+前端仅监听 `127.0.0.1:5173`，浏览器全部请求 `/api`，Vite 统一代理到网关 `127.0.0.1:88`；没有业务服务直连代理，也不加载根目录秘密到前端。请统一使用 `127.0.0.1`，避免与 localhost 的 Cookie 混用。
 
-云 OSS/真实短信默认关闭，避免启动时就要求付费账号。只有显式设置 OSS_ENABLED=true / SMS_ENABLED=true 并提供凭据才加载。这不代表开发验证码、本地上传或云服务已完成联调。
+云 OSS/真实短信默认关闭，避免启动时就要求付费账号。只有显式设置 OSS_ENABLED=true / SMS_ENABLED=true 并提供凭据才加载。阶段 1 验证码需同时启用 `dev` profile 和 `AUTH_SMS_MODE=development`，页面明确显示开发模式；真实短信和本地上传接口仍待后续阶段。
+
+Windows 上重建 jar 前须先停止对应业务服务，避免正在运行的 jar 被占用。当前机器可使用 `. ./.tools/enter-dev.ps1` 加载工具；`./.tools/start-services.ps1 Stop` 仅停止本项目标记的 JVM，构建后运行 `./.tools/start-services.ps1` 启动九个服务。这些本机辅助文件不随 Git 分发，其他机器按上述逐终端启动步骤执行。
 
 ## Docker 就绪后的阶段 0 验收
 

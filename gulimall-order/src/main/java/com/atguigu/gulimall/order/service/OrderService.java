@@ -25,8 +25,8 @@ public interface OrderService extends IService<OrderEntity> {
 
     SubmitOrderResponseVo submitOrder(OrderSubmitVo vo);
 
-    PayVo getOrderPay(String orderSn);
+    PayVo getOrderPay(String orderSn, Long memberId);
 
-    PageUtils getMemberOrderPage(Map<String, Object> params);
+    PageUtils getMemberOrderPage(Map<String, Object> params, Long memberId);
 }
 

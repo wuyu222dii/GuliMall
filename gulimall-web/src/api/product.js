@@ -2,7 +2,7 @@ import request from './request'
 
 /** Home page category tree (levels 2–3) */
 export function getCatalogJson() {
-  return request.get('/index/catalog.json')
+  return request.get('/api/product/catalog')
 }
 
 /** Paginated SKU list (search/list pages) */

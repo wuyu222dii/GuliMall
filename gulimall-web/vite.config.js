@@ -1,45 +1,10 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [react()],
   server: {
+    host: '127.0.0.1',
     port: 5173,
-    proxy: {
-      // Gateway routes
-      '/api': {
-        target: 'http://localhost:88',
-        changeOrigin: true,
-      },
-      // Product service - category JSON, home page
-      '/index': {
-        target: `http://localhost:${loadEnv(mode, '..', 'PRODUCT_').PRODUCT_PORT || 10000}`,
-        changeOrigin: true,
-      },
-      // Auth center
-      '/auth-api': {
-        target: 'http://localhost:20000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/auth-api/, ''),
-      },
-      // Order service
-      '/order-api': {
-        target: 'http://localhost:9000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/order-api/, ''),
-      },
-      // Coupon / marketing
-      '/coupon-api': {
-        target: 'http://localhost:7001',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/coupon-api/, ''),
-      },
-      // Search service
-      '/search-api': {
-        target: 'http://localhost:12000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/search-api/, ''),
-      },
-    },
+    proxy: { '/api': { target: 'http://127.0.0.1:88', changeOrigin: true } },
   },
-}))
+})

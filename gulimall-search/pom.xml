@@ -22,6 +22,7 @@
     </properties>
 
     <dependencies>
+        <dependency><groupId>org.springframework.session</groupId><artifactId>spring-session-data-redis</artifactId></dependency>
         <!-- Integratespring session-->
 <!--        <dependency>-->
 <!--            <groupId>org.springframework.session</groupId>-->

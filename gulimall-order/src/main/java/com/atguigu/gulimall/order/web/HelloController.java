@@ -3,7 +3,7 @@ package com.atguigu.gulimall.order.web;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
@@ -15,7 +15,7 @@ public class HelloController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @GetMapping("/testSubmit")
+    @PostMapping("/testSubmit")
     public String testSubmitOrder() {
         // Order placed successfully
         OrderEntity orderEntity = new OrderEntity();

@@ -191,7 +191,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         Map<String, List<Catelog2Vo>> parent_cid = level1Category.stream().collect(Collectors.toMap(k -> k.getCatId().toString(), v -> {
             //1, the first-level classification of each, find the second-level classification of this first-level classification
             List<CategoryEntity> level2Category = getParent_cid(selectList, v.getCatId());
-            List<Catelog2Vo> catelog2Vos = null;
+            List<Catelog2Vo> catelog2Vos = java.util.Collections.emptyList();
             if (!CollectionUtils.isEmpty(level2Category)) {
                 //1, find the third-level classification package of the current second-level classificationvo
                 catelog2Vos = level2Category.stream().map(l2 -> {
@@ -382,7 +382,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     }
 
     private List<CategoryEntity> getParent_cid(List<CategoryEntity> selectList, Long parent_cid) {
-        List<CategoryEntity> collect = selectList.stream().filter(item -> item.getParentCid() == parent_cid).collect(Collectors.toList());
+        List<CategoryEntity> collect = selectList.stream().filter(item -> Objects.equals(item.getParentCid(), parent_cid)).collect(Collectors.toList());
         // return baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", v.getCatId()));
         return collect;
     }

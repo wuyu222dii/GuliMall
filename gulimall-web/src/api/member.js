@@ -1,22 +1,6 @@
 import request from './request'
-
-/** Shipping address list */
-export function getAddressList(params = { page: 1, limit: 20 }) {
-  return request.get('/api/member/memberreceiveaddress/list', { params })
-}
-
-export function getAddressInfo(id) {
-  return request.get(`/api/member/memberreceiveaddress/info/${id}`)
-}
-
-export function saveAddress(data) {
-  return request.post('/api/member/memberreceiveaddress/save', data)
-}
-
-export function updateAddress(data) {
-  return request.post('/api/member/memberreceiveaddress/update', data)
-}
-
-export function deleteAddress(ids) {
-  return request.post('/api/member/memberreceiveaddress/delete', ids)
-}
+export const getAddressList = (params = { page: 1, limit: 20 }) => request.get('/api/member/addresses', { params })
+export const getAddressInfo = (id) => request.get(`/api/member/addresses/${id}`)
+export const saveAddress = (data) => request.post('/api/member/addresses', data)
+export const updateAddress = (data) => request.put(`/api/member/addresses/${data.id}`, data)
+export const deleteAddress = (ids) => request.delete('/api/member/addresses', { data: ids })

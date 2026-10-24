@@ -11,6 +11,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.atguigu.gulimall.member.feign")
 public class GulimallMemberApplication {
+    @org.springframework.context.annotation.Bean
+    public com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor paginationInterceptor() {
+        return new com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor();
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(GulimallMemberApplication.class, args);

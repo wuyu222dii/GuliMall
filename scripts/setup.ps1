@@ -5,7 +5,7 @@ if (-not (Test-Path -LiteralPath $taskEnvFile)) {
     $taskContent = Get-Content -LiteralPath (Join-Path $taskRoot '.env.example') -Raw
     $taskRng = [Security.Cryptography.RandomNumberGenerator]::Create()
     try {
-        foreach ($taskKey in @('DB_PASSWORD', 'MYSQL_ROOT_PASSWORD', 'REDIS_PASSWORD', 'RABBITMQ_PASSWORD')) {
+        foreach ($taskKey in @('DB_PASSWORD', 'MYSQL_ROOT_PASSWORD', 'REDIS_PASSWORD', 'RABBITMQ_PASSWORD', 'INTERNAL_API_TOKEN')) {
             $taskBytes = New-Object byte[] 24
             $taskRng.GetBytes($taskBytes)
             $taskSecret = [Convert]::ToBase64String($taskBytes).Replace('+', '-').Replace('/', '_')

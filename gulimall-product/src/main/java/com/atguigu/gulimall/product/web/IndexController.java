@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -48,7 +49,7 @@ public class IndexController {
     }
 
     @ResponseBody
-    @GetMapping("/hello")
+    @PostMapping("/hello")
     public String hello() {
         // 1. Obtain a lock. As long as the lock name is the same, it is the same lock.
         RLock lock = redisson.getLock("my-lock");
@@ -83,7 +84,7 @@ public class IndexController {
     // It is guaranteed that the latest data can be read. During the modification period, the write lock is a mutual lock (mutex lock). The read lock is a shared lock
     // Reading must wait until the write lock is released.
     @ResponseBody
-    @GetMapping("/write")
+    @PostMapping("/write")
     public String writeValue() {
 
         RReadWriteLock lock = redisson.getReadWriteLock("rw-lock");
@@ -132,7 +133,7 @@ public class IndexController {
      * 3parking space
      */
     @ResponseBody
-    @GetMapping("/park")
+    @PostMapping("/park")
     public String park() throws InterruptedException {
         RSemaphore park = redisson.getSemaphore("park");
         park.acquire(); // Get a signal, get a value
@@ -141,7 +142,7 @@ public class IndexController {
     }
 
     @ResponseBody
-    @GetMapping("/go")
+    @PostMapping("/go")
     public String go() {
         RSemaphore park = redisson.getSemaphore("park");
         park.release(); // free up a parking space
@@ -155,7 +156,7 @@ public class IndexController {
      * 5After all classes have finished, we can lock the door
      */
     @ResponseBody
-    @GetMapping("/lockDoor")
+    @PostMapping("/lockDoor")
     public String lockDoor() throws InterruptedException {
         RCountDownLatch door = redisson.getCountDownLatch("door");
         door.trySetCount(5);
@@ -166,7 +167,7 @@ public class IndexController {
 
 
     @ResponseBody
-    @GetMapping("/gogogo/{id}")
+    @PostMapping("/gogogo/{id}")
     public String gogogo(@PathVariable("id") Long id) {
         RCountDownLatch door = redisson.getCountDownLatch("door");
         door.countDown(); // count minus one

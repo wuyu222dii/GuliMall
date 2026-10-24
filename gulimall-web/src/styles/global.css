@@ -608,6 +608,7 @@ img {
 
 .auth-card {
   width: 400px;
+  max-width: 100%;
   background: var(--white);
   padding: 40px;
   border-radius: 8px;
@@ -638,6 +639,7 @@ img {
 
 .form-row .input {
   flex: 1;
+  min-width: 0;
 }
 
 .auth-footer {
@@ -725,4 +727,12 @@ img {
 
 .address-form .form-group {
   margin-bottom: 12px;
+}
+button.header-signout {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
