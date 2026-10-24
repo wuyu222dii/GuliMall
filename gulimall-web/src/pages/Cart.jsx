@@ -1,10 +1,20 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { checkCartItems } from '../api/product'
+import { IMAGE_FALLBACK, productImage } from '../utils/product'
 import { useCartStore } from '../store/cartStore'
 
-const PLACEHOLDER = 'https://via.placeholder.com/80x80?text=SKU'
-
 export default function Cart() {
+  const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
   const { items, updateCount, removeItem, totalCount, totalPrice, clearCart } = useCartStore()
+  const checkout = async () => {
+    setBusy(true); setError('')
+    try { await checkCartItems(items); navigate('/checkout') }
+    catch (e) { setError(e.message) }
+    finally { setBusy(false) }
+  }
 
   if (items.length === 0) {
     return (
@@ -37,9 +47,9 @@ export default function Cart() {
               <td>
                 <div className="cart-product">
                   <img
-                    src={item.skuDefaultImg?.startsWith('http') ? item.skuDefaultImg : PLACEHOLDER}
+                    src={productImage(item.skuDefaultImg)}
                     alt={item.skuName}
-                    onError={(e) => { e.target.src = PLACEHOLDER }}
+                    onError={(e) => { if (e.currentTarget.getAttribute('src') !== IMAGE_FALLBACK) e.currentTarget.src = IMAGE_FALLBACK }}
                   />
                   <Link to={`/product/${item.skuId}`}>{item.skuName}</Link>
                 </div>
@@ -67,6 +77,7 @@ export default function Cart() {
         </tbody>
       </table>
 
+      {error && <p className="error-msg" role="alert">{error} Your cart has been kept.</p>}
       <div className="cart-footer">
         <button className="btn btn-outline" onClick={clearCart}>Clear cart</button>
         <div className="cart-total">
@@ -76,7 +87,7 @@ export default function Cart() {
             <span className="price-value">{totalPrice().toFixed(2)}</span>
           </span>
         </div>
-        <Link to="/checkout" className="btn btn-primary btn-lg">Checkout</Link>
+        <button className="btn btn-primary btn-lg" disabled={busy} onClick={checkout}>{busy ? 'Checking products…' : 'Checkout'}</button>
       </div>
     </div>
   )

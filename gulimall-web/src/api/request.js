@@ -38,7 +38,10 @@ request.interceptors.response.use(
     if (status === 401 && !error.config?.url.endsWith('/login')) {
       window.dispatchEvent(new Event('gulimall:unauthorized'))
     }
-    const failure = new Error(error.response?.data?.msg || error.message || 'Network request failed')
+    const failure = new Error(error.response?.data?.msg || (status >= 500
+      ? 'The service is temporarily unavailable. Please retry.'
+      : error.code === 'ECONNABORTED' ? 'The request timed out. Please retry.'
+        : error.message || 'Unable to connect. Please retry.'))
     failure.status = status
     return Promise.reject(failure)
   }

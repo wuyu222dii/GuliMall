@@ -1,19 +1,18 @@
 import { Link } from 'react-router-dom'
-
-const PLACEHOLDER = 'https://via.placeholder.com/300x300?text=Gulimall'
+import { IMAGE_FALLBACK, productImage } from '../utils/product'
 
 export default function ProductCard({ product }) {
-  const img = product.skuDefaultImg || PLACEHOLDER
+  const img = productImage(product.skuDefaultImg)
   const name = product.skuTitle || product.skuName || 'Product'
-  const price = product.price ?? '0.00'
+  const price = product.price == null ? 'Price unavailable' : Number(product.price).toFixed(2)
 
   return (
     <Link to={`/product/${product.skuId}`} className="product-card">
       <div className="product-card-img">
         <img
-          src={img.startsWith('http') ? img : PLACEHOLDER}
+          src={img}
           alt={name}
-          onError={(e) => { e.target.src = PLACEHOLDER }}
+          onError={(e) => { if (e.currentTarget.getAttribute('src') !== IMAGE_FALLBACK) e.currentTarget.src = IMAGE_FALLBACK }}
         />
       </div>
       <div className="product-card-body">
@@ -24,4 +23,12 @@ export default function ProductCard({ product }) {
       </div>
     </Link>
   )
+}
+
+ProductCard.propTypes = {
+  product(props, name) {
+    const product = props[name]
+    return product && Number.isSafeInteger(product.skuId) && Number.isFinite(Number(product.price))
+      ? null : new Error('ProductCard requires a SKU id and price.')
+  },
 }

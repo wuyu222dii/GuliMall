@@ -14,9 +14,10 @@
     </resultMap>
     <!--resultType Returns the type of elements in the collection,As long as there are nested attributes, a custom result set must be encapsulated-->
     <resultMap id="spuItemAttrGroupVo" type="com.atguigu.gulimall.product.vo.SpuItemAttrGroupVo">
+        <id property="groupId" column="attr_group_id"/>
         <result property="groupName" column="attr_group_name"/>
         <collection property="attrs" ofType="com.atguigu.gulimall.product.vo.Attr">
-            <!--            <result property="attrId" column="attr_id"/>-->
+            <id property="attrId" column="attr_id"/>
             <result property="attrName" column="attr_name"/>
             <result property="attrValue" column="attr_value"/>
         </collection>
@@ -30,6 +31,7 @@
                  LEFT JOIN pms_product_attr_value pav ON pav.attr_id = attr.attr_id
         WHERE ag.catelog_id = #{catalogId}
           AND pav.spu_id = #{spuId}
+        ORDER BY ag.sort, ag.attr_group_id, aar.attr_sort, aar.attr_id
     </select>
 
 

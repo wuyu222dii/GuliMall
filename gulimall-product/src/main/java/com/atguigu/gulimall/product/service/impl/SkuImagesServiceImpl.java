@@ -33,7 +33,7 @@ public class SkuImagesServiceImpl extends ServiceImpl<SkuImagesDao, SkuImagesEnt
     public List<SkuImagesEntity> geImagesBySkuId(Long skuId) {
         SkuImagesDao imagesDao = this.baseMapper;
         QueryWrapper<SkuImagesEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("sku_id", skuId);
+        queryWrapper.eq("sku_id", skuId).orderByAsc("img_sort", "id");
         List<SkuImagesEntity> imagesEntities = imagesDao.selectList(queryWrapper);
         return imagesEntities;
     }

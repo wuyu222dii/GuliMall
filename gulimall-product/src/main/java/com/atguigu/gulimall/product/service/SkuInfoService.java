@@ -24,6 +24,8 @@ public interface SkuInfoService extends IService<SkuInfoEntity> {
 
     PageUtils queryPageByCondition(Map<String, Object> params);
 
+    PageUtils querySalePage(Map<String, Object> params);
+
     List<SkuInfoEntity> getSkusBySpuId(Long spuId);
 
     SkuItemVo item(Long skuId) throws ExecutionException, InterruptedException;

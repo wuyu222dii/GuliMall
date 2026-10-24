@@ -1,6 +1,6 @@
 # Gulimall React Frontend
 
-React 18 / Vite 5 / React Router 6 / Axios / Zustand。阶段 1 已接入真实认证；购物车与下单仍待后续阶段完善。
+React 18 / Vite 5 / React Router 6 / Axios / Zustand。阶段 1 认证和阶段 2 商品浏览均已完成；服务端购物车与下单仍待后续阶段完善。
 
 ## 启动
 
@@ -18,15 +18,15 @@ npm run dev
 
 | 页面 | 当前行为 |
 |---|---|
-| `/` | `/api/product/catalog` 分类与商品推荐 |
-| `/search` | 商品 SKU 列表，ES 搜索留待阶段 4 |
-| `/product/:skuId` | 商品与库存接口，完整详情留待阶段 2 |
+| `/` | 消费者分类树与已上架商品推荐 |
+| `/search` | 关键词、分类、品牌、价格、排序和分页；ES 搜索留待阶段 4 |
+| `/product/:skuId` | 图片、销售属性切换、分组参数、介绍、可售与库存状态 |
 | `/login`、`/register` | 真实会员登录/注册，开发验证码有明确标识 |
 | `/admin/login`、`/admin` | 独立管理员登录与身份确认；管理业务页面留待阶段 3 |
 | `/member/address` | 当前会员地址增删改查，服务端验证归属 |
 | `/member/orders` | 当前会员订单列表，服务端过滤会员 ID |
-| `/cart` | 仍为浏览器购物车，服务端合并留待阶段 5 |
-| `/checkout` | 需会员登录，提交仍为演示，占位下单留待阶段 6 |
+| `/cart` | 仍为浏览器购物车，进入结算前重新检查商品；服务端合并留待阶段 5 |
+| `/checkout` | 需会员登录；重新检查可售性并使用当前价格；提交按钮禁用，真实下单留待阶段 6 |
 
 Session Cookie 为 HttpOnly；Zustand 仅存当前页面身份，刷新通过 `/api/auth/me` 恢复。localStorage 中旧模拟身份会清除，不能作为登录凭证。修改请求自动携带从 `/api/auth/csrf` 取得的 Token，退出由服务端销毁会话。
 
@@ -39,4 +39,6 @@ npm run build
 npm run lint
 ```
 
-生产构建已通过。lint 尚有原有 ProductCard props 校验 6 条错误，阶段 2 处理；未关闭规则。浏览器已验证登录、刷新恢复、退出、受保护页面跳转、错误密码提示和开发验证码提示。
+生产构建与 lint 均已通过，原有 ProductCard 校验错误已修复。浏览器已验证筛选、SKU 切换、加购前校验、下架后的购物车/结算拦截，以及库存未知、缺货、商品不存在、服务停止和恢复后的提示。1200px 和 375px CSS 视口已检查；未进行实体手机测试。
+
+详情和结算预览使用消费者 `/api/product/items`、`/api/product/categories`、`/api/product/brands`，不直接请求管理 CRUD。库存未知时禁止购买，不使用假库存；结算占位提交不会清空购物车。接口及边界见 [商品说明](../docs/CATALOG.md)。

@@ -1,27 +1,34 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getAddressList } from '../api/member'
+import { checkCartItems } from '../api/product'
 import { useCartStore } from '../store/cartStore'
 import { useAuthStore } from '../store/authStore'
 
 export default function Checkout() {
   const navigate = useNavigate()
-  const { items, totalPrice, clearCart } = useCartStore()
+  const { items } = useCartStore()
   const user = useAuthStore((s) => s.user)
 
   const [addresses, setAddresses] = useState([])
   const [selectedAddr, setSelectedAddr] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
+  const [confirmedItems, setConfirmedItems] = useState([])
+  const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
 
   useEffect(() => {
+    let active = true
     if (items.length === 0) {
       navigate('/cart')
       return
     }
     async function load() {
+      setLoading(true); setError(''); setConfirmedItems([])
       try {
-        const res = await getAddressList({ page: 1, limit: 20 })
+        const [res, freshItems] = await Promise.all([getAddressList({ page: 1, limit: 20 }), checkCartItems(items)])
+        if (!active) return
+        setConfirmedItems(freshItems)
         if (res.code === 0) {
           const list = res.page?.list || []
           setAddresses(list)
@@ -29,40 +36,27 @@ export default function Checkout() {
           setSelectedAddr(defaultAddr?.id || null)
         }
       } catch (e) {
-        console.error(e)
+        if (active) setError(e.message)
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
     load()
-  }, [items.length, navigate])
-
-  const handleSubmit = async () => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-    setSubmitting(true)
-    // Backend submitOrder is a placeholder; frontend simulates successful order submission
-    setTimeout(() => {
-      alert('Order submission requires the backend submitOrder API to be implemented. Currently in demo mode.')
-      clearCart()
-      setSubmitting(false)
-      navigate('/member/orders')
-    }, 800)
-  }
+    return () => { active = false }
+  }, [items, navigate, retry, user?.id])
 
   if (items.length === 0) return null
 
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
       <h1 className="page-title">Confirm order</h1>
+      {error && <div className="error-msg" role="alert"><p>{error} Your cart has been kept.</p><button className="btn btn-outline" onClick={() => setRetry(retry + 1)}>Retry product check</button><Link to="/cart">Return to cart</Link></div>}
 
       <div className="card" style={{ padding: 20, marginBottom: 16 }}>
         <h3 style={{ marginBottom: 12, fontSize: 16 }}>Shipping address</h3>
         {loading ? (
           <div className="loading">Loading addresses...</div>
-        ) : addresses.length > 0 ? (
+        ) : error ? <p>Address selection is unavailable until the product check succeeds.</p> : addresses.length > 0 ? (
           <div className="address-list">
             {addresses.map((addr) => (
               <div
@@ -93,7 +87,7 @@ export default function Checkout() {
 
       <div className="card" style={{ padding: 20, marginBottom: 16 }}>
         <h3 style={{ marginBottom: 12, fontSize: 16 }}>Order items</h3>
-        {items.map((item) => (
+        {loading ? <p role="status">Checking current prices and availability…</p> : confirmedItems.map((item) => (
           <div key={item.skuId} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
             <span>{item.skuName} × {item.count}</span>
             <span className="price">¥{(Number(item.price) * item.count).toFixed(2)}</span>
@@ -106,17 +100,17 @@ export default function Checkout() {
           Total due:
           <span className="price">
             <span className="price-symbol">¥</span>
-            <span className="price-value">{totalPrice().toFixed(2)}</span>
+            <span className="price-value">{loading || error ? 'Unavailable' : confirmedItems.reduce((sum, item) => sum + Number(item.price) * item.count, 0).toFixed(2)}</span>
           </span>
         </div>
         <button
           className="btn btn-primary btn-lg"
-          onClick={handleSubmit}
-          disabled={submitting}
+          disabled
         >
-          {submitting ? 'Submitting...' : 'Place order'}
+          Place order
         </button>
       </div>
+      <p className="purchase-notice">Order submission is not available yet. No order will be created and your cart will be kept.</p>
     </div>
   )
 }

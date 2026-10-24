@@ -26,7 +26,7 @@ spring:
         - id: product_read
           uri: lb://gulimall-product
           predicates:
-            - Path=/api/product/skuinfo/list,/api/product/skuinfo/info/{id},/api/product/category/list/tree
+            - Path=/api/product/items,/api/product/items/**,/api/product/categories,/api/product/brands
             - Method=GET
           filters:
             - StripPrefix=1

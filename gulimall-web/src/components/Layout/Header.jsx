@@ -56,7 +56,7 @@ export default function Header() {
           </Link>
 
           <form className="search-box" onSubmit={handleSearch}>
-            <input name="keyword" placeholder="Search products..." />
+            <input name="keyword" aria-label="Search products" placeholder="Search products..." />
             <button type="submit">Search</button>
           </form>
 

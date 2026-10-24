@@ -1,6 +1,6 @@
 # 本地开发与运行验收
 
-阶段 0 和阶段 1 已验收；认证使用真实服务端会话，下单仍为占位。进度见 [implementation-plan.md](implementation-plan.md)，身份接口和验收命令见 [AUTHENTICATION.md](AUTHENTICATION.md)。
+阶段 0–2 已验收；认证和商品浏览已接通，真实下单尚未实现。进度见 [implementation-plan.md](implementation-plan.md)，身份接口见 [AUTHENTICATION.md](AUTHENTICATION.md)，商品接口与验收命令见 [CATALOG.md](CATALOG.md)。
 
 ## 工具与配置
 
@@ -67,13 +67,13 @@ node --test scripts/baseline.test.mjs
 
 新增检查包括：
 
-- Java：短信 Feign POST/参数契约、默认不加载付费云组件、BCrypt 与安全响应、开发验证码开关、分类大 ID 回归。
+- Java：短信 Feign POST/参数契约、默认不加载付费云组件、BCrypt 与安全响应、开发验证码开关、分类大 ID 回归、Mapper 离线解析、详情缺失与库存失败处理，共 9 项。
 - Node：实体/SQL 覆盖、种子数据列匹配、数据库和凭据隔离。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
 这些默认检查不连接数据库。额外的阶段 1 运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；尚未验证库存并发或支付。
 
-前端 lint 仍有原有的 ProductCard props 校验错误（6 条），记录为阶段 2 修复项，没有关闭规则掩盖错误。生成器 Oracle/SQL Server 驱动在 `legacy-database-drivers` 可选 profile 内，本次未验证该 profile。
+阶段 2 已修复 ProductCard props 校验，前端 lint 通过，未关闭规则。生成器 Oracle/SQL Server 驱动在 `legacy-database-drivers` 可选 profile 内，本次未验证该 profile。
 
 订单模块未使用的 Seata starter 已移除，符合本轮采用本地事务和补偿的决策，不要求额外启动 Seata 服务。
 
@@ -89,6 +89,18 @@ node --test scripts/baseline.test.mjs
 ./scripts/dev.ps1 Run -Module gulimall-gateway
 ```
 
+Windows 也可统一后台启动，使用已构建的 jar，日志写入 `.tools/runtime`：
+
+```powershell
+./scripts/services.ps1 Start
+./scripts/dev.ps1 Smoke
+./scripts/services.ps1 Stop
+# 仅操作单个服务：
+./scripts/services.ps1 Start -Modules ware
+```
+
+Start 只表示进程已创建，需等待 Nacos 注册与 Smoke 成功。Stop 仅匹配本工作区标记与完整 jar 路径，不停止其他项目/IDE JVM；通过 IDE 或 dev.ps1 Run 启动的进程应在各自终端停止。阶段 2 的自动故障验收要求仓储服务由 services.ps1 启动。
+
 模块参数使用完整名称，如 `gulimall-member`。默认业务端口：商品 **10001**（`.env` 的 PRODUCT_PORT，避开已发现的 10000 端口占用）、会员 8000、营销 7001、库存 11000、搜索 12000、订单 9000、认证 20000、第三方 30000、网关 88。业务服务默认仅监听本机。生成器为 8088，不是必要启动项。
 
 ```powershell
@@ -100,7 +112,7 @@ npm run dev
 
 云 OSS/真实短信默认关闭，避免启动时就要求付费账号。只有显式设置 OSS_ENABLED=true / SMS_ENABLED=true 并提供凭据才加载。阶段 1 验证码需同时启用 `dev` profile 和 `AUTH_SMS_MODE=development`，页面明确显示开发模式；真实短信和本地上传接口仍待后续阶段。
 
-Windows 上重建 jar 前须先停止对应业务服务，避免正在运行的 jar 被占用。当前机器可使用 `. ./.tools/enter-dev.ps1` 加载工具；`./.tools/start-services.ps1 Stop` 仅停止本项目标记的 JVM，构建后运行 `./.tools/start-services.ps1` 启动九个服务。这些本机辅助文件不随 Git 分发，其他机器按上述逐终端启动步骤执行。
+Windows 上重建 jar 前须先停止对应业务服务，避免正在运行的 jar 被占用。当前机器可使用 `. ./.tools/enter-dev.ps1` 加载工具；启动和停止统一使用已提交的 `scripts/services.ps1`。`.tools/enter-dev.ps1` 仅供此机器使用，其他机器应配置自己的 JAVA_HOME 和 PATH。
 
 ## Docker 就绪后的阶段 0 验收
 

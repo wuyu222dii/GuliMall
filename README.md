@@ -2,11 +2,12 @@
 
 Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / Vite 前端。
 
-阶段 0 环境验收和阶段 1 认证验收已通过。已接入真实注册登录、Redis Session、CSRF、会员地址/订单隔离和管理员接口保护；服务端购物车、真实下单及沙箱支付闭环仍待后续阶段完成。
+阶段 0–2 已验收。已接入真实认证、会员隔离、管理员保护、消费者商品筛选、完整详情与可售性检查；服务端购物车、真实下单及沙箱支付仍待后续阶段完成。
 
 - [开发环境、构建与启动说明](docs/DEVELOPMENT.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
 - [认证接口、管理员配置与安全验收](docs/AUTHENTICATION.md)
+- [商品浏览接口与阶段 2 验收](docs/CATALOG.md)
 - [前端现状](gulimall-web/README.md)
 
 ## 快速开始
@@ -18,12 +19,12 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 ./scripts/dev.ps1 Check
 ./scripts/dev.ps1 Up
 ./scripts/dev.ps1 Build
-./scripts/dev.ps1 Run -Module gulimall-product
+./scripts/services.ps1 Start
 ```
 
 setup.ps1 为 .env 生成随机密码，不覆盖已有配置。默认数据库使用独立的 _demo 后缀，SQL 初始化仅用于空数据卷。停止使用 `./scripts/dev.ps1 Down`，保留数据卷。
 
-业务服务各开终端启动；前端进入 gulimall-web，执行 npm run dev。完整顺序和验收步骤见开发文档。
+services.ps1 在后台启动本项目的九个 jar，日志在 .tools/runtime；停止使用 services.ps1 Stop。也可用 dev.ps1 Run 逐终端运行。前端进入 gulimall-web，执行 npm run dev，浏览器打开 http://127.0.0.1:5173。完整步骤见开发文档。
 
 ## 模块
 

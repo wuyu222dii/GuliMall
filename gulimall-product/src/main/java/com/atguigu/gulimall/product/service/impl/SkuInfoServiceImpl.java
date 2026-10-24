@@ -1,164 +1,135 @@
 package com.atguigu.gulimall.product.service.impl;
 
-import com.atguigu.gulimall.product.entity.SkuImagesEntity;
-import com.atguigu.gulimall.product.entity.SpuInfoDescEntity;
+import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.security.ApiProblem;
+import com.atguigu.common.to.SkuHasStockVo;
+import com.atguigu.common.utils.PageUtils;
+import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.product.dao.SkuInfoDao;
+import com.atguigu.gulimall.product.entity.*;
+import com.atguigu.gulimall.product.feign.WareFeignService;
 import com.atguigu.gulimall.product.service.*;
-import com.atguigu.gulimall.product.vo.SkuItemSaleAttrVo;
 import com.atguigu.gulimall.product.vo.SkuItemVo;
-import com.atguigu.gulimall.product.vo.SpuItemAttrGroupVo;
-import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.atguigu.common.utils.PageUtils;
-import com.atguigu.common.utils.Query;
-
-import com.atguigu.gulimall.product.dao.SkuInfoDao;
-import com.atguigu.gulimall.product.entity.SkuInfoEntity;
-
 
 @Service("skuInfoService")
 public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> implements SkuInfoService {
-    @Autowired
-    SkuImagesService skuImagesService;
-    @Autowired
-    SpuInfoDescService spuInfoDescService;
-    @Autowired
-    AttrGroupService attrGroupService;
-    @Autowired
-    SkuSaleAttrValueService skuSaleAttrValueService;
-    @Autowired
-    ThreadPoolExecutor executor;
+    @Autowired private SkuImagesService skuImagesService;
+    @Autowired private SpuInfoDescService spuInfoDescService;
+    @Autowired private SpuInfoService spuInfoService;
+    @Autowired private AttrGroupService attrGroupService;
+    @Autowired private SkuSaleAttrValueService skuSaleAttrValueService;
+    @Autowired private WareFeignService wareFeignService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
-        IPage<SkuInfoEntity> page = this.page(
-                new Query<SkuInfoEntity>().getPage(params),
-                new QueryWrapper<SkuInfoEntity>()
-        );
-
-        return new PageUtils(page);
+        return queryPageByCondition(params);
     }
 
     @Override
     public void saveSkuInfo(SkuInfoEntity skuInfoEntity) {
-        this.baseMapper.insert(skuInfoEntity);
+        baseMapper.insert(skuInfoEntity);
     }
 
     @Override
     public PageUtils queryPageByCondition(Map<String, Object> params) {
-        QueryWrapper<SkuInfoEntity> queryWrapper = new QueryWrapper<>();
-        /**
-         * key:
-         * catelogId: 0
-         * brandId: 0
-         * min: 0
-         * max: 0
-         */
-        String key = (String) params.get("key");
-        if (!StringUtils.isEmpty(key)) {
-            queryWrapper.and((wrapper) -> {
-                wrapper.eq("sku_id", key).or().like("sku_name", key);
+        return queryPage(params, false);
+    }
+
+    @Override
+    public PageUtils querySalePage(Map<String, Object> params) {
+        return queryPage(params, true);
+    }
+
+    private PageUtils queryPage(Map<String, Object> params, boolean saleOnly) {
+        long page = Long.parseLong(value(params, "page", "page", "1"));
+        long limit = Long.parseLong(value(params, "limit", "limit", "12"));
+        if (page < 1 || page > 100000 || limit < 1 || limit > 100) { throw new ApiProblem(400, "分页参数不正确"); }
+        QueryWrapper<SkuInfoEntity> wrapper = new QueryWrapper<>();
+        String key = value(params, "keyword", "key", "").trim();
+        if (key.length() > 100) { throw new ApiProblem(400, "关键词过长"); }
+        if (!key.isEmpty()) {
+            wrapper.and(w -> {
+                if (key.matches("[0-9]{1,18}")) { w.eq("sku_id", Long.valueOf(key)).or(); }
+                w.like("sku_name", key).or().like("sku_title", key);
             });
         }
+        Long catalogId = id(value(params, "catalogId", "catelogId", "0"));
+        Long brandId = id(value(params, "brandId", "brandId", "0"));
+        if (catalogId != null) { wrapper.eq("catalog_id", catalogId); }
+        if (brandId != null) { wrapper.eq("brand_id", brandId); }
+        BigDecimal min = price(value(params, "min", "min", ""));
+        BigDecimal max = price(value(params, "max", "max", ""));
+        if (min != null && max != null && min.compareTo(max) > 0) { throw new ApiProblem(400, "最低价不能高于最高价"); }
+        if (min != null) { wrapper.ge("price", min); }
+        if (max != null) { wrapper.le("price", max); }
+        if (saleOnly) { wrapper.inSql("spu_id", "SELECT id FROM pms_spu_info WHERE publish_status = 1"); }
+        String sort = value(params, "sort", "sort", "default");
+        if ("price_asc".equals(sort)) { wrapper.orderByAsc("price"); }
+        else if ("price_desc".equals(sort)) { wrapper.orderByDesc("price"); }
+        else if (!"default".equals(sort)) { throw new ApiProblem(400, "排序参数不正确"); }
+        wrapper.orderByAsc("sku_id");
+        return new PageUtils(page(new Page<SkuInfoEntity>(page, limit), wrapper));
+    }
 
-        String catelogId = (String) params.get("catelogId");
-        if (!StringUtils.isEmpty(catelogId)) {
-            queryWrapper.eq("catalog_id", catelogId);
+    private String value(Map<String, Object> params, String name, String alias, String fallback) {
+        Object value = params.containsKey(name) ? params.get(name) : params.get(alias);
+        return value == null || value.toString().trim().isEmpty() ? fallback : value.toString().trim();
+    }
+    private Long id(String value) {
+        long id = Long.parseLong(value);
+        if (id < 0) { throw new ApiProblem(400, "分类或品牌编号不正确"); }
+        return id == 0 ? null : id;
+    }
+    private BigDecimal price(String value) {
+        if (value.isEmpty()) { return null; }
+        BigDecimal price = new BigDecimal(value);
+        if (price.signum() < 0 || price.scale() > 2 || price.compareTo(new BigDecimal("999999999999.99")) > 0) {
+            throw new ApiProblem(400, "价格必须为非负金额，最多两位小数");
         }
-
-        String brandId = (String) params.get("brandId");
-        if (!StringUtils.isEmpty(brandId) && !"0".equalsIgnoreCase(catelogId)) {
-            queryWrapper.eq("brand_id", brandId);
-
-        }
-
-        String min = (String) params.get("min");
-        if (!StringUtils.isEmpty(min)) {
-            queryWrapper.ge("price", min);
-        }
-
-        String max = (String) params.get("max");
-
-        if (!StringUtils.isEmpty(max) && "0".equalsIgnoreCase(max)) {
-            try {
-                BigDecimal bigDecimal = new BigDecimal(max);
-                if (bigDecimal.compareTo(new BigDecimal("0")) == 1) {
-                    queryWrapper.le("price", max);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        IPage<SkuInfoEntity> page = this.page(
-                new Query<SkuInfoEntity>().getPage(params),
-                queryWrapper
-        );
-
-        return new PageUtils(page);
-
+        return price;
     }
 
     @Override
     public List<SkuInfoEntity> getSkusBySpuId(Long spuId) {
-
-        QueryWrapper<SkuInfoEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("spu_id", spuId);
-        List<SkuInfoEntity> list = this.list(queryWrapper);
-        return list;
+        return list(new QueryWrapper<SkuInfoEntity>().eq("spu_id", spuId).orderByAsc("sku_id"));
     }
 
     @Override
-    public SkuItemVo item(Long skuId) throws ExecutionException, InterruptedException {
-        SkuItemVo skuItemVo = new SkuItemVo();
-
-        CompletableFuture<SkuInfoEntity> infoFuture = CompletableFuture.supplyAsync(() -> {
-            // 1,skuObtain basic information pms_sku_info
-            SkuInfoEntity info = getById(skuId);
-            skuItemVo.setInfo(info);
-            return info;
-        }, executor);
-
-        CompletableFuture<Void> saleAttrFuture = infoFuture.thenAcceptAsync((res) -> {
-            // 3, getspusales attribute combination pms_sku_sale_attr
-            List<SkuItemSaleAttrVo> saleAttrVos = skuSaleAttrValueService.getSaleAttrsBySpuId(res.getSpuId());
-            skuItemVo.setSaleAttr(saleAttrVos);
-        }, executor);
-
-        CompletableFuture<Void> descFuture = infoFuture.thenAcceptAsync((res) -> {
-            // 4, getspuIntroduction pms_spu_info_desc
-            SpuInfoDescEntity spuInfoDesc = spuInfoDescService.getById(res.getSpuId());
-            skuItemVo.setDesc(spuInfoDesc);
-        }, executor);
-
-        CompletableFuture<Void> baseAttrFuture = infoFuture.thenAcceptAsync((res) -> {
-            // 5, getspuSpecification parameter information pms_sku_attr_value
-            List<SpuItemAttrGroupVo> attrGroupVos = attrGroupService.getAttrGroupWithAttrsBySpuId(res.getSpuId(), res.getCatalogId());
-            skuItemVo.setGroupAttrs(attrGroupVos);
-        }, executor);
-
-        // 2,skuImage information acquisition pms_sku_images
-        CompletableFuture<Void> imagesFuture = CompletableFuture.runAsync(() -> {
-            List<SkuImagesEntity> images = skuImagesService.geImagesBySkuId(skuId);
-            skuItemVo.setImages(images);
-        }, executor);
-
-        // Wait for all tasks to be completed
-        CompletableFuture.allOf(saleAttrFuture, descFuture, baseAttrFuture, imagesFuture).get();
-
-        return skuItemVo;
+    public SkuItemVo item(Long skuId) {
+        SkuInfoEntity sku = getById(skuId);
+        if (sku == null) { throw new ApiProblem(404, "商品不存在"); }
+        SpuInfoEntity spu = spuInfoService.getById(sku.getSpuId());
+        if (spu == null) { throw new ApiProblem(404, "商品不存在"); }
+        SkuItemVo item = new SkuItemVo();
+        item.setInfo(sku);
+        item.setSpuDescription(spu.getSpuDescription());
+        item.setOnSale(Integer.valueOf(1).equals(spu.getPublishStatus()));
+        item.setImages(skuImagesService.geImagesBySkuId(skuId));
+        item.setVariants(getSkusBySpuId(sku.getSpuId()));
+        item.setSaleAttr(skuSaleAttrValueService.getSaleAttrsBySpuId(sku.getSpuId()));
+        item.setDesc(spuInfoDescService.getById(sku.getSpuId()));
+        item.setGroupAttrs(attrGroupService.getAttrGroupWithAttrsBySpuId(sku.getSpuId(), sku.getCatalogId()));
+        try {
+            R result = wareFeignService.getSkuHasStock(Collections.singletonList(skuId));
+            if (result.getCode() == 0) {
+                List<SkuHasStockVo> stock = result.getData("data", new TypeReference<List<SkuHasStockVo>>() {});
+                if (stock != null) {
+                    stock.stream().filter(s -> skuId.equals(s.getSkuId())).findFirst().ifPresent(s -> item.setHasStock(s.getHasStock()));
+                }
+            }
+        } catch (Exception unavailable) {
+            // An unavailable inventory service leaves hasStock unknown and purchasing disabled.
+        }
+        return item;
     }
-
 }

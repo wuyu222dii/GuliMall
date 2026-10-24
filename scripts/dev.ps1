@@ -46,10 +46,10 @@ try {
         }
     }
     if ($Action -eq 'Smoke') {
-        $taskCatalog = Invoke-RestMethod 'http://127.0.0.1:88/api/product/category/list/tree' -TimeoutSec 15
+        $taskCatalog = Invoke-RestMethod 'http://127.0.0.1:88/api/product/categories' -TimeoutSec 15
         if ($taskCatalog.code -ne 0 -or -not ($taskCatalog.data | Where-Object catId -eq 900001)) { throw 'Gateway/category demo smoke check failed.' }
-        $taskSku = Invoke-RestMethod 'http://127.0.0.1:88/api/product/skuinfo/info/900001' -TimeoutSec 15
-        if ($taskSku.code -ne 0 -or $taskSku.skuInfo.price -ne 1999) { throw 'Demo SKU smoke check failed.' }
+        $taskSku = Invoke-RestMethod 'http://127.0.0.1:88/api/product/items/900001' -TimeoutSec 15
+        if ($taskSku.code -ne 0 -or $taskSku.item.info.price -ne 1999 -or -not $taskSku.item.onSale) { throw 'Demo SKU smoke check failed.' }
         Write-Output 'Gateway, product database and demo SKU checks passed.'
     }
 } finally { Pop-Location }

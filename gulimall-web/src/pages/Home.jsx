@@ -1,58 +1,64 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getCatalogJson, getSkuList } from '../api/product'
+import { getCategoryTree, getSkuList } from '../api/product'
 import { getHomeAdvList } from '../api/coupon'
 import ProductCard from '../components/ProductCard'
 
 export default function Home() {
-  const [catalog, setCatalog] = useState({})
+  const [catalog, setCatalog] = useState([])
   const [products, setProducts] = useState([])
   const [banners, setBanners] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
 
   useEffect(() => {
+    let active = true
     async function load() {
+      setLoading(true)
+      setError('')
       try {
         const [catData, skuRes, advRes] = await Promise.allSettled([
-          getCatalogJson(),
+          getCategoryTree(),
           getSkuList({ page: 1, limit: 8 }),
           getHomeAdvList({ page: 1, limit: 5 }),
         ])
 
-        if (catData.status === 'fulfilled') setCatalog(catData.value || {})
+        if (!active) return
+        if (catData.status === 'fulfilled') setCatalog(catData.value.data || [])
         if (skuRes.status === 'fulfilled' && skuRes.value?.code === 0) {
           setProducts(skuRes.value.page?.list || [])
         }
         if (advRes.status === 'fulfilled' && advRes.value?.code === 0) {
           setBanners(advRes.value.page?.list || [])
         }
+        if (catData.status === 'rejected' || skuRes.status === 'rejected') setError('Products could not be loaded. Please retry.')
       } catch (e) {
         console.error(e)
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
     load()
-  }, [])
-
-  const catalogEntries = Object.entries(catalog)
+    return () => { active = false }
+  }, [retry])
 
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
       <div className="home-layout">
         <div className="category-sidebar">
-          {catalogEntries.slice(0, 10).map(([cat1Id, cat2List]) => (
-            <div key={cat1Id} className="category-item">
-              Category {cat1Id}
+          {catalog.slice(0, 10).map((cat1) => (
+            <div key={cat1.catId} className="category-item" tabIndex={0}>
+              {cat1.name}
               <div className="category-popup">
-                {(cat2List || []).map((cat2) => (
-                  <div key={cat2.id} className="cat2-group">
+                {(cat1.children || []).map((cat2) => (
+                  <div key={cat2.catId} className="cat2-group">
                     <div className="cat2-name">{cat2.name}</div>
                     <div className="cat3-list">
-                      {(cat2.catalog3List || []).map((cat3) => (
+                      {(cat2.children || []).map((cat3) => (
                         <Link
-                          key={cat3.id}
-                          to={`/search?catalog3Id=${cat3.id}&keyword=${encodeURIComponent(cat3.name)}`}
+                          key={cat3.catId}
+                          to={`/search?catalogId=${cat3.catId}`}
                         >
                           {cat3.name}
                         </Link>
@@ -63,7 +69,7 @@ export default function Home() {
               </div>
             </div>
           ))}
-          {catalogEntries.length === 0 && !loading && (
+          {catalog.length === 0 && !loading && (
             <div className="category-item">No category data available</div>
           )}
         </div>
@@ -82,7 +88,7 @@ export default function Home() {
       <h2 className="section-title">Hot Picks</h2>
       {loading ? (
         <div className="loading">Loading...</div>
-      ) : products.length > 0 ? (
+      ) : error ? <div className="empty-state" role="alert"><p>{error}</p><button className="btn btn-outline" onClick={() => setRetry(retry + 1)}>Retry</button></div> : products.length > 0 ? (
         <div className="product-grid">
           {products.map((p) => (
             <ProductCard key={p.skuId} product={p} />
@@ -90,7 +96,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="empty-state">
-          No product data available. Please ensure the gulimall-product service is running (port 10000).
+          No products are currently available.
         </div>
       )}
     </div>

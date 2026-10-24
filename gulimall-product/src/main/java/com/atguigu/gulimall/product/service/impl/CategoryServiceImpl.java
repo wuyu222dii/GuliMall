@@ -8,7 +8,6 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -27,6 +26,8 @@ import com.atguigu.common.utils.Query;
 
 import com.atguigu.gulimall.product.dao.CategoryDao;
 import com.atguigu.gulimall.product.entity.CategoryEntity;
+import com.atguigu.gulimall.product.entity.SpuInfoEntity;
+import com.atguigu.gulimall.product.dao.SpuInfoDao;
 import com.atguigu.gulimall.product.service.CategoryService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -46,6 +47,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
     @Autowired
     RedissonClient redisson;
+    @Autowired private SpuInfoDao spuInfoDao;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -57,6 +59,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     }
 
     @Override
+    @Cacheable(value = "category", key = "'tree-v2'", sync = true)
     public List<CategoryEntity> listWithTree() {
         // 1 Find all categories
         List<CategoryEntity> categoryEntityList = baseMapper.selectList(null);
@@ -120,7 +123,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 //    })
     // category:key
     @CacheEvict(value = "category", allEntries = true)
-    @CachePut // Dual write mode
     @Transactional
     @Override
     public void updateCascade(CategoryEntity category) {
@@ -129,6 +131,13 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
         // Also update data in cache
         // redis.del("catalogJSON");Waiting for the next active query to update
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "category", allEntries = true)
+    public boolean save(CategoryEntity category) {
+        return super.save(category);
     }
 
     // Rendering a first-level category menu
@@ -388,8 +397,19 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = "category", allEntries = true)
     public void removeMenuByIds(List<Long> asList) {
-
+        if (asList == null || asList.isEmpty() || asList.contains(null)) {
+            throw new com.atguigu.common.security.ApiProblem(400, "请选择分类");
+        }
+        if (count(new QueryWrapper<CategoryEntity>().in("parent_cid", asList).notIn("cat_id", asList)) > 0) {
+            throw new com.atguigu.common.security.ApiProblem(409, "分类还有子分类，不能删除");
+        }
+        if (spuInfoDao.selectCount(new QueryWrapper<SpuInfoEntity>().in("catalog_id", asList)) > 0) {
+            throw new com.atguigu.common.security.ApiProblem(409, "分类已有商品，不能删除");
+        }
+        removeByIds(asList);
     }
 
 }

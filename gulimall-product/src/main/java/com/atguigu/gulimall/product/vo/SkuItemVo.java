@@ -10,6 +10,11 @@ import java.util.List;
 
 @Data
 public class SkuItemVo {
+    private boolean onSale;
+    // null means the inventory result is unknown, never available stock.
+    private Boolean hasStock;
+    private List<SkuInfoEntity> variants;
+    private String spuDescription;
     // 1,skuObtain basic information  pms_sku_info
     private SkuInfoEntity info;
 

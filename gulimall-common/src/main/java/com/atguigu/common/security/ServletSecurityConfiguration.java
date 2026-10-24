@@ -59,7 +59,8 @@ public class ServletSecurityConfiguration implements WebMvcConfigurer {
                 boolean read = "GET".equals(method);
                 boolean publicPath = path.matches("/auth/(csrf|me|login|register|sms/code|admin/login)")
                         || read && (path.equals("/index/catalog.json") || path.equals("/product/category/list/tree")
-                        || path.equals("/product/skuinfo/list") || path.matches("/product/skuinfo/info/[0-9]+")
+                        || path.equals("/product/items") || path.matches("/product/items/[^/]+(/purchase-check)?")
+                        || path.equals("/product/categories") || path.equals("/product/brands")
                         || path.equals("/coupon/homeadv/list") || path.equals("/coupon/homesubject/list")
                         || path.equals("/list.html") || path.equals("/search"))
                         || path.equals("/ware/waresku/hasstock") && "POST".equals(method);
