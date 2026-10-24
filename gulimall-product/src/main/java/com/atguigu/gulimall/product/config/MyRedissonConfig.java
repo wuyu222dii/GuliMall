@@ -5,6 +5,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 
 @Configuration
 public class MyRedissonConfig {
@@ -16,11 +17,13 @@ public class MyRedissonConfig {
      * @throws Exception
      */
     @Bean(destroyMethod = "shutdown")
-    RedissonClient redisson() throws Exception {
+    RedissonClient redisson(RedisProperties redis) throws Exception {
         // 1, create configuration
         Config config = new Config();
         config.useSingleServer()
-                .setAddress("redis://127.0.0.1:6379");
+                .setAddress("redis://" + redis.getHost() + ":" + redis.getPort())
+                .setDatabase(redis.getDatabase())
+                .setPassword(redis.getPassword());
         // 2,according toConfigcreateRedissonClientExample
         RedissonClient redissonClient = Redisson.create(config);
         return redissonClient;

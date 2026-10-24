@@ -2,6 +2,8 @@
 
 A single-page application built with React + Vite, connecting to the gulimall microservices backend.
 
+Current checkpoint: stage 0 baseline is prepared; Docker runtime acceptance is pending. See [development instructions](../docs/DEVELOPMENT.md). Login and checkout remain demonstrations.
+
 ## Tech Stack
 
 - React 18 + Vite 5
@@ -44,7 +46,7 @@ In development, `vite.config.js` proxies requests to microservices:
 | Prefix | Target |
 |------|------|
 | `/api` | Gateway `localhost:88` |
-| `/index` | Product service `localhost:10000` |
+| `/index` | Product service `localhost:10001` from root `.env` `PRODUCT_PORT` (fallback: 10000) |
 | `/auth-api` | Auth server `localhost:20000` |
 | `/order-api` | Order service `localhost:9000` |
 | `/coupon-api` | Coupon service `localhost:7001` |
@@ -53,7 +55,7 @@ In development, `vite.config.js` proxies requests to microservices:
 ## Backend Dependencies
 
 - **Shopping cart**: Backend `gulimall-cart` module is missing; the cart is implemented using browser localStorage
-- **Login/Register**: auth-server SSO is not fully implemented; login is mocked on the frontend; registration SMS API works normally
+- **Login/Register**: auth-server SSO is not fully implemented; login is mocked on the frontend. Real cloud SMS is disabled by default; development verification and real registration are scheduled for stage 1.
 - **Checkout**: order service `submitOrder` is a placeholder; the checkout page runs in demo mode
 - **Search**: Currently uses the product service SKU list API for keyword search; ES search requires a JSON API to be added on the backend
 

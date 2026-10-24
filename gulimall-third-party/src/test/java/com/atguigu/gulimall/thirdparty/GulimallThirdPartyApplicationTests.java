@@ -7,6 +7,7 @@ import com.atguigu.gulimall.thirdparty.component.SmsComponent;
 import com.atguigu.gulimall.thirdparty.util.HttpUtils;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+@Ignore("Legacy manual demo: may mutate databases or call paid external APIs; replace with isolated tests before enabling.")
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class GulimallThirdPartyApplicationTests {

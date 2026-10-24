@@ -105,18 +105,6 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<version>${mysql.version}</version>
 		</dependency>
-		<!-- Oracle driver -->
-		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>ojdbc6</artifactId>
-			<version>${oracle.version}</version>
-		</dependency>
-		<!-- SQL Server driver -->
-		<dependency>
-			<groupId>com.microsoft.sqlserver</groupId>
-			<artifactId>sqljdbc4</artifactId>
-			<version>${mssql.version}</version>
-		</dependency>
 		<!-- PostgreSQL driver -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -129,6 +117,30 @@
 			<version>${mongo.version}</version>
 		</dependency>
 	</dependencies>
+	<profiles>
+		<profile>
+			<id>legacy-database-drivers</id>
+			<dependencies>
+				<!-- These optional vendor drivers are not needed for the MySQL demo. -->
+				<dependency>
+					<groupId>com.oracle</groupId>
+					<artifactId>ojdbc6</artifactId>
+					<version>${oracle.version}</version>
+				</dependency>
+				<dependency>
+					<groupId>com.microsoft.sqlserver</groupId>
+					<artifactId>sqljdbc4</artifactId>
+					<version>${mssql.version}</version>
+				</dependency>
+			</dependencies>
+			<repositories>
+				<repository>
+					<id>legacy-vendor-drivers</id>
+					<url>https://maven.aliyun.com/repository/public</url>
+				</repository>
+			</repositories>
+		</profile>
+	</profiles>
 
 	<build>
 		<plugins>
@@ -138,29 +150,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>public</id>
-			<name>aliyun nexus</name>
-			<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>public</id>
-			<name>aliyun nexus</name>
-			<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
 
 </project>

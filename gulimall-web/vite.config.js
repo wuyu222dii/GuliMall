@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   server: {
     port: 5173,
@@ -13,7 +13,7 @@ export default defineConfig({
       },
       // Product service - category JSON, home page
       '/index': {
-        target: 'http://localhost:10000',
+        target: `http://localhost:${loadEnv(mode, '..', 'PRODUCT_').PRODUCT_PORT || 10000}`,
         changeOrigin: true,
       },
       // Auth center
@@ -42,4 +42,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

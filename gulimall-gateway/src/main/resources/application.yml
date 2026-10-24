@@ -1,4 +1,5 @@
 server:
+  address: 127.0.0.1
   port: 88
 
 spring:
@@ -7,7 +8,7 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: ${NACOS_ADDR:127.0.0.1:18848}
     gateway:
       routes:
         #        - id: baidu_route

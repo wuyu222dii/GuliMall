@@ -1,5 +1,6 @@
 server:
-  port: 80
+  address: 127.0.0.1
+  port: 8088
 
 # mysql
 spring:
@@ -7,9 +8,9 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
     # MySQL config
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/gulimall_wms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: Wuyujian
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3307}/gulimall_wms_demo?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USER:gulimall}
+    password: ${DB_PASSWORD}
     # Oracle config
     #    driverClassName: oracle.jdbc.OracleDriver
     #    url: jdbc:oracle:thin:@47.100.206.162:1521:xe

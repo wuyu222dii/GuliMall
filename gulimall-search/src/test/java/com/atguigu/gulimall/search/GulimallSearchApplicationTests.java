@@ -20,6 +20,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,6 +29,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.IOException;
 
 @RunWith(SpringRunner.class)
+@Ignore("Legacy manual demo: may mutate databases or call paid external APIs; replace with isolated tests before enabling.")
 @SpringBootTest
 public class GulimallSearchApplicationTests {
 

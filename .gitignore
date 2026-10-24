@@ -15,4 +15,8 @@ buildNumber.properties
 **/target
 .idea
 **/application-local.yml
+.tools/
+.data/
+.env
+*.log
 

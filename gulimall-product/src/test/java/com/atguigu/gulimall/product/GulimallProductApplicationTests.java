@@ -11,6 +11,7 @@ import com.atguigu.gulimall.product.vo.SkuItemVo;
 import com.atguigu.gulimall.product.vo.SpuItemAttrGroupVo;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Slf4j
+@Ignore("Legacy manual demo: may mutate databases or call paid external APIs; replace with isolated tests before enabling.")
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class GulimallProductApplicationTests {

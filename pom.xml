@@ -22,11 +22,4 @@
 		<module>gulimall-third-party</module>
         <module>gulimall-auth-server</module>
     </modules>
-	<dependencies>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-bootstrap</artifactId>
-			<version>3.0.0</version>
-		</dependency>
-	</dependencies>
 </project>

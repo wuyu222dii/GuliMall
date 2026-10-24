@@ -7,6 +7,7 @@ import com.aliyun.oss.model.MatchMode;
 import com.aliyun.oss.model.PolicyConditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,6 +21,7 @@ import java.util.Map;
  * @date 2025/9/11 17:27
  */
 @RestController
+@ConditionalOnProperty(name = "spring.cloud.alicloud.oss.enabled", havingValue = "true")
 public class OssController {
 
     @Autowired

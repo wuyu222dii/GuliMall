@@ -10,5 +10,7 @@ public interface ThirdPartyFeignService {
 
 
     @GetMapping("/sms/sendcode")
-    R sendCode(@RequestParam("phone") String phone,String code,String minute);
+    R sendCode(@RequestParam("phone") String phone,
+               @RequestParam("code") String code,
+               @RequestParam("minute") String minute);
 }

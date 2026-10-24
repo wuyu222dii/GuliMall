@@ -1,13 +1,13 @@
 spring:
   datasource:
-    username: root
-    password: Wuyujian
-    url: jdbc:mysql://localhost:3306/gulimall_wms?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&useSSL=false
+    username: ${DB_USER:gulimall}
+    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3307}/gulimall_wms_demo?serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
   cloud:
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: ${NACOS_ADDR:127.0.0.1:18848}
   application:
     name: gulimall-ware
   jackson:
@@ -18,6 +18,7 @@ mybatis-plus:
     db-config:
       id-type: auto
 server:
+  address: 127.0.0.1
   port: 11000
 logging:
   level:

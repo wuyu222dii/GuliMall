@@ -7,6 +7,7 @@ import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * 1, import dependencies
@@ -28,11 +29,11 @@ public class GulimallElasticSearchConfig {
     }
 
     @Bean
-    public RestHighLevelClient esRestClient() {
+    public RestHighLevelClient esRestClient(@Value("${gulimall.elasticsearch.url}") String url) {
 
         RestClientBuilder builder = null;
         // final String hostname, final int port, final String scheme
-        builder = RestClient.builder(new HttpHost("127.0.0.1", 9200, "http"));
+        builder = RestClient.builder(HttpHost.create(url));
         RestHighLevelClient client = new RestHighLevelClient(builder);
 //        RestHighLevelClient client = new RestHighLevelClient(
 //                RestClient.builder(

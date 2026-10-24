@@ -1,23 +1,36 @@
 server:
+  address: 127.0.0.1
   port: 30000
 
 spring:
   application:
     name: gulimall-third-party
-  config:
-    additional-location: optional:classpath:application-local.yml
   cloud:
+    alibaba:
+      oss:
+        enabled: ${OSS_ENABLED:false}
     alicloud:
       access-key: ${ALIYUN_ACCESS_KEY:}
       secret-key: ${ALIYUN_SECRET_KEY:}
+      sms:
+        host: ${SMS_HOST:https://gyytz.market.alicloudapi.com}
+        path: ${SMS_PATH:/sms/smsSend}
+        sms-sign-id: ${SMS_SIGN_ID:}
+        template-code: ${SMS_TEMPLATE_CODE:}
+        appcode: ${SMS_APPCODE:}
       oss:
-        endpoint: oss-cn-beijing.aliyuncs.com
-        bucket: harry-gulimall
+        enabled: ${OSS_ENABLED:false}
+        endpoint: ${OSS_ENDPOINT:oss-cn-beijing.aliyuncs.com}
+        bucket: ${OSS_BUCKET:}
 
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: ${NACOS_ADDR:127.0.0.1:18848}
 
 logging:
   level:
     com.atguigu.gulimall.product: debug
+
+gulimall:
+  sms:
+    enabled: ${SMS_ENABLED:false}
