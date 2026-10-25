@@ -1,7 +1,6 @@
 package com.atguigu.gulimall.order.service.impl;
 
 import com.atguigu.common.utils.PageUtils;
-import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.order.dao.OrderDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.entity.OrderItemEntity;
@@ -22,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import com.atguigu.common.security.ApiProblem;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 
 @Service("orderService")
@@ -32,12 +32,25 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
-        IPage<OrderEntity> page = this.page(
-                new Query<OrderEntity>().getPage(params),
-                new QueryWrapper<OrderEntity>()
-        );
-
-        return new PageUtils(page);
+        QueryWrapper<OrderEntity> filter=new QueryWrapper<>();
+        String sn=String.valueOf(params.getOrDefault("orderSn", "")).trim();
+        if(!sn.isEmpty()) {
+            if(!sn.matches("[a-f0-9]{32}")) throw new ApiProblem(400,"请填写完整的 32 位订单号");
+            filter.eq("order_sn",sn);
+        }
+        String status=String.valueOf(params.getOrDefault("status", ""));
+        if(!status.isEmpty()) {
+            if(!status.matches("[0-9]")) throw new ApiProblem(400,"订单状态不正确");
+            filter.eq("status",Integer.parseInt(status));
+        }
+        return new PageUtils(this.page(pagination(params),filter.orderByDesc("id")));
+    }
+    private IPage<OrderEntity> pagination(Map<String,Object> params) {
+        try {
+            long page=Long.parseLong(String.valueOf(params.getOrDefault("page","1"))),limit=Long.parseLong(String.valueOf(params.getOrDefault("limit","10")));
+            if(page<1 || page>1000000 || limit<1 || limit>100) throw new NumberFormatException();
+            return new Page<>(page,limit);
+        } catch(NumberFormatException invalid) { throw new ApiProblem(400,"分页参数不正确"); }
     }
 
     @Override
@@ -76,7 +89,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Override
     public PageUtils getMemberOrderPage(Map<String, Object> params, Long memberId) {
-        return new PageUtils(this.page(new Query<OrderEntity>().getPage(params),
+        return new PageUtils(this.page(pagination(params),
                 new QueryWrapper<OrderEntity>().eq("member_id", memberId).orderByDesc("id")));
     }
 

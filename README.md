@@ -4,6 +4,8 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 
 阶段 0–6 已验收。阶段 7 的支付验签、幂等流水、持久化事件、RabbitMQ、关单及库存结算已通过本地联调与故障验收；真实支付宝沙箱与公网回调待账号开通后补验。默认没有沙箱凭据时不能付款，不以本地网关冒充沙箱。
 
+阶段 8 的订单查询、物流发货、会员详情/收货及待付款取消已通过本地 API 与浏览器验收。前七阶段 59 个业务场景回归通过，加上本阶段共 68 个；物流信息由管理员填写，不接物流轨迹服务。
+
 - [开发环境、构建与启动说明](docs/DEVELOPMENT.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
 - [认证接口、管理员配置与安全验收](docs/AUTHENTICATION.md)
@@ -13,6 +15,7 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 - [服务端购物车、访客合并与运行验收](docs/CART.md)
 - [真实下单、库存锁定与故障恢复](docs/ORDERS.md)
 - [支付、消息、关单与本地/沙箱验收边界](docs/PAYMENTS.md)
+- [订单查询、发货、收货与取消](docs/FULFILLMENT.md)
 - [前端现状](gulimall-web/README.md)
 
 ## 快速开始

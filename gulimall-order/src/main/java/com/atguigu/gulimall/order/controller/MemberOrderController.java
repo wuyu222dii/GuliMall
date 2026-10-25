@@ -13,20 +13,23 @@ import java.util.Map;
 @RequestMapping("/order/mine")
 public class MemberOrderController {
     @Autowired private OrderService orders;
-    @Autowired private com.atguigu.gulimall.order.service.OrderCreationService creation;
+    @Autowired private com.atguigu.gulimall.order.service.OrderFulfillmentService fulfillment;
+    @Autowired private com.atguigu.gulimall.order.service.PaymentSettlementService payments;
+    private long member(HttpServletRequest request) {
+        long id=RequestIdentity.memberId(request); String expected=request.getHeader("X-Cart-Owner");
+        if(expected!=null && !Long.toString(id).equals(expected)) throw new ApiProblem(409,"会员会话已变化，请刷新"); return id;
+    }
     @GetMapping
     public R list(@RequestParam Map<String,Object> params, HttpServletRequest request) {
-        int page = Integer.parseInt((String) params.getOrDefault("page", "1"));
-        int limit = Integer.parseInt((String) params.getOrDefault("limit", "10"));
-        if (page < 1 || limit < 1 || limit > 100) { throw new ApiProblem(400, "分页参数不正确"); }
-        return R.ok().put("page", orders.getMemberOrderPage(params, RequestIdentity.memberId(request)));
+        return R.ok().put("page", orders.getMemberOrderPage(params, member(request)));
     }
     @GetMapping("/{id}")
     public R detail(@PathVariable Long id, HttpServletRequest request) {
-        long memberId = RequestIdentity.memberId(request);
-        OrderEntity order = orders.getById(id);
-        if (order == null) { throw new ApiProblem(404, "订单不存在"); }
-        if (!Long.valueOf(memberId).equals(order.getMemberId())) { throw new ApiProblem(403, "不能访问其他会员的订单"); }
-        return R.ok().put("order", order).put("items",creation.detail(order.getOrderSn(),memberId).get("items"));
+        R result=R.ok(); result.putAll(fulfillment.detail(id,member(request))); return result;
+    }
+    @PostMapping("/{id}/receive") public R receive(@PathVariable long id,HttpServletRequest request) { return R.ok().put("order",fulfillment.receive(id,member(request))); }
+    @PostMapping("/{id}/cancel") public R cancel(@PathVariable long id,HttpServletRequest request) {
+        long memberId=member(request); OrderEntity order=fulfillment.owned(id,memberId);
+        return R.ok().put("order",payments.cancel(order.getOrderSn(),memberId));
     }
 }

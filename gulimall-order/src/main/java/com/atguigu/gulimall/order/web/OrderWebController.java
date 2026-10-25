@@ -71,7 +71,7 @@ public class OrderWebController {
      * @return
      */
     @RequestMapping("/memberOrder.html")
-    public String memberOrder(@RequestParam(value = "pageNum",required = false,defaultValue = "0") Integer pageNum,
+    public String memberOrder(@RequestParam(value = "pageNum",required = false,defaultValue = "1") Integer pageNum,
                          Model model, javax.servlet.http.HttpServletRequest request){
         Map<String, Object> params = new HashMap<>();
         params.put("page", pageNum.toString());

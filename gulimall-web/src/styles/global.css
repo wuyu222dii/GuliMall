@@ -874,3 +874,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .order-address input { margin-top: 4px; }
 .order-address span { min-width: 0; overflow-wrap: anywhere; }
 .order-number { overflow-wrap: anywhere; }
+.order-details { margin-top: 24px; overflow-wrap: anywhere; }
+.order-details h3 { font-size: 16px; margin: 24px 0 8px; }
+.order-history { padding-left: 24px; }
+.order-history li { margin: 10px 0; line-height: 1.7; }

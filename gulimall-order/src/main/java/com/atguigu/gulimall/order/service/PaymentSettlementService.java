@@ -81,6 +81,18 @@ public class PaymentSettlementService {
         });
     }
     private OrderEntity current(String sn) { return orders.selectOne(new QueryWrapper<OrderEntity>().eq("order_sn",sn)); }
+    public OrderEntity cancel(String sn,long memberId) {
+        owned(sn,memberId);
+        transaction.execute(tx->{
+            Map<String,Object> row=db.queryForMap("SELECT id,status FROM oms_order WHERE order_sn=? FOR UPDATE",sn);
+            int status=((Number)row.get("status")).intValue();
+            if(status==0) {
+                if(db.update("UPDATE oms_order SET status=8,failure_reason='会员取消订单，正在确认支付关闭结果',modify_time=NOW(),recovery_after=NOW() WHERE order_sn=? AND status=0",sn)==1) db.update("INSERT INTO oms_order_operate_history(order_id,operate_man,create_time,order_status,note) VALUES(?,'member',NOW(),8,'会员请求取消订单，确认支付结果后才能释放库存')",row.get("id"));
+            } else if(status!=8 && status!=4) throw new ApiProblem(409,"仅待付款订单可以取消；如已付款请查看最新状态");
+            return null;
+        });
+        reconcile(sn); return current(sn);
+    }
     private void beginClose(String sn) {
         transaction.execute(tx->{
             Map<String,Object> row=db.queryForMap("SELECT id,status,payment_deadline<=NOW() AS expired FROM oms_order WHERE order_sn=? FOR UPDATE",sn);
@@ -95,7 +107,7 @@ public class PaymentSettlementService {
         transaction.execute(tx->{
             Map<String,Object> row=db.queryForMap("SELECT id,status FROM oms_order WHERE order_sn=? FOR UPDATE",sn);
             if(Arrays.asList(0,8).contains(((Number)row.get("status")).intValue())) {
-                db.update("UPDATE oms_order SET status=4,failure_reason='未付款订单关闭已确认，等待库存释放',modify_time=NOW(),recovery_after=NOW() WHERE order_sn=?",sn);
+                db.update("UPDATE oms_order SET status=4,failure_reason='未付款订单关闭已确认',modify_time=NOW(),recovery_after=NOW() WHERE order_sn=?",sn);
                 history(((Number)row.get("id")).longValue(),4,"支付宝未付款关闭已确认，提交库存释放事件"); events.enqueue(sn,TradeMessages.RELEASE);
             } return null;
         });

@@ -38,7 +38,8 @@ export default function Payment() {
     {order && <section className="card order-summary"><h2>{orderStatuses[order.status] || 'Unknown'}</h2><p className="order-number">Order No.: {order.orderSn}</p><p>Total: <strong className="price">¥{Number(order.payAmount).toFixed(2)}</strong></p>
       <p>This page only reads the server result. Returning from a payment page does not mark an order paid.</p>
       {order.status === 0 && <><p>Pay before {new Date(order.paymentDeadline).toLocaleString()}. Closing may keep stock reserved until the payment result is confirmed.</p>{!result.configured && <p className="error-msg">Alipay sandbox is not configured. Contact the administrator; payment is unavailable.</p>}<button className="btn btn-primary" disabled={busy || !result.configured} onClick={pay}>{busy ? 'Opening payment…' : result.mode === 'LOCAL_TEST' ? 'Open local test payment' : 'Pay with Alipay sandbox'}</button></>}
-      {order.status === 1 && <p role="status">{order.fulfillmentReady ? 'Payment and inventory deduction confirmed. Shipping will be connected in stage 8.' : 'Payment confirmed. Inventory processing is pending; shipping is blocked.'}</p>}
+      {order.status === 1 && <p role="status">{order.fulfillmentReady ? 'Payment and inventory deduction confirmed. Awaiting shipment.' : 'Payment confirmed. Inventory processing is pending; shipping is blocked.'}</p>}
+      {[2, 3].includes(order.status) && <p>{order.deliveryCompany} · {order.deliverySn}. {order.status === 3 ? 'Receipt confirmed.' : 'View delivery details and confirm receipt in My orders.'}</p>}
       {order.status === 4 && <p>{order.inventoryStatus === 2 ? 'Order closed and inventory released.' : 'Order closed; inventory release is pending.'}</p>}
       {[8, 9].includes(order.status) && <p className="error-msg">{order.failureReason} {order.status === 9 && 'Do not pay again. An administrator must review it; no automatic refund or shipping is performed.'}</p>}
     </section>}

@@ -7,7 +7,6 @@ import com.atguigu.gulimall.order.service.OrderOperateHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.Map;
 
 
@@ -54,9 +53,7 @@ public class OrderOperateHistoryController {
     @RequestMapping("/save")
     //@RequiresPermissions("order:orderoperatehistory:save")
     public R save(@RequestBody OrderOperateHistoryEntity orderOperateHistory){
-		orderOperateHistoryService.save(orderOperateHistory);
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409,"订单历史由业务流程记录，不能直接修改");
     }
 
     /**
@@ -65,9 +62,7 @@ public class OrderOperateHistoryController {
     @RequestMapping("/update")
     //@RequiresPermissions("order:orderoperatehistory:update")
     public R update(@RequestBody OrderOperateHistoryEntity orderOperateHistory){
-		orderOperateHistoryService.updateById(orderOperateHistory);
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409,"订单历史由业务流程记录，不能直接修改");
     }
 
     /**
@@ -76,9 +71,7 @@ public class OrderOperateHistoryController {
     @RequestMapping("/delete")
     //@RequiresPermissions("order:orderoperatehistory:delete")
     public R delete(@RequestBody Long[] ids){
-		orderOperateHistoryService.removeByIds(Arrays.asList(ids));
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409,"订单历史由业务流程记录，不能直接删除");
     }
 
 }

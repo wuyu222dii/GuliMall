@@ -24,11 +24,12 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
     @Autowired private com.atguigu.gulimall.order.config.AlipayTemplate alipay;
+    @Autowired private com.atguigu.gulimall.order.service.OrderFulfillmentService fulfillment;
 
     /**
      * List
      */
-    @RequestMapping("/list")
+    @GetMapping("/list")
     //@RequiresPermissions("order:order:list")
     public R list(@RequestParam Map<String, Object> params){
         PageUtils page = orderService.queryPage(params);
@@ -40,12 +41,15 @@ public class OrderController {
     /**
      * Info
      */
-    @RequestMapping("/info/{id}")
+    @GetMapping("/info/{id}")
     //@RequiresPermissions("order:order:info")
     public R info(@PathVariable("id") Long id){
-		OrderEntity order = orderService.getById(id);
+        R result=R.ok(); result.putAll(fulfillment.detail(id,null)); return result;
+    }
 
-        return R.ok().put("order", order);
+    @PostMapping("/{id}/ship")
+    public R ship(@PathVariable long id,@RequestBody com.atguigu.gulimall.order.service.OrderFulfillmentService.Shipment shipment) {
+        return R.ok().put("order",fulfillment.ship(id,shipment));
     }
 
     /**
