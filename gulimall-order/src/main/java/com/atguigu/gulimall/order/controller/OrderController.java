@@ -7,7 +7,6 @@ import com.atguigu.gulimall.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.Map;
 
 
@@ -54,9 +53,7 @@ public class OrderController {
     @RequestMapping("/save")
     //@RequiresPermissions("order:order:save")
     public R save(@RequestBody OrderEntity order){
-		orderService.save(order);
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409,"订单必须通过下单业务创建");
     }
 
     /**
@@ -65,9 +62,7 @@ public class OrderController {
     @RequestMapping("/update")
     //@RequiresPermissions("order:order:update")
     public R update(@RequestBody OrderEntity order){
-		orderService.updateById(order);
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409,"订单状态必须通过业务流程变更");
     }
 
     /**
@@ -76,9 +71,7 @@ public class OrderController {
     @RequestMapping("/delete")
     //@RequiresPermissions("order:order:delete")
     public R delete(@RequestBody Long[] ids){
-		orderService.removeByIds(Arrays.asList(ids));
-
-        return R.ok();
+        throw new com.atguigu.common.security.ApiProblem(409,"订单不能直接删除，需先完成业务关闭");
     }
 
 }

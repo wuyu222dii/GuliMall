@@ -866,3 +866,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .cart-table { min-width: 760px; }
 .cart-table .qty-control { justify-content: center; }
 .cart-table .error-msg { margin: 6px 0 0; font-size: 13px; }
+.order-summary { padding: 20px; margin-bottom: 16px; }
+.order-summary h2 { font-size: 18px; margin-bottom: 12px; }
+.order-summary p { margin: 12px 0; overflow-wrap: anywhere; }
+.order-summary fieldset { border: 0; min-width: 0; }
+.order-address { display: flex; gap: 12px; align-items: start; padding: 12px 0; cursor: pointer; }
+.order-address input { margin-top: 4px; }
+.order-address span { min-width: 0; overflow-wrap: anywhere; }
+.order-number { overflow-wrap: anywhere; }

@@ -8,6 +8,8 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @SpringBootApplication
 @MapperScan("com.atguigu.gulimall.order.dao")
 @EnableDiscoveryClient
+@org.springframework.cloud.openfeign.EnableFeignClients
+@org.springframework.scheduling.annotation.EnableScheduling
 public class GulimallOrderApplication {
     @org.springframework.context.annotation.Bean
     public com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor paginationInterceptor() {

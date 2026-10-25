@@ -1,6 +1,5 @@
 package com.atguigu.gulimall.ware.controller;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,9 +58,7 @@ public class WareOrderTaskController {
     @RequestMapping("/save")
     //@RequiresPermissions("ware:wareordertask:save")
     public R save(@RequestBody WareOrderTaskEntity wareOrderTask){
-		wareOrderTaskService.save(wareOrderTask);
-
-        return R.ok();
+		throw new com.atguigu.common.security.ApiProblem(409,"库存工作单必须通过订单业务变更");
     }
 
     /**
@@ -70,9 +67,7 @@ public class WareOrderTaskController {
     @RequestMapping("/update")
     //@RequiresPermissions("ware:wareordertask:update")
     public R update(@RequestBody WareOrderTaskEntity wareOrderTask){
-		wareOrderTaskService.updateById(wareOrderTask);
-
-        return R.ok();
+		throw new com.atguigu.common.security.ApiProblem(409,"库存工作单必须通过订单业务变更");
     }
 
     /**
@@ -81,9 +76,7 @@ public class WareOrderTaskController {
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:wareordertask:delete")
     public R delete(@RequestBody Long[] ids){
-		wareOrderTaskService.removeByIds(Arrays.asList(ids));
-
-        return R.ok();
+		throw new com.atguigu.common.security.ApiProblem(409,"库存工作单必须通过订单业务变更");
     }
 
 }

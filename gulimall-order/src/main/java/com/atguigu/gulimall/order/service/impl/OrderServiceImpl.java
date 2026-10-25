@@ -77,7 +77,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     @Override
     public PageUtils getMemberOrderPage(Map<String, Object> params, Long memberId) {
         return new PageUtils(this.page(new Query<OrderEntity>().getPage(params),
-                new QueryWrapper<OrderEntity>().eq("member_id", memberId)));
+                new QueryWrapper<OrderEntity>().eq("member_id", memberId).orderByDesc("id")));
     }
 
 }

@@ -18,6 +18,10 @@ import java.util.Date;
 @Data
 @TableName("oms_order")
 public class OrderEntity implements Serializable {
+	private Date creationDeadline;
+	private Date paymentDeadline;
+	private Integer cartCleaned;
+	private String failureReason;
 	private static final long serialVersionUID = 1L;
 
 	/**

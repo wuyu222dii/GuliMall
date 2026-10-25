@@ -14,6 +14,7 @@ for _,line in ipairs(incoming) do
     item.count=item.count+line.count
     if item.count>999 then return -1 end
     item.checked=item.checked or line.checked
+    item.revision=ARGV[4]
     updated[sku]=cjson.encode(item)
 end
 for sku,item in pairs(updated) do redis.call('HSET',KEYS[1],sku,item) end

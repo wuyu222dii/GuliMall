@@ -1,6 +1,6 @@
 # 本地开发与运行验收
 
-阶段 0–2 已验收；认证和商品浏览已接通，真实下单尚未实现。进度见 [implementation-plan.md](implementation-plan.md)，身份接口见 [AUTHENTICATION.md](AUTHENTICATION.md)，商品接口与验收命令见 [CATALOG.md](CATALOG.md)。
+阶段 0–6 已验收；真实下单、原子锁库与恢复说明见 [ORDERS.md](ORDERS.md)，整体进度见 [implementation-plan.md](implementation-plan.md)。支付和待付款超时关单仍为阶段 7。
 
 ## 工具与配置
 
@@ -40,7 +40,7 @@ Compose 项目名为 `gulimall-demo`，端口仅绑定本机，数据使用独�
 
 MySQL 镜像仅在**空数据卷首次初始化**时执行：
 
-1. `infra/mysql/001-schema.sql`：五个 `_demo` 数据库、68 张与现有实体对应的表，以及本地应用用户授权。
+1. `infra/mysql/001-schema.sql`：五个 `_demo` 数据库、70 张表（68 张实体表、商品同步任务和订单提交记录），以及本地应用用户授权。
 2. `infra/mysql/002-demo.sql`：两个会员、三级分类、品牌、规格、一个双 SKU 商品、仓库、库存与收货地址。
 
 数据库为 `gulimall_pms_demo`、`gulimall_sms_demo`、`gulimall_ums_demo`、`gulimall_oms_demo`、`gulimall_wms_demo`。应用用 `gulimall` 用户，不使用 root，密码来自 `.env`。
@@ -67,11 +67,11 @@ node --test scripts/baseline.test.mjs
 
 新增检查包括：
 
-- Java：认证/安全响应、云组件开关、分类/详情、图片、搜索，以及购物车合并归一化、BigDecimal 勾选合计和服务失败保留数据，共 17 项。
+- Java：认证/安全响应、云组件开关、分类/详情、图片、搜索、购物车，以及订单 BigDecimal 金额边界和库存锁定载荷校验，共 19 项。
 - Node：实体/SQL 覆盖、种子列、凭据隔离、商品展示校验，以及访客迁移/pending 绑定和金额数量边界，共 7 项。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
-这些默认检查不连接数据库。阶段 1–3 的运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；阶段 3 已验证采购入库并发与幂等，尚未实现下单锁库或支付。
+这些默认检查不连接数据库。阶段 1–6 的运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；故障验收必须串行运行。真实支付尚未接入。
 
 阶段 2 已修复 ProductCard props 校验，前端 lint 通过，未关闭规则。生成器 Oracle/SQL Server 驱动在 `legacy-database-drivers` 可选 profile 内，本次未验证该 profile。
 
@@ -119,6 +119,8 @@ npm run dev
 阶段 4 新增商品库同步任务表，已有库确认表不存在并备份后执行一次 `infra/migrations/003-search-sync.sql`，当前机器已完成；当前演示库共 69 张表。运行 `./scripts/search-index.ps1` 创建/检查映射，再由管理员在 `/admin/products/sync` 排入全量重建任务。脚本保留已有文档；索引丢失可重建，不删除商品数据。搜索故障验收会停止 ES 并删除/恢复本项目派生索引，限独立本机演示环境，详见 [SEARCH.md](SEARCH.md)。
 
 阶段 5 新增 `gulimall-cart`：当前聚合构建十三个项目、后台启动十个业务服务；购物车使用已有 Redis AOF 卷，无新增 SQL 表。共享 Session 和网关保护，详情/加购/结算按最新商品状态处理。合并协议、运行验收及恢复边界见 [CART.md](CART.md)。
+
+阶段 6 新增订单提交记录与订单/库存约束，当前演示库为 70 张表。已有数据先备份并执行一次 `infra/migrations/004-order-creation.sql`，不要重跑空库初始化。订单状态、确认令牌、故障恢复和验收见 [ORDERS.md](ORDERS.md)。
 
 Windows 上重建 jar 前须先停止对应业务服务，避免正在运行的 jar 被占用。当前机器可使用 `. ./.tools/enter-dev.ps1` 加载工具；启动和停止统一使用已提交的 `scripts/services.ps1`。`.tools/enter-dev.ps1` 仅供此机器使用，其他机器应配置自己的 JAVA_HOME 和 PATH。
 

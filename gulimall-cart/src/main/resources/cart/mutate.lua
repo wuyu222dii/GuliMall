@@ -11,4 +11,5 @@ elseif not raw then return -5
 elseif operation == 'count' then item.count=tonumber(ARGV[3])
 elseif operation == 'check' then item.checked=(ARGV[3]=='true')
 else return -6 end
+item.revision=ARGV[4]
 redis.call('HSET',KEYS[1],sku,cjson.encode(item)); return 1

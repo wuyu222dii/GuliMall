@@ -13,6 +13,7 @@ import java.util.Map;
 @RequestMapping("/order/mine")
 public class MemberOrderController {
     @Autowired private OrderService orders;
+    @Autowired private com.atguigu.gulimall.order.service.OrderCreationService creation;
     @GetMapping
     public R list(@RequestParam Map<String,Object> params, HttpServletRequest request) {
         int page = Integer.parseInt((String) params.getOrDefault("page", "1"));
@@ -26,6 +27,6 @@ public class MemberOrderController {
         OrderEntity order = orders.getById(id);
         if (order == null) { throw new ApiProblem(404, "订单不存在"); }
         if (!Long.valueOf(memberId).equals(order.getMemberId())) { throw new ApiProblem(403, "不能访问其他会员的订单"); }
-        return R.ok().put("order", order);
+        return R.ok().put("order", order).put("items",creation.detail(order.getOrderSn(),memberId).get("items"));
     }
 }

@@ -4,6 +4,7 @@ import lombok.Data;
 @Data
 public class CartLine extends CartProductTo {
     private int count;
+    private String revision;
     private boolean checked;
     private String status;
     private String message;

@@ -10,5 +10,5 @@ import java.util.List;
 public class CartProductController {
     @Autowired private SkuInfoService products;
     @PostMapping("/internal/product/cart-items")
-    public R items(@RequestBody List<Long> ids) { return R.ok().put("data", products.cartProducts(ids)); }
+    public R items(@RequestBody List<Long> ids,@RequestParam(defaultValue="true") boolean inventory) { return R.ok().put("data", products.cartProducts(ids,inventory)); }
 }

@@ -671,6 +671,11 @@ CREATE DATABASE `gulimall_oms_demo` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicod
 USE `gulimall_oms_demo`;
 
 CREATE TABLE `oms_order` (
+  `creation_deadline` DATETIME,
+  `payment_deadline` DATETIME,
+  `cart_cleaned` INT NOT NULL DEFAULT 1,
+  `failure_reason` VARCHAR(255),
+  `recovery_after` DATETIME,
   `id` BIGINT NOT NULL AUTO_INCREMENT,
   `member_id` BIGINT,
   `order_sn` VARCHAR(255),
@@ -713,10 +718,25 @@ CREATE TABLE `oms_order` (
   `receive_time` DATETIME,
   `comment_time` DATETIME,
   `modify_time` DATETIME,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_order_sn` (`order_sn`),
+  KEY `idx_order_recovery` (`status`, `cart_cleaned`, `creation_deadline`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `oms_order_submit` (
+  `token` CHAR(36) NOT NULL,
+  `member_id` BIGINT NOT NULL,
+  `items_json` MEDIUMTEXT NOT NULL,
+  `expires_at` DATETIME NOT NULL,
+  `address_id` BIGINT,
+  `order_sn` VARCHAR(255),
+  PRIMARY KEY (`token`),
+  UNIQUE KEY `uk_submit_order` (`order_sn`),
+  KEY `idx_submit_member` (`member_id`, `expires_at`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `oms_order_item` (
+  `cart_revision` VARCHAR(255),
   `id` BIGINT NOT NULL AUTO_INCREMENT,
   `order_id` BIGINT,
   `order_sn` VARCHAR(255),
@@ -737,7 +757,8 @@ CREATE TABLE `oms_order_item` (
   `real_amount` DECIMAL(20,2),
   `gift_integration` INT,
   `gift_growth` INT,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_item_order` (`order_sn`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `oms_order_operate_history` (
@@ -876,10 +897,12 @@ CREATE TABLE `wms_ware_order_task_detail` (
   `task_id` BIGINT,
   `ware_id` BIGINT,
   `lock_status` INT,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_task_sku` (`task_id`, `sku_id`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `wms_ware_order_task` (
+  `lock_payload` MEDIUMTEXT,
   `id` BIGINT NOT NULL AUTO_INCREMENT,
   `order_id` BIGINT,
   `order_sn` VARCHAR(255),
@@ -894,7 +917,8 @@ CREATE TABLE `wms_ware_order_task` (
   `create_time` DATETIME,
   `ware_id` BIGINT,
   `task_comment` VARCHAR(255),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_task_order` (`order_sn`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `wms_ware_sku` (

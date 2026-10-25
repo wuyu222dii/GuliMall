@@ -5,4 +5,5 @@ public class CartInput {
     private Long skuId;
     private Integer count;
     private Boolean checked;
+    private String revision;
 }

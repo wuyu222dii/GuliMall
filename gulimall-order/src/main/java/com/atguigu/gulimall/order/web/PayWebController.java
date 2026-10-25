@@ -1,9 +1,6 @@
 package com.atguigu.gulimall.order.web;
 
-import com.alipay.api.AlipayApiException;
-import com.atguigu.gulimall.order.config.AlipayTemplate;
 import com.atguigu.gulimall.order.service.OrderService;
-import com.atguigu.gulimall.order.vo.PayVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,18 +13,13 @@ import javax.servlet.http.HttpServletRequest;
 public class PayWebController {
 
     @Autowired
-    private AlipayTemplate alipayTemplate;
-
-    @Autowired
     private OrderService orderService;
 
     @ResponseBody
     @GetMapping(value = "/aliPayOrder",produces = "text/html")
-    public String aliPayOrder(@RequestParam("orderSn") String orderSn, HttpServletRequest request) throws AlipayApiException {
-        System.out.println("Received order info orderSn: "+orderSn);
-        PayVo payVo = orderService.getOrderPay(orderSn, RequestIdentity.memberId(request));
-        String pay = alipayTemplate.pay(payVo);
-        return pay;
+    public String aliPayOrder(@RequestParam("orderSn") String orderSn, HttpServletRequest request) {
+        orderService.getOrderPay(orderSn, RequestIdentity.memberId(request));
+        throw new com.atguigu.common.security.ApiProblem(503,"沙箱支付将在阶段 7 接入，当前订单尚未收款");
     }
 
 

@@ -26,6 +26,7 @@ public class CartService {
     @Autowired private ProductFeignService products;
     private final DefaultRedisScript<Long> mutate = script("mutate");
     private final DefaultRedisScript<Long> merge = script("merge");
+    private final DefaultRedisScript<Long> ordered = script("ordered");
     private static DefaultRedisScript<Long> script(String name) {
         DefaultRedisScript<Long> result = new DefaultRedisScript<>(); result.setLocation(new ClassPathResource("cart/"+name+".lua")); result.setResultType(Long.class); return result;
     }
@@ -35,7 +36,8 @@ public class CartService {
     }
     private long execute(DefaultRedisScript<Long> script, List<String> keys, String... args) {
         Long result;
-        try { result = redis.execute(script,keys,(Object[])args); }
+        String[] arguments = Arrays.copyOf(args,args.length+1); arguments[args.length]=UUID.randomUUID().toString();
+        try { result = redis.execute(script,keys,(Object[])arguments); }
         catch (DataAccessException unavailable) { throw new ApiProblem(503,"购物车存储暂不可用，请重试；原购物车不会被清空"); }
         if (result == null) throw new ApiProblem(503,"购物车操作结果未知，请刷新后重试");
         if (result == -1) throw new ApiProblem(409,"同一 SKU 合并后的数量不能超过 999");
@@ -89,6 +91,7 @@ public class CartService {
         List<CartInput> items = new ArrayList<>();
         for (Map.Entry<Object,Object> entry : values.entrySet()) {
             CartInput item = JSON.parseObject(entry.getValue().toString(),CartInput.class); item.setSkuId(Long.valueOf(entry.getKey().toString()));
+            if(item.getRevision()==null) item.setRevision(entry.getValue().toString());
             if (!selected || Boolean.TRUE.equals(item.getChecked())) items.add(item);
         }
         items.sort(Comparator.comparing(CartInput::getSkuId));
@@ -118,6 +121,7 @@ public class CartService {
             if (fresh != null) BeanUtils.copyProperties(fresh,line);
             else { line.setSkuId(saved.getSkuId()); line.setSkuName("SKU #"+saved.getSkuId()); }
             line.setCount(saved.getCount()); line.setChecked(!Boolean.FALSE.equals(saved.getChecked()));
+            line.setRevision(saved.getRevision());
             String status, message;
             if (failed) { status="SERVICE_UNAVAILABLE"; message="商品服务暂不可用，无法确认价格与可售性"; }
             else if (fresh == null) { status="DELETED"; message="商品已删除或不存在"; }
@@ -131,5 +135,14 @@ public class CartService {
             if (line.isChecked()) { view.setCheckedCount(view.getCheckedCount()+line.getCount()); ready &= line.isPurchasable(); if (line.isPurchasable()) total=total.add(line.getPrice().multiply(BigDecimal.valueOf(line.getCount()))); }
         }
         view.setReadyToCheckout(ready && view.getCheckedCount()>0); view.setTotalAmount(ready ? total : null); return view;
+    }
+    public void ordered(long memberId, com.atguigu.common.to.StockLockTo request) {
+        if(request==null || request.getOrderSn()==null || !request.getOrderSn().matches("[a-f0-9]{32}") || request.getItems()==null || request.getItems().isEmpty() || request.getItems().size()>100) throw new ApiProblem(400,"订单购物车快照不正确");
+        List<Map<String,Object>> lines=new ArrayList<>();
+        for(com.atguigu.common.to.OrderLineTo item:request.getItems()) {
+            if(item.getSkuId()==null || item.getSkuId()<1 || item.getRevision()==null) throw new ApiProblem(400,"购物车版本不正确");
+            Map<String,Object> line=new LinkedHashMap<>(); line.put("skuId",item.getSkuId().toString()); line.put("revision",item.getRevision()); lines.add(line);
+        }
+        execute(ordered,Arrays.asList(key(memberId),"gulimall:cart:{"+memberId+"}:orders"),request.getOrderSn(),JSON.toJSONString(lines));
     }
 }
