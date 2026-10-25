@@ -9,6 +9,7 @@ import Cart from './pages/Cart'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Checkout from './pages/Checkout'
+import Payment from './pages/Payment'
 import MemberOrders from './pages/MemberOrders'
 import MemberAddress from './pages/MemberAddress'
 import AdminLayout from './pages/admin/AdminLayout'
@@ -49,6 +50,8 @@ export default function App() {
           </Route>
           <Route element={<MemberRoute />}>
             <Route path="checkout" element={<Checkout />} />
+            <Route path="payment/return" element={<Payment />} />
+            <Route path="payment/:orderSn" element={<Payment />} />
             <Route path="member/orders" element={<MemberOrders />} />
             <Route path="member/address" element={<MemberAddress />} />
           </Route>
@@ -61,8 +64,8 @@ export default function App() {
 
 function MemberRoute() {
   const user = useAuthStore((s) => s.user)
-  const { pathname } = useLocation()
-  if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(pathname)}`} replace />
+  const { pathname, search } = useLocation()
+  if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(pathname + search)}`} replace />
   if (user.admin) return <Navigate to="/admin" replace />
   return <Outlet />
 }

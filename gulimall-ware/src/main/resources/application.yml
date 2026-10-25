@@ -1,4 +1,15 @@
 spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5673}
+    username: ${RABBITMQ_USER:gulimall}
+    password: ${RABBITMQ_PASSWORD}
+    connection-timeout: 3000
+    listener:
+      simple:
+        acknowledge-mode: manual
+        missing-queues-fatal: false
+        prefetch: 1
   datasource:
     username: ${DB_USER:gulimall}
     password: ${DB_PASSWORD}

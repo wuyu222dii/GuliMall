@@ -22,6 +22,10 @@ public class OrderEntity implements Serializable {
 	private Date paymentDeadline;
 	private Integer cartCleaned;
 	private String failureReason;
+	private Integer paymentStarted;
+	private String paymentTradeNo;
+	private Integer inventoryStatus;
+	public boolean isFulfillmentReady() { return Integer.valueOf(1).equals(status) && Integer.valueOf(1).equals(inventoryStatus) && paymentTradeNo!=null; }
 	private static final long serialVersionUID = 1L;
 
 	/**

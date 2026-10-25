@@ -32,6 +32,7 @@ public class OrderCreationService {
     @Autowired private MemberFeignService members;
     @Autowired private ProductFeignService products;
     @Autowired private StockFeignService stock;
+    @Autowired private TradeEventService events;
 
     private R rpc(Supplier<R> action) {
         try {
@@ -143,6 +144,7 @@ public class OrderCreationService {
         new TransactionTemplate(transactions).execute(tx->{
             int changed=db.update("UPDATE oms_order SET status=?,failure_reason=?,modify_time=NOW(),recovery_after=NOW(),payment_deadline=IF(?=0,DATE_ADD(NOW(),INTERVAL 30 MINUTE),payment_deadline) WHERE order_sn=? AND status=?",to,reason,to,sn,from);
             if(changed==1) history(orders.selectOne(new QueryWrapper<OrderEntity>().eq("order_sn",sn)).getId(),to,reason==null?"库存锁定已确认，等待付款":reason);
+            if(changed==1 && to==PENDING) events.enqueue(sn,com.atguigu.common.constant.TradeMessages.TIMER);
             return null;
         });
     }

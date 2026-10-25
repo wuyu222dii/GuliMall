@@ -1,6 +1,6 @@
 # 本地开发与运行验收
 
-阶段 0–6 已验收；真实下单、原子锁库与恢复说明见 [ORDERS.md](ORDERS.md)，整体进度见 [implementation-plan.md](implementation-plan.md)。支付和待付款超时关单仍为阶段 7。
+阶段 0–6 已验收；阶段 7 的代码与本地验证正在完成，真实沙箱与公网回调尚未验收。下单见 [ORDERS.md](ORDERS.md)，支付与消息边界见 [PAYMENTS.md](PAYMENTS.md)，整体进度见 [implementation-plan.md](implementation-plan.md)。
 
 ## 工具与配置
 
@@ -40,7 +40,7 @@ Compose 项目名为 `gulimall-demo`，端口仅绑定本机，数据使用独�
 
 MySQL 镜像仅在**空数据卷首次初始化**时执行：
 
-1. `infra/mysql/001-schema.sql`：五个 `_demo` 数据库、70 张表（68 张实体表、商品同步任务和订单提交记录），以及本地应用用户授权。
+1. `infra/mysql/001-schema.sql`：五个 `_demo` 数据库、71 张表（68 张实体表、商品同步任务、订单提交记录与交易事件），以及本地应用用户授权。
 2. `infra/mysql/002-demo.sql`：两个会员、三级分类、品牌、规格、一个双 SKU 商品、仓库、库存与收货地址。
 
 数据库为 `gulimall_pms_demo`、`gulimall_sms_demo`、`gulimall_ums_demo`、`gulimall_oms_demo`、`gulimall_wms_demo`。应用用 `gulimall` 用户，不使用 root，密码来自 `.env`。
@@ -67,11 +67,11 @@ node --test scripts/baseline.test.mjs
 
 新增检查包括：
 
-- Java：认证/安全响应、云组件开关、分类/详情、图片、搜索、购物车，以及订单 BigDecimal 金额边界和库存锁定载荷校验，共 19 项。
-- Node：实体/SQL 覆盖、种子列、凭据隔离、商品展示校验，以及访客迁移/pending 绑定和金额数量边界，共 7 项。
+- Java：认证、商品、图片、搜索、购物车、订单与锁库，以及 RSA2、网关/金额边界和履约门禁，共 22 项。
+- Node：基线、商品与购物车，以及支付目标限制和安全回跳，共 9 项。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
-这些默认检查不连接数据库。阶段 1–6 的运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；故障验收必须串行运行。真实支付尚未接入。
+这些默认检查不连接数据库。阶段 1–7 的运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；故障验收必须串行运行。阶段 7 使用独立测试密钥与 RabbitMQ 虚拟主机，真实沙箱尚待开通后验收。
 
 阶段 2 已修复 ProductCard props 校验，前端 lint 通过，未关闭规则。生成器 Oracle/SQL Server 驱动在 `legacy-database-drivers` 可选 profile 内，本次未验证该 profile。
 
@@ -121,6 +121,8 @@ npm run dev
 阶段 5 新增 `gulimall-cart`：当前聚合构建十三个项目、后台启动十个业务服务；购物车使用已有 Redis AOF 卷，无新增 SQL 表。共享 Session 和网关保护，详情/加购/结算按最新商品状态处理。合并协议、运行验收及恢复边界见 [CART.md](CART.md)。
 
 阶段 6 新增订单提交记录与订单/库存约束，当前演示库为 70 张表。已有数据先备份并执行一次 `infra/migrations/004-order-creation.sql`，不要重跑空库初始化。订单状态、确认令牌、故障恢复和验收见 [ORDERS.md](ORDERS.md)。
+
+阶段 7 新增交易事件表和支付/库存结果字段，当前为 71 张表。已有库停服务、备份并检查重复交易号后执行一次 `infra/migrations/005-payments-events.sql`。支付宝配置和公网验收待账号开通；本地测试模式必须显式启用，并与沙箱明确区分，见 [PAYMENTS.md](PAYMENTS.md)。
 
 Windows 上重建 jar 前须先停止对应业务服务，避免正在运行的 jar 被占用。当前机器可使用 `. ./.tools/enter-dev.ps1` 加载工具；启动和停止统一使用已提交的 `scripts/services.ps1`。`.tools/enter-dev.ps1` 仅供此机器使用，其他机器应配置自己的 JAVA_HOME 和 PATH。
 

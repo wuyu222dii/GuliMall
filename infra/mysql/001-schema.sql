@@ -671,6 +671,9 @@ CREATE DATABASE `gulimall_oms_demo` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicod
 USE `gulimall_oms_demo`;
 
 CREATE TABLE `oms_order` (
+  `payment_started` INT NOT NULL DEFAULT 0,
+  `payment_trade_no` VARCHAR(255),
+  `inventory_status` INT NOT NULL DEFAULT 0,
   `creation_deadline` DATETIME,
   `payment_deadline` DATETIME,
   `cart_cleaned` INT NOT NULL DEFAULT 1,
@@ -824,6 +827,7 @@ CREATE TABLE `oms_order_setting` (
 ) ENGINE=InnoDB;
 
 CREATE TABLE `oms_payment_info` (
+  `exception_reason` VARCHAR(255),
   `id` BIGINT NOT NULL AUTO_INCREMENT,
   `order_sn` VARCHAR(255),
   `order_id` BIGINT,
@@ -835,7 +839,23 @@ CREATE TABLE `oms_payment_info` (
   `confirm_time` DATETIME,
   `callback_content` TEXT,
   `callback_time` DATETIME,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_payment_trade` (`alipay_trade_no`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `oms_trade_event` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `order_sn` VARCHAR(255) NOT NULL,
+  `event_type` VARCHAR(32) NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `next_attempt` DATETIME NOT NULL,
+  `attempts` INT NOT NULL DEFAULT 0,
+  `sent_at` DATETIME,
+  `consumed_at` DATETIME,
+  `last_error` VARCHAR(255),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_trade_event` (`order_sn`, `event_type`),
+  KEY `idx_trade_event_due` (`consumed_at`, `next_attempt`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `oms_refund_info` (

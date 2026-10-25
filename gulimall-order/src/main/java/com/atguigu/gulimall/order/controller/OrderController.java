@@ -23,6 +23,7 @@ import java.util.Map;
 public class OrderController {
     @Autowired
     private OrderService orderService;
+    @Autowired private com.atguigu.gulimall.order.config.AlipayTemplate alipay;
 
     /**
      * List
@@ -32,7 +33,7 @@ public class OrderController {
     public R list(@RequestParam Map<String, Object> params){
         PageUtils page = orderService.queryPage(params);
 
-        return R.ok().put("page", page);
+        return R.ok().put("page", page).put("mode",alipay.localTest()?"LOCAL_TEST":"ALIPAY_SANDBOX");
     }
 
 

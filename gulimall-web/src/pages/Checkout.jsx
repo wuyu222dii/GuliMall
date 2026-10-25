@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import { confirmOrder, submitOrder, getSubmission, retireConfirmation } from '../api/order'
 import { useCartStore } from '../store/cartStore'
 import { useAuthStore } from '../store/authStore'
+import { orderStatuses } from '../utils/payment'
 
-const statusName = { 0: 'Pending payment', 4: 'Closed', 6: 'Creating — stock result pending', 7: 'Closing — release result pending' }
 export default function Checkout() {
   const user = useAuthStore((s) => s.user)
   const selected = useCartStore((s) => s.selected)
@@ -80,14 +80,15 @@ export default function Checkout() {
     <h1 className="page-title">Confirm order</h1>
     {error && <p className="error-msg" role="alert">{error}</p>}
     {loading ? <p role="status">Checking your saved request, current prices and addresses…</p> : result?.order ? <section className="card order-summary">
-      <h2>{statusName[result.order.status] || 'Order saved'}</h2>
+      <h2>{orderStatuses[result.order.status] || 'Order saved'}</h2>
       <p className="order-number">Order No.: {result.order.orderSn}</p>
       <p>Total due: <strong className="price">¥{Number(result.order.payAmount).toFixed(2)}</strong></p>
       <p>{result.order.receiverName} · {result.order.receiverProvince}{result.order.receiverCity}{result.order.receiverRegion} {result.order.receiverDetailAddress}</p>
       {result.items.map((item) => <p key={item.skuId}>{item.skuName} × {item.skuQuantity} — ¥{Number(item.realAmount).toFixed(2)}</p>)}
-      {result.order.status === 0 && <p className="purchase-notice">Stock is locked. Sandbox payment and unpaid-order expiry will be connected in stage 7; this order has not been paid.</p>}
+      {result.order.status === 0 && <p className="purchase-notice">Stock is locked. Use the payment page to pay or check the result before the fixed payment deadline.</p>}
       {[6, 7].includes(result.order.status) && <p role="status">The server is confirming the inventory result and will recover after a restart. This request will keep the same order number.</p>}
-      {result.order.status === 4 && <p>{result.order.failureReason} Your cart has been kept.</p>}
+      {result.order.status === 4 && <p>{result.order.failureReason}</p>}
+      {[0, 1, 4, 8, 9].includes(result.order.status) && <p><Link className="btn btn-primary" to={`/payment/${result.order.orderSn}`}>Payment / inventory status</Link></p>}
       <div className="admin-toolbar"><Link className="btn btn-primary" to="/member/orders">My orders</Link><Link className="btn btn-outline" to="/cart">View cart</Link>{[0, 4].includes(result.order.status) && <button className="btn btn-outline" onClick={startNew}>Start a new confirmation</button>}</div>
     </section> : confirmation && <>
       <section className="card order-summary"><h2>Shipping address</h2>

@@ -43,7 +43,7 @@ async function releaseFixtures() {
   const ids = accounts.map(v => v.id).join(',')
   const sns = sql(`SELECT order_sn FROM gulimall_oms_demo.oms_order WHERE member_id IN(${ids});`).split('\n').filter(Boolean)
   for (const sn of sns) await internal('/' + sn + '/release', 'POST')
-  sql(`UPDATE gulimall_oms_demo.oms_order SET status=4,cart_cleaned=1 WHERE member_id IN(${ids});`)
+  sql(`UPDATE gulimall_oms_demo.oms_order SET status=4,cart_cleaned=1,inventory_status=2 WHERE member_id IN(${ids});`)
 }
 async function readyOrder() { await until(async () => (await a.call('/api/order/mine')).status === 200, 'Order service did not recover') }
 async function startProxy() {
@@ -220,7 +220,7 @@ test('stage 6 durable order creation, atomic reservations and recovery', async t
       for (const sn of sns) {
         sql(`DELETE FROM gulimall_wms_demo.wms_ware_order_task_detail WHERE task_id IN(SELECT id FROM gulimall_wms_demo.wms_ware_order_task WHERE order_sn='${sn}'); DELETE FROM gulimall_wms_demo.wms_ware_order_task WHERE order_sn='${sn}'; DELETE FROM gulimall_oms_demo.oms_order_operate_history WHERE order_id IN(SELECT id FROM gulimall_oms_demo.oms_order WHERE order_sn='${sn}'); DELETE FROM gulimall_oms_demo.oms_order_item WHERE order_sn='${sn}';`)
       }
-      sql(`DELETE FROM gulimall_oms_demo.oms_order_submit WHERE member_id IN(${ids}); DELETE FROM gulimall_oms_demo.oms_order WHERE member_id IN(${ids}); DELETE FROM gulimall_ums_demo.ums_member_receive_address WHERE member_id IN(${ids});`)
+      sql(`DELETE FROM gulimall_oms_demo.oms_trade_event WHERE order_sn IN(SELECT order_sn FROM gulimall_oms_demo.oms_order WHERE member_id IN(${ids})); DELETE FROM gulimall_oms_demo.oms_order_submit WHERE member_id IN(${ids}); DELETE FROM gulimall_oms_demo.oms_order WHERE member_id IN(${ids}); DELETE FROM gulimall_ums_demo.ums_member_receive_address WHERE member_id IN(${ids});`)
     }
     if (productId) {
       await until(async () => (await admin.call(`/api/admin/product/search-sync/${productId}/publish?status=0`, 'POST')).status === 200, 'Fixture index cleanup failed')

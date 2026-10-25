@@ -19,7 +19,7 @@ public class PayWebController {
     @GetMapping(value = "/aliPayOrder",produces = "text/html")
     public String aliPayOrder(@RequestParam("orderSn") String orderSn, HttpServletRequest request) {
         orderService.getOrderPay(orderSn, RequestIdentity.memberId(request));
-        throw new com.atguigu.common.security.ApiProblem(503,"沙箱支付将在阶段 7 接入，当前订单尚未收款");
+        throw new com.atguigu.common.security.ApiProblem(405,"请通过受 CSRF 保护的 POST 支付入口发起支付");
     }
 
 

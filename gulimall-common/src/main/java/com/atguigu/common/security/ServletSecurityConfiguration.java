@@ -56,6 +56,8 @@ public class ServletSecurityConfiguration implements WebMvcConfigurer {
                 }
                 if (equal(internalToken, request.getHeader("X-Internal-Token"))) { return true; }
                 if (path.startsWith("/internal/")) { return deny(response, 403, "内部接口禁止访问"); }
+                // Alipay authenticates this exact server callback with RSA2, independently of Redis Session.
+                if (path.equals("/payments/alipay/notify") && "POST".equals(method)) { return true; }
                 boolean read = "GET".equals(method);
                 boolean publicPath = path.matches("/auth/(csrf|me|login|register|sms/code|admin/login)")
                         || read && (path.equals("/index/catalog.json") || path.equals("/product/category/list/tree")

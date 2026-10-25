@@ -10,6 +10,13 @@ spring:
         server-addr: ${NACOS_ADDR:127.0.0.1:18848}
     gateway:
       routes:
+        - id: alipay_notify
+          uri: lb://gulimall-order
+          predicates:
+            - Path=/api/payments/alipay/notify
+            - Method=POST
+          filters:
+            - StripPrefix=1
         - id: member_cart
           uri: lb://gulimall-cart
           predicates:

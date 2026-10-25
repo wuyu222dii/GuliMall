@@ -2,7 +2,7 @@
 
 Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / Vite 前端。
 
-阶段 0–6 已验收。已接入认证、商品与采购后台、搜索、会员购物车，以及真实下单、服务端金额、原子锁库与失败恢复；沙箱支付及待付款超时关单留待阶段 7，当前待付款订单保留库存锁定。
+阶段 0–6 已验收。阶段 7 的支付验签、幂等流水、持久化事件、RabbitMQ、关单及库存结算已通过本地联调与故障验收；真实支付宝沙箱与公网回调待账号开通后补验。默认没有沙箱凭据时不能付款，不以本地网关冒充沙箱。
 
 - [开发环境、构建与启动说明](docs/DEVELOPMENT.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
@@ -12,6 +12,7 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 - [搜索接口、同步任务与索引恢复](docs/SEARCH.md)
 - [服务端购物车、访客合并与运行验收](docs/CART.md)
 - [真实下单、库存锁定与故障恢复](docs/ORDERS.md)
+- [支付、消息、关单与本地/沙箱验收边界](docs/PAYMENTS.md)
 - [前端现状](gulimall-web/README.md)
 
 ## 快速开始
@@ -41,7 +42,7 @@ services.ps1 在后台启动本项目的十个 jar，日志在 .tools/runtime；
 | gulimall-member | 会员与地址 | 8000 |
 | gulimall-coupon | 积分、折扣、优惠券等营销数据 | 7001 |
 | gulimall-ware | 仓库、采购和库存 | 11000 |
-| gulimall-order | 订单快照、确认令牌、幂等下单、锁库协调与恢复 | 9000 |
+| gulimall-order | 订单快照、支付、幂等下单、持久化事件与补偿 | 9000 |
 | gulimall-cart | Redis 会员购物车、幂等访客合并、勾选与商品实时刷新 | 18000 |
 | gulimall-search | Elasticsearch 索引与检索 | 12000 |
 | gulimall-auth-server | 注册、会员/管理员登录、Session 和开发验证码 | 20000 |

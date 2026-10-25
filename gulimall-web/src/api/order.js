@@ -11,11 +11,6 @@ export function getOrders(params = { page: 1, limit: 10 }) {
   return request.get('/api/order/mine', { params })
 }
 
-/** Alipay payment page (returns HTML) */
-export function getAlipayForm(orderSn) {
-  return request.get(`/api/order/pay`, {
-    params: { orderSn },
-    responseType: 'text',
-    transformResponse: [(data) => data],
-  })
-}
+export const getAlipayForm = (owner, orderSn) => request.post(`/api/order/mine/${orderSn}/payment`, {}, ownerConfig(owner))
+export const getPaymentStatus = (owner, orderSn) => request.get(`/api/order/mine/${orderSn}/payment-status`, ownerConfig(owner))
+export const retryPaymentEvents = (orderSn) => request.post(`/api/admin/order/payments/${orderSn}/retry`, {})

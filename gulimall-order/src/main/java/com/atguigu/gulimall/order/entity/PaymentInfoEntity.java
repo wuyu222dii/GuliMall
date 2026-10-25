@@ -18,6 +18,7 @@ import java.util.Date;
 @Data
 @TableName("oms_payment_info")
 public class PaymentInfoEntity implements Serializable {
+	private String exceptionReason;
 	private static final long serialVersionUID = 1L;
 
 	/**

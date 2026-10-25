@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getOrders, getOrder } from '../api/order'
 import { useAuthStore } from '../store/authStore'
+import { orderStatuses } from '../utils/payment'
 
-const statuses = { 0: 'Pending payment', 1: 'Pending shipment', 2: 'Shipped', 3: 'Completed', 4: 'Closed', 5: 'Invalid order', 6: 'Creating — inventory pending', 7: 'Closing — release pending' }
 export default function MemberOrders() {
   const user = useAuthStore((s) => s.user)
   const [orders, setOrders] = useState([])
@@ -28,10 +28,11 @@ export default function MemberOrders() {
     <div className="admin-toolbar"><h1 className="page-title">My orders</h1><button className="btn btn-outline" disabled={loading} onClick={() => setRetry((value) => value + 1)}>Refresh orders</button></div>
     {error && <p className="error-msg" role="alert">{error}</p>}
     {loading ? <p role="status">Loading orders…</p> : orders.length ? orders.map((order) => <section className="card order-summary" key={order.id}>
-      <p className="order-number">Order No.: {order.orderSn}</p><p>{statuses[order.status] || 'Unknown'} · ¥{Number(order.payAmount).toFixed(2)}</p><p>Recipient: {order.receiverName} · {order.createTime}</p>
+      <p className="order-number">Order No.: {order.orderSn}</p><p>{orderStatuses[order.status] || 'Unknown'} · ¥{Number(order.payAmount).toFixed(2)}</p><p>Recipient: {order.receiverName} · {order.createTime}</p>
       {order.failureReason && <p>{order.failureReason}</p>}
       <button className="btn btn-outline" onClick={() => show(order.id)}>View order {order.orderSn}</button>
-      {detail?.order.id === order.id && <div><p>{detail.order.receiverPhone} · {detail.order.receiverProvince}{detail.order.receiverCity}{detail.order.receiverRegion} {detail.order.receiverDetailAddress}</p>{detail.items.map((item) => <p key={item.id}>{item.skuName} × {item.skuQuantity} — ¥{Number(item.realAmount).toFixed(2)}</p>)}<p className="admin-note">Freight ¥{Number(detail.order.freightAmount || 0).toFixed(2)}. Payment is not connected yet.</p></div>}
+      {[0, 1, 4, 8, 9].includes(order.status) && <p><Link className="btn btn-outline" to={`/payment/${order.orderSn}`}>Payment / inventory status</Link></p>}
+      {detail?.order.id === order.id && <div><p>{detail.order.receiverPhone} · {detail.order.receiverProvince}{detail.order.receiverCity}{detail.order.receiverRegion} {detail.order.receiverDetailAddress}</p>{detail.items.map((item) => <p key={item.id}>{item.skuName} × {item.skuQuantity} — ¥{Number(item.realAmount).toFixed(2)}</p>)}<p className="admin-note">Freight ¥{Number(detail.order.freightAmount || 0).toFixed(2)}. {detail.order.fulfillmentReady ? 'Payment and inventory confirmed.' : 'Shipping is blocked until payment and inventory are confirmed.'}</p></div>}
     </section>) : !error && <div className="empty-state card"><p>No orders yet</p><Link className="btn btn-primary" to="/search">Go shopping</Link></div>}
     {totalPage > 1 && <div className="pagination"><button disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>Previous</button><span>{page} / {totalPage}</span><button disabled={page >= totalPage || loading} onClick={() => setPage(page + 1)}>Next</button></div>}
   </div>

@@ -18,6 +18,14 @@ spring:
     port: ${RABBITMQ_PORT:5673}
     username: ${RABBITMQ_USER:gulimall}
     password: ${RABBITMQ_PASSWORD}
+    publisher-confirms: true
+    publisher-returns: true
+    connection-timeout: 3000
+    listener:
+      simple:
+        acknowledge-mode: manual
+        missing-queues-fatal: false
+        prefetch: 1
   application:
     name: gulimall-order
 mybatis-plus:
@@ -33,9 +41,7 @@ alipay:
   app_id: ${ALIPAY_APP_ID:}
   merchant_private_key: ${ALIPAY_PRIVATE_KEY:}
   alipay_public_key: ${ALIPAY_PUBLIC_KEY:}
+  seller_id: ${ALIPAY_SELLER_ID:}
   notify_url: ${ALIPAY_NOTIFY_URL:}
-  return_url: ${ALIPAY_RETURN_URL:http://localhost:5173/member/orders}
-  sign_type: RSA2
-  charset: utf-8
-  timeout: 30m
-  gatewayUrl: https://openapi.alipaydev.com/gateway.do
+  return_url: ${ALIPAY_RETURN_URL:http://127.0.0.1:5173/payment/return}
+  gatewayUrl: ${ALIPAY_GATEWAY_URL:https://openapi-sandbox.dl.alipaydev.com/gateway.do}

@@ -7,7 +7,6 @@ import com.atguigu.gulimall.order.service.PaymentInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.Map;
 
 
@@ -54,9 +53,7 @@ public class PaymentInfoController {
     @RequestMapping("/save")
     //@RequiresPermissions("order:paymentinfo:save")
     public R save(@RequestBody PaymentInfoEntity paymentInfo){
-		paymentInfoService.save(paymentInfo);
-
-        return R.ok();
+		throw new com.atguigu.common.security.ApiProblem(409,"支付流水和订单快照只能通过业务流程变更");
     }
 
     /**
@@ -65,9 +62,7 @@ public class PaymentInfoController {
     @RequestMapping("/update")
     //@RequiresPermissions("order:paymentinfo:update")
     public R update(@RequestBody PaymentInfoEntity paymentInfo){
-		paymentInfoService.updateById(paymentInfo);
-
-        return R.ok();
+		throw new com.atguigu.common.security.ApiProblem(409,"支付流水和订单快照只能通过业务流程变更");
     }
 
     /**
@@ -76,9 +71,7 @@ public class PaymentInfoController {
     @RequestMapping("/delete")
     //@RequiresPermissions("order:paymentinfo:delete")
     public R delete(@RequestBody Long[] ids){
-		paymentInfoService.removeByIds(Arrays.asList(ids));
-
-        return R.ok();
+		throw new com.atguigu.common.security.ApiProblem(409,"支付流水和订单快照只能通过业务流程变更");
     }
 
 }
