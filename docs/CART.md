@@ -1,5 +1,7 @@
 # 服务端购物车（阶段 5）
 
+阶段 9 起，运行验收统一使用 [独立测试入口](RUNBOOK.md)，不再允许直接向演示库运行旧脚本；下方历史结果保留当时的验收边界。
+
 新增 `gulimall-cart`，Java 8 / Spring Boot 2.1.8，端口 18000，只监听本机，注册到 Nacos。沿用共享 Redis Session、内部 Feign 令牌、R 返回格式和统一 `/api` 网关；无需新增数据库表或迁移，不更换技术栈。
 
 ## 页面与接口
@@ -75,16 +77,14 @@ Redis Key：`gulimall:cart:{会员ID}:items` 与 `gulimall:cart:{会员ID}:merge
 ```powershell
 node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-ui.test.mjs
 ./scripts/scripts.test.ps1
-$env:GULIMALL_ACCEPTANCE='1'
-$env:GULIMALL_FAULTS='1'
-node --test scripts/cart.acceptance.mjs
+./scripts/test.ps1 -Suite Cart
 # 其他阶段验收按顺序运行，勿与故障验收并发：
-node --test scripts/auth.acceptance.mjs
-node --test scripts/product.acceptance.mjs
-node --test scripts/admin.acceptance.mjs
-node --test scripts/search.acceptance.mjs
+./scripts/test.ps1 -Suite Auth
+./scripts/test.ps1 -Suite Product
+./scripts/test.ps1 -Suite Admin
+./scripts/test.ps1 -Suite Search
 ```
 
-运行验收只用于独立本机 `_demo` 环境，创建专用会员与商品，finally 清理自己的 Redis Key、SQL 记录和索引文档，不操作演示会员购物车。覆盖认证/CSRF/归属、真实价格、勾选、并发数量、重复/冲突合并、超限整批回滚、缺货/删除/下架与故障恢复。故障模式会重启商品、仓储、购物车和 Redis；其他用户同时操作时不要运行。
+当前运行验收只用于独立 gulimall-test / `_test` 环境，创建专用会员与商品，finally 清理自己的 Redis Key、SQL 记录和索引文档。覆盖认证/CSRF/归属、真实价格、勾选、并发数量、重复/冲突合并、超限整批回滚、缺货/删除/下架与故障恢复。运行器自动启用故障场景，重启商品、仓储、购物车和测试 Redis；其他用户同时操作时不要运行。
 
 新增 3 项默认 Java 检查覆盖合并归一化、金额/勾选及服务失败不清空；2 项 Node 检查覆盖访客格式迁移、pending 绑定/确认边界、金额和数量验证。默认测试不连接外部业务数据。浏览器已验证失败保留、换号隔离、恢复合并、刷新不重复、数量/勾选/删除、已选结算预览及桌面/窄屏布局。本机私有日志与截图在 `.tools/stage5-*`，详见实施检查点。

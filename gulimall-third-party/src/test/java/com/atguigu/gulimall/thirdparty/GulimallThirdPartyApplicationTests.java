@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Ignore("Legacy manual demo: may mutate databases or call paid external APIs; replace with isolated tests before enabling.")
+@org.springframework.test.context.ActiveProfiles("test")
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class GulimallThirdPartyApplicationTests {

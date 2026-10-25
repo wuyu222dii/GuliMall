@@ -1,10 +1,12 @@
+import { assertTestEnvironment } from './test-environment.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 
-if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Set GULIMALL_ACCEPTANCE=1; this uses only the local demo environment.')
+if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Set GULIMALL_ACCEPTANCE=1; use scripts/test.ps1 for the isolated test environment.')
+await assertTestEnvironment()
 const base='http://127.0.0.1:88', es='http://127.0.0.1:19200', index='gulimall-products-v1'
 const label=`stage4_${randomUUID().replaceAll('-','')}`
 let product, id, esStopped=false, productStopped=false
@@ -33,7 +35,7 @@ async function document(sku) {const r=await fetch(`${es}/${index}/_doc/${sku}`);
 
 test('stage 4 Elasticsearch search and durable synchronization acceptance',async t=>{
   try {
-    await admin.call('/api/auth/csrf');await ok('/api/auth/admin/login','POST',JSON.parse(readFileSync('.tools/admin-access.json','utf8')))
+    await admin.call('/api/auth/csrf');await ok('/api/auth/admin/login','POST',JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE || '.tools/admin-access.json','utf8')))
     await member.call('/api/auth/csrf');assert.equal((await member.call('/api/auth/login','POST',{username:'demo_a',password:'Demo12345!'})).status,200)
     await t.test('management and internal indexing remain protected',async()=>{
       assert.equal((await guest.call('/api/admin/product/search-sync')).status,401)
@@ -46,7 +48,7 @@ test('stage 4 Elasticsearch search and durable synchronization acceptance',async
     product={spuName:label,spuDescription:'阶段四星河手机检索验收',catalogId:900003,brandId:900001,weight:'0.2',images:['/demo-product.svg'],decript:['/demo-product.svg'],baseAttrs:[{attrId:900001,attrValues:'8GB',showDesc:1}],skus:['红色','蓝色','绿色'].map((color,i)=>({skuName:`${label} 星河手机 ${color}`,skuTitle:`${label} 星河手机 ${color}`,price:['0.00','10.00','20.00'][i],attr:[{attrId:900002,attrName:'颜色',attrValue:color}],images:[{imgUrl:'/demo-product.svg',defaultImg:1}]}))}
     id=(await ok('/api/admin/product/spuinfo/editor','POST',product)).id
     product=(await ok(`/api/admin/product/spuinfo/editor/${id}`)).product
-    sql(`INSERT INTO gulimall_wms_demo.wms_ware_sku(sku_id,ware_id,stock,stock_locked) VALUES(${product.skus[0].skuId},900001,5,0);`)
+    sql(`INSERT INTO gulimall_wms_test.wms_ware_sku(sku_id,ware_id,stock,stock_locked) VALUES(${product.skus[0].skuId},900001,5,0);`)
     await t.test('drafts are hidden; published multi-SKU documents support Chinese search, combined filters and pagination',async()=>{
       assert.equal((await search()).totalCount,0)
       assert.equal((await publish(1)).status,200);assert.equal((await job()).state,1)
@@ -95,7 +97,7 @@ test('stage 4 Elasticsearch search and durable synchronization acceptance',async
       await until(async()=>(await job()).state===1,'Rebuild did not complete')
       assert.equal((await search()).totalCount,3)
       await until(async()=>{const p=await guest.call('/api/search?keyword=Demo');return p.status===200&&p.data.page.list.some(s=>s.skuId===900001)},'Seed catalog was not rebuilt')
-      assert.equal(sql('SELECT GROUP_CONCAT(CONCAT(sku_id,\':\',stock,\':\',stock_locked) ORDER BY sku_id) FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id IN(900001,900002);'),'900001:10:0,900002:1:0')
+      assert.equal(sql('SELECT GROUP_CONCAT(CONCAT(sku_id,\':\',stock,\':\',stock_locked) ORDER BY sku_id) FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN(900001,900002);'),'900001:10:0,900002:1:0')
     })
   } finally {
     if(esStopped)command('docker',['compose','start','elasticsearch'])
@@ -103,8 +105,8 @@ test('stage 4 Elasticsearch search and durable synchronization acceptance',async
     if(id){
       await until(async()=>{try{return (await publish(0)).status===200}catch{return false}},'Could not remove indexed fixture safely')
       const ids=product.skus.map(s=>s.skuId).filter(Boolean).join(',')
-      if(ids)sql(`DELETE FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id IN(${ids});DELETE FROM gulimall_pms_demo.pms_sku_images WHERE sku_id IN(${ids});DELETE FROM gulimall_pms_demo.pms_sku_sale_attr_value WHERE sku_id IN(${ids});DELETE FROM gulimall_pms_demo.pms_sku_info WHERE sku_id IN(${ids}) AND spu_id=${id};`)
-      sql(`DELETE FROM gulimall_pms_demo.pms_search_sync WHERE spu_id=${id};DELETE FROM gulimall_pms_demo.pms_product_attr_value WHERE spu_id=${id};DELETE FROM gulimall_pms_demo.pms_spu_images WHERE spu_id=${id};DELETE FROM gulimall_pms_demo.pms_spu_info_desc WHERE spu_id=${id};DELETE FROM gulimall_pms_demo.pms_spu_info WHERE id=${id} AND spu_name='${label}';`)
+      if(ids)sql(`DELETE FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN(${ids});DELETE FROM gulimall_pms_test.pms_sku_images WHERE sku_id IN(${ids});DELETE FROM gulimall_pms_test.pms_sku_sale_attr_value WHERE sku_id IN(${ids});DELETE FROM gulimall_pms_test.pms_sku_info WHERE sku_id IN(${ids}) AND spu_id=${id};`)
+      sql(`DELETE FROM gulimall_pms_test.pms_search_sync WHERE spu_id=${id};DELETE FROM gulimall_pms_test.pms_product_attr_value WHERE spu_id=${id};DELETE FROM gulimall_pms_test.pms_spu_images WHERE spu_id=${id};DELETE FROM gulimall_pms_test.pms_spu_info_desc WHERE spu_id=${id};DELETE FROM gulimall_pms_test.pms_spu_info WHERE id=${id} AND spu_name='${label}';`)
     }
     await admin.call('/api/auth/logout','POST');await member.call('/api/auth/logout','POST')
   }

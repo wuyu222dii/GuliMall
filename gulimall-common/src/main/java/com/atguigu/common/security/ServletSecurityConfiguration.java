@@ -21,7 +21,7 @@ import java.security.MessageDigest;
 @Configuration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @EnableRedisHttpSession(redisNamespace = "gulimall:session", maxInactiveIntervalInSeconds = 7200)
-@Import(ApiErrorAdvice.class)
+@Import({ApiErrorAdvice.class,TestEnvironmentController.class})
 public class ServletSecurityConfiguration implements WebMvcConfigurer {
     private final String internalToken;
     private final ObjectMapper mapper;

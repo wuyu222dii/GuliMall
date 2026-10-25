@@ -1,6 +1,6 @@
 # 本地开发与运行验收
 
-阶段 0–6 已验收，阶段 7–8 本地验收通过，真实沙箱与公网回调尚未验收。下单见 [ORDERS.md](ORDERS.md)，支付与消息边界见 [PAYMENTS.md](PAYMENTS.md)，履约、取消与浏览器验收见 [FULFILLMENT.md](FULFILLMENT.md)，整体进度见 [implementation-plan.md](implementation-plan.md)。
+阶段 0–9 本地验收已通过，真实支付宝沙箱与公网回调仍待补验。独立测试、静态部署、两套交易演示及备份恢复见 [RUNBOOK.md](RUNBOOK.md)。下单见 [ORDERS.md](ORDERS.md)，支付与消息边界见 [PAYMENTS.md](PAYMENTS.md)，履约见 [FULFILLMENT.md](FULFILLMENT.md)，整体进度见 [implementation-plan.md](implementation-plan.md)。
 
 ## 工具与配置
 
@@ -67,11 +67,11 @@ node --test scripts/baseline.test.mjs
 
 新增检查包括：
 
-- Java：认证、商品、图片、搜索、购物车、订单与锁库，以及 RSA2、网关/金额边界、履约门禁和物流校验，共 23 项。
-- Node：基线、商品与购物车，以及支付目标限制、安全回跳和订单详情展示，共 10 项。
+- Java：认证、商品、图片、搜索、购物车、订单与锁库，以及 RSA2、金额边界、履约门禁、测试环境保护、管理员摘要工具与网关来源限制，共 26 项。
+- Node：基线、商品、购物车、支付目标限制、安全回跳、订单详情、真实库名保护及静态部署，共 13 项。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
-这些默认检查不连接数据库。阶段 1–7 的运行验收会在本机 `_demo` 库写入并清理专用测试记录，需显式启用；故障验收必须串行运行。阶段 7 使用独立测试密钥与 RabbitMQ 虚拟主机，真实沙箱尚待开通后验收。
+这些默认检查不连接数据库。阶段 9 起统一以 `./scripts/test.ps1 -Suite All` 运行 68 个业务场景，使用独立 Compose 项目、卷和五个 `_test` 库；会暂停演示环境，结束后恢复。直接向演示库运行 acceptance 脚本会被拒绝。支付使用独立测试密钥与 RabbitMQ 虚拟主机，真实沙箱尚待开通后验收。故障验收必须串行运行，详见 [RUNBOOK.md](RUNBOOK.md)。
 
 阶段 2 已修复 ProductCard props 校验，前端 lint 通过，未关闭规则。生成器 Oracle/SQL Server 驱动在 `legacy-database-drivers` 可选 profile 内，本次未验证该 profile。
 
@@ -124,7 +124,9 @@ npm run dev
 
 阶段 7 新增交易事件表和支付/库存结果字段，当前为 71 张表。已有库停服务、备份并检查重复交易号后执行一次 `infra/migrations/005-payments-events.sql`。支付宝配置和公网验收待账号开通；本地测试模式必须显式启用，并与沙箱明确区分，见 [PAYMENTS.md](PAYMENTS.md)。
 
-阶段 8 复用已有物流、收货时间和订单历史字段，无新增迁移，仍为 71 张表、十个业务服务。管理后台按订单号/状态查询并填写物流，会员查看详情、确认收货或取消待付款订单；取消复用阶段 7 的支付关闭确认与库存释放，不直接改状态或释放未知结果库存。验收需显式 `GULIMALL_ACCEPTANCE=1`，命令与范围见 [FULFILLMENT.md](FULFILLMENT.md)。
+阶段 8 复用已有物流、收货时间和订单历史字段，无新增迁移，仍为 71 张表、十个业务服务。管理后台按订单号/状态查询并填写物流，会员查看详情、确认收货或取消待付款订单；取消复用阶段 7 的支付关闭确认与库存释放，不直接改状态或释放未知结果库存。当前验收入口为 `./scripts/test.ps1 -Suite Fulfillment`，范围见 [FULFILLMENT.md](FULFILLMENT.md)。
+
+阶段 9 提供静态部署 `deploy.ps1 Build/Start/Stop`，浏览器访问 `127.0.0.1:8080`，无需 Vite；浏览器仅走同源 `/api`。`test.ps1 -Suite Success/Failure/Recovery` 提供两套真实业务接口演示及全新实例恢复验证。冷备份、Redis AOF 导入、消息重放、图片与搜索恢复步骤见 [运行手册](RUNBOOK.md)。不新增业务表，不改已有演示库。
 
 Windows 上重建 jar 前须先停止对应业务服务，避免正在运行的 jar 被占用。当前机器可使用 `. ./.tools/enter-dev.ps1` 加载工具；启动和停止统一使用已提交的 `scripts/services.ps1`。`.tools/enter-dev.ps1` 仅供此机器使用，其他机器应配置自己的 JAVA_HOME 和 PATH。
 

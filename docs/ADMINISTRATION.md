@@ -1,5 +1,7 @@
 # 商品与采购库存管理（阶段 3）
 
+阶段 9 起，运行验收统一使用 [独立测试入口](RUNBOOK.md)，不再允许直接向演示库运行旧脚本；下方历史结果保留当时的验收边界。
+
 入口为 `http://127.0.0.1:5173/admin`，使用独立管理员登录。普通会员与未登录访问者不能调用管理接口；绕过网关直接访问业务端口也受保护。所有修改请求沿用 Session + CSRF。
 
 ## 录入一个双 SKU 商品
@@ -70,13 +72,11 @@ SHOW COLUMNS FROM gulimall_wms_demo.wms_purchase_detail LIKE 'failure_reason';
 ```powershell
 node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs
 ./scripts/scripts.test.ps1
-$env:GULIMALL_ACCEPTANCE='1'
-$env:GULIMALL_FAULTS='1'
-node --test scripts/admin.acceptance.mjs
-node --test scripts/auth.acceptance.mjs
-node --test scripts/product.acceptance.mjs
+./scripts/test.ps1 -Suite Admin
+./scripts/test.ps1 -Suite Auth
+./scripts/test.ps1 -Suite Product
 ```
 
-管理验收使用 `.tools/admin-access.json` 或 `ADMIN_TEST_PASSWORD` / `ADMIN_USER`；只允许本机 `_demo` 配置。脚本通过业务 API 创建独立资料、双 SKU、图片、仓库和采购单，检查非法输入、会员拒绝、编辑保留编号、并发入库、部分失败和重试；最后清理自己创建的记录。故障开关会重启 third-party 验证图片哈希不变；商品验收会重启 ware。不要并行运行这些故障验收。
+当前管理验收由 test.ps1 自动提供 `.tools/test/admin-access.json`，只允许独立 `_test` 配置，不需要演示管理员的明文密码。脚本通过业务 API 创建独立资料、双 SKU、图片、仓库和采购单，检查非法输入、会员拒绝、编辑保留编号、并发入库、部分失败和重试；最后清理自己创建的记录。运行器自动启用故障场景，重启 third-party 验证图片哈希不变；商品验收会重启 ware。不要并行运行这些故障验收。
 
 2026-10-25 的构建、运行验收及浏览器操作结果见实施检查点。本机 `.tools/stage3-*` 保存私有日志与截图，不进入 Git。

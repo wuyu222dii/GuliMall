@@ -1,5 +1,7 @@
 # 阶段 1：身份、权限与运行验收
 
+阶段 9 起，运行验收统一使用 [独立测试入口](RUNBOOK.md)，不再允许直接向演示库运行旧脚本；下方历史结果保留当时的验收边界。
+
 ## 当前行为
 
 会员真实注册，用户名或手机号登录；密码使用 BCrypt（cost 10），拒绝超过 72 UTF-8 字节的密码。用户名和手机号在数据库中有唯一约束。响应和 Session 仅保存必要身份字段，不返回密码、摘要或社交令牌。
@@ -56,12 +58,10 @@ SHOW INDEX FROM gulimall_ums_demo.ums_member;
 
 ```powershell
 . ./scripts/env.ps1
-$env:GULIMALL_ACCEPTANCE = '1'
 # 其他机器临时设置 ADMIN_TEST_PASSWORD，与已配置 BCrypt 摘要对应；本机可读取私有 admin-access.json。
-node --test scripts/auth.acceptance.mjs
-Remove-Item Env:GULIMALL_ACCEPTANCE
+./scripts/test.ps1 -Suite Auth
 ```
 
-该脚本只操作本机 Compose 的 `_demo` 数据库，生成专用随机账号、订单、地址和品牌，finally 清理自己的记录，不删除种子数据。不可用于生产。9 项（含父用例）验证：开发验证码频率/尝试次数、注册唯一性与并发、错误密码、用户名/手机号登录、会话更换、安全响应、地址/订单隔离、支付归属、伪造头、直连服务权限、管理员 CSRF 与退出后旧 Cookie 失效。
+当前入口只操作独立 gulimall-test 的 `_test` 数据库，生成专用随机账号、订单、地址和品牌，finally 清理自己的记录，不删除种子数据。不可用于生产。9 项（含父用例）验证：开发验证码频率/尝试次数、注册唯一性与并发、错误密码、用户名/手机号登录、会话更换、安全响应、地址/订单隔离、支付归属、伪造头、直连服务权限、管理员 CSRF 与退出后旧 Cookie 失效。
 
 浏览器回归已验证 demo_a 登录、地址归属、刷新恢复、退出后的路由跳转、错误密码和开发验证码提示，以及管理员登录与刷新恢复。购物车和订单已接入阶段 5/6，阶段 7 支付代码与本地验证见 [PAYMENTS.md](PAYMENTS.md)；真实沙箱、公网回调及发货尚未验收，不能把认证验收视为完整交易闭环验收。

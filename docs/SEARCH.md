@@ -1,5 +1,7 @@
 # Elasticsearch 搜索与商品同步（阶段 4）
 
+阶段 9 起，运行验收统一使用 [独立测试入口](RUNBOOK.md)，不再允许直接向演示库运行旧脚本；下方历史结果保留当时的验收边界。
+
 搜索页 `http://127.0.0.1:5173/search` 使用 `GET /api/search`，结果来自 Elasticsearch 7.10.2。首页推荐仍使用商品库消费者列表。搜索失败时显示错误与重试入口，不回退到数据库查询或继续显示旧结果。详情、加购和结算前的实时可售性校验继续由商品/仓储服务负责。
 
 ## 初始化与已有库迁移
@@ -72,14 +74,12 @@ ES 使用相同 SKU ID、外部版本及批量写入，批量任一项失败保�
 启动十个业务服务与前端，并通过 Smoke 后运行：
 
 ```powershell
-$env:GULIMALL_ACCEPTANCE='1'
-$env:GULIMALL_FAULTS='1'
-node --test scripts/search.acceptance.mjs
-node --test scripts/auth.acceptance.mjs
-node --test scripts/product.acceptance.mjs
-node --test scripts/admin.acceptance.mjs
+./scripts/test.ps1 -Suite Search
+./scripts/test.ps1 -Suite Auth
+./scripts/test.ps1 -Suite Product
+./scripts/test.ps1 -Suite Admin
 ```
 
-仅用于本机 `_demo` 环境。搜索验收创建独立三 SKU 商品和库存，测试中文、组合筛选、价格零上限、属性、分页、上下架与版本重放。故障模式会停止本项目 ES 容器、重启本工作区商品服务，验证任务与最新价格恢复，并删除派生的 `gulimall-products-v1` 索引，再从商品库恢复全部商品。**不要在共享或生产环境执行故障验收。** 脚本 finally 下架并清理自己的商品、库存与任务，不修改种子商品或库存。其他验收会重启仓储/图片服务，需顺序运行。
+当前入口仅用于独立 gulimall-test / `_test` 环境。搜索验收创建三 SKU 商品和库存，测试中文、组合筛选、价格零上限、属性、分页、上下架与版本重放。运行器自动启用故障场景，停止测试 ES 容器、重启本工作区商品服务，验证任务与最新价格恢复，并删除测试派生索引 `gulimall-products-v1`，再从测试商品库恢复。**不要在共享或生产环境执行故障验收。** finally 下架并清理自己的商品、库存与任务，不修改种子商品或库存。其他验收会重启仓储/图片服务，需顺序运行。
 
 默认构建新增 SearchQueryTest：零价格上限与 nested 配对、非法排序/分页窗口、真实返回分页结果；不连接数据库或 ES。运行与浏览器记录见实施检查点，本机私有日志/截图在 `.tools/stage4-*`。

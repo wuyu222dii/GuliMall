@@ -1,0 +1,9 @@
+name: gulimall-test
+services:
+  mysql:
+    environment:
+      MYSQL_DATABASE: gulimall_pms_test
+    volumes:
+      - ${GULIMALL_TEST_INIT_DIR:?Use scripts/test.ps1}:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysql -h127.0.0.1 -uroot -e 'SELECT 1 FROM gulimall_wms_test.wms_ware_sku LIMIT 1'"]

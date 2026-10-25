@@ -1,3 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.atguigu.common.security.ServletSecurityConfiguration,\
 com.atguigu.common.security.FeignSecurityConfiguration
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.atguigu.common.security.TestEnvironmentGuard

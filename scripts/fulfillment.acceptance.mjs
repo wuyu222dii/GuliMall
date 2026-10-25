@@ -1,10 +1,12 @@
+import { assertTestEnvironment } from './test-environment.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { randomUUID, randomInt } from 'node:crypto'
 import { testConfig, createPaymentGateway, providerTime } from './payment-test-gateway.mjs'
-if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Set GULIMALL_ACCEPTANCE=1; only use the isolated local *_demo environment.')
+if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Set GULIMALL_ACCEPTANCE=1; only use the isolated local *_test environment.')
+await assertTestEnvironment()
 const base = 'http://127.0.0.1:88', label = 'stage8_' + randomUUID().replaceAll('-', ''), vhost = label
 const baseline = { ...process.env }, accounts = [], config = testConfig('.tools/stage8-test-config.json')
 let gateway, productId, sku, vhostCreated = false, rabbitStopped = false
@@ -13,7 +15,7 @@ function command(program, args) { const r = spawnSync(program, args, { stdio: 'i
 function redis(args) { command('docker', ['compose', 'exec', '-T', 'redis', 'redis-cli', '--raw', ...args]) }
 function service(action, module, local = true) {
   const env = { ...baseline }
-  if (local && gateway) Object.assign(env, { SPRING_PROFILES_ACTIVE: 'dev,payment-test', SPRING_RABBITMQ_VIRTUAL_HOST: vhost, ALIPAY_APP_ID: config.appId, ALIPAY_PRIVATE_KEY: config.merchantPrivate, ALIPAY_PUBLIC_KEY: config.providerPublic, ALIPAY_SELLER_ID: config.sellerId, ALIPAY_NOTIFY_URL: config.notifyUrl, ALIPAY_RETURN_URL: config.returnUrl, ALIPAY_GATEWAY_URL: gateway.url + '/gateway.do' })
+  if (local && gateway) Object.assign(env, { SPRING_PROFILES_ACTIVE: 'dev,test,payment-test', SPRING_RABBITMQ_VIRTUAL_HOST: vhost, ALIPAY_APP_ID: config.appId, ALIPAY_PRIVATE_KEY: config.merchantPrivate, ALIPAY_PUBLIC_KEY: config.providerPublic, ALIPAY_SELLER_ID: config.sellerId, ALIPAY_NOTIFY_URL: config.notifyUrl, ALIPAY_RETURN_URL: config.returnUrl, ALIPAY_GATEWAY_URL: gateway.url + '/gateway.do' })
   const r = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts/services.ps1', action, '-Modules', module], { env, stdio: 'ignore', windowsHide: true, timeout: 30000 }); assert.equal(r.status, 0, 'Service command failed')
 }
 async function until(check, message, attempts = 80) { for (let i = 0; i < attempts; i++) { try { if (await check()) return } catch {} await new Promise(r => setTimeout(r, 1000)) } assert.fail(message) }
@@ -34,7 +36,7 @@ async function management(path) {
 }
 const vp = encodeURIComponent(vhost)
 const view = async (sn, client = a) => (await ok(client, `/api/order/mine/${sn}/payment-status`)).payment
-const stockRow = () => sql(`SELECT stock,stock_locked FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id=${sku};`).split('\t').map(Number)
+const stockRow = () => sql(`SELECT stock,stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE sku_id=${sku};`).split('\t').map(Number)
 const internalStock = (path, method = 'GET', body) => ok(guest, 'http://127.0.0.1:11000/internal/stock' + path, method, body, { 'X-Internal-Token': baseline.INTERNAL_API_TOKEN })
 async function newOrder(count = 1, client = a) {
   await ok(client, '/api/cart', 'DELETE'); await ok(client, '/api/cart/items', 'POST', { skuId: sku, count })
@@ -63,6 +65,7 @@ async function settled(order, status = 1) { await until(async () => { const curr
 async function ready() {
   await until(async () => (await guest.call('http://127.0.0.1:9000/order/mine')).status === 401, 'Order service not ready')
   await until(async () => (await guest.call('http://127.0.0.1:11000/internal/stock/' + 'a'.repeat(32), 'GET', undefined, { 'X-Internal-Token': baseline.INTERNAL_API_TOKEN })).status === 200, 'Warehouse service not ready')
+  await until(async () => (await guest.call('/api/order/mine')).status === 401, 'Order gateway discovery did not recover after restart')
 }
 
 test('stage 8 shipment, receipt and cancellation (local payment verification)', { timeout: 900000 }, async t => {
@@ -71,16 +74,16 @@ test('stage 8 shipment, receipt and cancellation (local payment verification)', 
     command('docker', ['compose', 'exec', '-T', 'rabbitmq', 'rabbitmqctl', 'set_permissions', '-p', vhost, baseline.RABBITMQ_USER, '.*', '.*', '.*'])
     gateway = await createPaymentGateway({ config }); service('Stop', 'order'); service('Stop', 'ware'); service('Start', 'order'); service('Start', 'ware'); await ready()
     await until(async () => (await management('/queues/' + vp)).length === 4, 'Isolated RabbitMQ topology was not declared')
-    await admin.call('/api/auth/csrf'); await ok(admin, '/api/auth/admin/login', 'POST', JSON.parse(readFileSync('.tools/admin-access.json', 'utf8')))
+    await admin.call('/api/auth/csrf'); await ok(admin, '/api/auth/admin/login', 'POST', JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE || '.tools/admin-access.json', 'utf8')))
     for (const [client, suffix] of [[a, 'a'], [b, 'b']]) {
       const username = label + suffix, phone = '136' + String(randomInt(100000000)).padStart(8, '0')
-      const id = Number(sql(`INSERT INTO gulimall_ums_demo.ums_member(username,password,mobile,status) SELECT '${username}',password,'${phone}',1 FROM gulimall_ums_demo.ums_member WHERE id=900001; SELECT LAST_INSERT_ID();`)); assert.ok(id > 900002); accounts.push({ id, username }); client.memberId = id
+      const id = Number(sql(`INSERT INTO gulimall_ums_test.ums_member(username,password,mobile,status) SELECT '${username}',password,'${phone}',1 FROM gulimall_ums_test.ums_member WHERE id=900001; SELECT LAST_INSERT_ID();`)); assert.ok(id > 900002); accounts.push({ id, username }); client.memberId = id
       await client.call('/api/auth/csrf'); await ok(client, '/api/auth/login', 'POST', { username, password: 'Demo12345!' })
       client.addressId = (await ok(client, '/api/member/addresses', 'POST', { name: username, phone, province: '浙江省', city: '杭州市', region: '西湖区', detailAddress: 'Local payment fixture', defaultStatus: 1 })).id
     }
     productId = (await ok(admin, '/api/admin/product/spuinfo/editor', 'POST', { spuName: label, spuDescription: 'Local payment verification', catalogId: 900003, brandId: 900001, weight: '0.1', images: ['/demo-product.svg'], decript: [], baseAttrs: [], skus: [{ skuName: label, skuTitle: '本地测试 "手机" & 斜杠 \\ 红色', price: '0.10', images: [{ imgUrl: '/demo-product.svg', defaultImg: 1 }], attr: [{ attrId: 900002, attrName: '颜色', attrValue: '红色' }] }] })).id
     sku = (await ok(admin, `/api/admin/product/spuinfo/editor/${productId}`)).product.skus[0].skuId
-    sql(`INSERT INTO gulimall_wms_demo.wms_ware_sku(sku_id,ware_id,stock,stock_locked) VALUES(${sku},900001,100,0);`)
+    sql(`INSERT INTO gulimall_wms_test.wms_ware_sku(sku_id,ware_id,stock,stock_locked) VALUES(${sku},900001,100,0);`)
     await until(async () => (await admin.call(`/api/admin/product/search-sync/${productId}/publish?status=1`, 'POST')).status === 200, 'Fixture publication did not recover after discovery refresh')
     writeFileSync('.tools/stage8-fixtures.json', JSON.stringify({ label, vhost, accounts, productId, sku }))
 
@@ -89,7 +92,7 @@ test('stage 8 shipment, receipt and cancellation (local payment verification)', 
     const ship = (order, body = shipment) => admin.call(`/api/admin/order/order/${order.id}/ship`, 'POST', body)
     const cancel = (order, client = a) => client.call(`/api/order/mine/${order.id}/cancel`, 'POST', {})
     const receive = (order, client = a) => client.call(`/api/order/mine/${order.id}/receive`, 'POST', {})
-    const historyCount = (order, status) => Number(sql(`SELECT COUNT(*) FROM gulimall_oms_demo.oms_order_operate_history WHERE order_id=${order.id} AND order_status=${status};`))
+    const historyCount = (order, status) => Number(sql(`SELECT COUNT(*) FROM gulimall_oms_test.oms_order_operate_history WHERE order_id=${order.id} AND order_status=${status};`))
     const detail = async (order, client = a) => ok(client, `/api/order/mine/${order.id}`)
     await t.test('admin filters, details and member boundaries reject spoofing, bypasses and invalid pagination', async () => {
       blocked = await newOrder(); const other = await newOrder(1, b)
@@ -142,7 +145,6 @@ test('stage 8 shipment, receipt and cancellation (local payment verification)', 
       assert.equal((await receive(completed, b)).status, 403); assert.equal((await receive(completed, admin)).status, 403)
       assert.equal((await cancel(completed)).status, 409); assert.equal((await ship(completed)).status, 200)
       service('Stop', 'order'); service('Start', 'order'); await ready()
-      await until(async () => (await guest.call('/api/order/mine')).status === 401, 'Order gateway route not restored')
       const d = await detail(completed); assert.equal(d.order.status, 3); assert.equal(d.order.deliverySn, shipment.deliverySn); assert(d.order.receiveTime)
       assert.equal(d.history.filter(h => h.orderStatus === 2).length, 1); assert.equal(d.history.filter(h => h.orderStatus === 3).length, 1)
     })
@@ -152,7 +154,7 @@ test('stage 8 shipment, receipt and cancellation (local payment verification)', 
       assert(results.every(r => r.status === 200 && [4, 8].includes(r.data.order.status))); await settled(order, 4)
       assert.equal(stockRow()[0], before[0]); assert.equal(stockRow()[1], before[1] - 2)
       assert.equal(historyCount(order, 8), 1); assert.equal(historyCount(order, 4), 1)
-      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_oms_demo.oms_trade_event WHERE order_sn='${order.orderSn}' AND event_type='STOCK_RELEASE';`), '1')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_oms_test.oms_trade_event WHERE order_sn='${order.orderSn}' AND event_type='STOCK_RELEASE';`), '1')
       assert.equal((await cancel(order)).data.order.status, 4); assert.equal((await ship(order)).status, 409); assert.equal((await receive(order)).status, 409)
       assert.equal(historyCount(order, 4), 1)
     })
@@ -182,7 +184,7 @@ test('stage 8 shipment, receipt and cancellation (local payment verification)', 
         await until(async () => { const o = (await view(order.orderSn)).order; return [1, 4].includes(o.status) && o.inventoryStatus > 0 }, 'Payment/cancel race did not settle')
         const o = (await view(order.orderSn)).order, state = (await internalStock('/' + order.orderSn)).data.state
         if (o.status === 1) { paidCount++; assert.equal(state, 'DEDUCTED'); assert(o.fulfillmentReady) } else { closedCount++; closedOrder = order; assert.equal(state, 'RELEASED') }
-        assert.equal(sql(`SELECT COUNT(*) FROM gulimall_oms_demo.oms_trade_event WHERE order_sn='${order.orderSn}' AND event_type IN('STOCK_DEDUCT','STOCK_RELEASE');`), '1')
+        assert.equal(sql(`SELECT COUNT(*) FROM gulimall_oms_test.oms_trade_event WHERE order_sn='${order.orderSn}' AND event_type IN('STOCK_DEDUCT','STOCK_RELEASE');`), '1')
       }
       gateway.options.closeDelay = 0; assert(paidCount > 0 && closedCount > 0)
       gateway.put(closedOrder.orderSn, { state: 'TRADE_SUCCESS', paidAt: providerTime() }); assert.equal((await gateway.notify(closedOrder.orderSn)).body, 'success')
@@ -200,16 +202,16 @@ test('stage 8 shipment, receipt and cancellation (local payment verification)', 
     service('Stop', 'order'); service('Stop', 'ware')
     try {
       if (accounts.length) {
-        const ids = accounts.map(v => v.id).join(','), sns = sql(`SELECT order_sn FROM gulimall_oms_demo.oms_order WHERE member_id IN(${ids});`).split('\n').filter(Boolean)
-        for (const sn of sns) sql(`DELETE FROM gulimall_wms_demo.wms_ware_order_task_detail WHERE task_id IN(SELECT id FROM gulimall_wms_demo.wms_ware_order_task WHERE order_sn='${sn}'); DELETE FROM gulimall_wms_demo.wms_ware_order_task WHERE order_sn='${sn}'; DELETE FROM gulimall_oms_demo.oms_order_operate_history WHERE order_id IN(SELECT id FROM gulimall_oms_demo.oms_order WHERE order_sn='${sn}'); DELETE FROM gulimall_oms_demo.oms_order_item WHERE order_sn='${sn}'; DELETE FROM gulimall_oms_demo.oms_payment_info WHERE order_sn='${sn}'; DELETE FROM gulimall_oms_demo.oms_trade_event WHERE order_sn='${sn}';`)
-        sql(`DELETE FROM gulimall_oms_demo.oms_order_submit WHERE member_id IN(${ids}); DELETE FROM gulimall_oms_demo.oms_order WHERE member_id IN(${ids}); DELETE FROM gulimall_ums_demo.ums_member_receive_address WHERE member_id IN(${ids});`)
+        const ids = accounts.map(v => v.id).join(','), sns = sql(`SELECT order_sn FROM gulimall_oms_test.oms_order WHERE member_id IN(${ids});`).split('\n').filter(Boolean)
+        for (const sn of sns) sql(`DELETE FROM gulimall_wms_test.wms_ware_order_task_detail WHERE task_id IN(SELECT id FROM gulimall_wms_test.wms_ware_order_task WHERE order_sn='${sn}'); DELETE FROM gulimall_wms_test.wms_ware_order_task WHERE order_sn='${sn}'; DELETE FROM gulimall_oms_test.oms_order_operate_history WHERE order_id IN(SELECT id FROM gulimall_oms_test.oms_order WHERE order_sn='${sn}'); DELETE FROM gulimall_oms_test.oms_order_item WHERE order_sn='${sn}'; DELETE FROM gulimall_oms_test.oms_payment_info WHERE order_sn='${sn}'; DELETE FROM gulimall_oms_test.oms_trade_event WHERE order_sn='${sn}';`)
+        sql(`DELETE FROM gulimall_oms_test.oms_order_submit WHERE member_id IN(${ids}); DELETE FROM gulimall_oms_test.oms_order WHERE member_id IN(${ids}); DELETE FROM gulimall_ums_test.ums_member_receive_address WHERE member_id IN(${ids});`)
       }
       if (productId) {
         await ok(admin, `/api/admin/product/search-sync/${productId}/publish?status=0`, 'POST')
-        if (sku) sql(`DELETE FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id=${sku}; DELETE FROM gulimall_pms_demo.pms_sku_images WHERE sku_id=${sku}; DELETE FROM gulimall_pms_demo.pms_sku_sale_attr_value WHERE sku_id=${sku};`)
-        sql(`DELETE FROM gulimall_pms_demo.pms_sku_info WHERE spu_id=${productId}; DELETE FROM gulimall_pms_demo.pms_search_sync WHERE spu_id=${productId}; DELETE FROM gulimall_pms_demo.pms_product_attr_value WHERE spu_id=${productId}; DELETE FROM gulimall_pms_demo.pms_spu_images WHERE spu_id=${productId}; DELETE FROM gulimall_pms_demo.pms_spu_info_desc WHERE spu_id=${productId}; DELETE FROM gulimall_pms_demo.pms_spu_info WHERE id=${productId} AND spu_name='${label}';`)
+        if (sku) sql(`DELETE FROM gulimall_wms_test.wms_ware_sku WHERE sku_id=${sku}; DELETE FROM gulimall_pms_test.pms_sku_images WHERE sku_id=${sku}; DELETE FROM gulimall_pms_test.pms_sku_sale_attr_value WHERE sku_id=${sku};`)
+        sql(`DELETE FROM gulimall_pms_test.pms_sku_info WHERE spu_id=${productId}; DELETE FROM gulimall_pms_test.pms_search_sync WHERE spu_id=${productId}; DELETE FROM gulimall_pms_test.pms_product_attr_value WHERE spu_id=${productId}; DELETE FROM gulimall_pms_test.pms_spu_images WHERE spu_id=${productId}; DELETE FROM gulimall_pms_test.pms_spu_info_desc WHERE spu_id=${productId}; DELETE FROM gulimall_pms_test.pms_spu_info WHERE id=${productId} AND spu_name='${label}';`)
       }
-      for (const account of accounts) { redis(['DEL', `gulimall:cart:{${account.id}}:items`, `gulimall:cart:{${account.id}}:merges`, `gulimall:cart:{${account.id}}:orders`]); sql(`DELETE FROM gulimall_ums_demo.ums_member WHERE id=${account.id} AND username='${account.username}';`) }
+      for (const account of accounts) { redis(['DEL', `gulimall:cart:{${account.id}}:items`, `gulimall:cart:{${account.id}}:merges`, `gulimall:cart:{${account.id}}:orders`]); sql(`DELETE FROM gulimall_ums_test.ums_member WHERE id=${account.id} AND username='${account.username}';`) }
     } finally {
       if (vhostCreated) command('docker', ['compose', 'exec', '-T', 'rabbitmq', 'rabbitmqctl', 'delete_vhost', vhost])
       if (gateway) await gateway.close()

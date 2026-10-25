@@ -22,6 +22,7 @@ public class GulimallCorsConfiguration {
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.addAllowedOrigin("http://localhost:5173");
         corsConfiguration.addAllowedOrigin("http://127.0.0.1:5173");
+        corsConfiguration.addAllowedOrigin("http://127.0.0.1:8080");
         corsConfiguration.setAllowCredentials(true);
         source.registerCorsConfiguration("/**", corsConfiguration);
         return new CorsWebFilter(source);

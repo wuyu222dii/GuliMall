@@ -1,13 +1,15 @@
+import { assertTestEnvironment } from './test-environment.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 
-if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Set GULIMALL_ACCEPTANCE=1 and load .env. This writes disposable local *_demo fixtures.')
+if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Set GULIMALL_ACCEPTANCE=1 and use scripts/test.ps1. This writes disposable local *_test fixtures.')
 const label = `stage2_${randomUUID().replaceAll('-', '')}`
 const inserted = new Map()
 let wareStopped = false
+await assertTestEnvironment()
 const base = 'http://127.0.0.1:88'
 function sql(statement) {
   const result = spawnSync('docker', ['compose', 'exec', '-T', 'mysql', 'sh', '-c', 'MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -ugulimall --default-character-set=utf8mb4 --batch --skip-column-names'], { input: statement, encoding: 'utf8', windowsHide: true })
@@ -16,7 +18,7 @@ function sql(statement) {
 }
 function track(table, id) { inserted.set(table, [...(inserted.get(table) || []), id]); return id }
 function row(table, columns, values) {
-  const db = table.startsWith('wms_') ? 'gulimall_wms_demo' : 'gulimall_pms_demo'
+  const db = table.startsWith('wms_') ? 'gulimall_wms_test' : 'gulimall_pms_test'
   return track(table, Number(sql(`INSERT INTO ${db}.${table} (${columns}) VALUES (${values}); SELECT LAST_INSERT_ID();`)))
 }
 class Client {
@@ -36,7 +38,7 @@ class Client {
 const guest = new Client(); const admin = new Client()
 async function category(name, parentCid, catLevel) {
   assert.equal((await admin.call('/api/admin/product/category/save', 'POST', { name, parentCid, catLevel, showStatus: 1, sort: 0 })).status, 200)
-  return track('pms_category', Number(sql(`SELECT cat_id FROM gulimall_pms_demo.pms_category WHERE name='${name}';`)))
+  return track('pms_category', Number(sql(`SELECT cat_id FROM gulimall_pms_test.pms_category WHERE name='${name}';`)))
 }
 async function list(params = {}) {
   const result = await guest.call('/api/product/items?' + new URLSearchParams({ keyword: label, ...params }))
@@ -61,7 +63,7 @@ test('stage 2 product browsing and saleability acceptance', async (t) => {
   try {
     assert.equal((await admin.call('/api/auth/csrf')).status, 200)
     const credentials = process.env.ADMIN_TEST_PASSWORD ? { username: process.env.ADMIN_USER || 'admin', password: process.env.ADMIN_TEST_PASSWORD }
-      : JSON.parse(readFileSync('.tools/admin-access.json', 'utf8'))
+      : JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE || '.tools/admin-access.json', 'utf8'))
     assert.equal((await admin.call('/api/auth/admin/login', 'POST', credentials)).status, 200)
     ids.root = await category(`${label}_Root`, 0, 1)
     ids.parent = await category(`${label}_Parent`, ids.root, 2)
@@ -100,7 +102,7 @@ test('stage 2 product browsing and saleability acceptance', async (t) => {
     }
     row('pms_sku_images', 'sku_id,img_url,img_sort', `${ids.red},'/image-unavailable.svg',2`)
     row('pms_sku_images', 'sku_id,img_url,img_sort', `${ids.red},'/demo-product.svg',1`)
-    sql(`INSERT INTO gulimall_pms_demo.pms_spu_info_desc(spu_id,decript) VALUES (${ids.spu},'/demo-product.svg');`)
+    sql(`INSERT INTO gulimall_pms_test.pms_spu_info_desc(spu_id,decript) VALUES (${ids.spu},'/demo-product.svg');`)
 
     await t.test('consumer queries combine keyword, category, brand, price and stable pagination', async () => {
       assert.equal((await list()).totalCount, 5)
@@ -177,19 +179,19 @@ test('stage 2 product browsing and saleability acceptance', async (t) => {
     if (wareStopped) service('Start')
     for (const spuId of inserted.get('pms_spu_info') || []) {
       assert.equal((await admin.call(`/api/admin/product/search-sync/${spuId}/publish?status=0`, 'POST')).status, 200, 'Search fixture cleanup failed')
-      sql(`DELETE FROM gulimall_pms_demo.pms_search_sync WHERE spu_id=${spuId};`)
+      sql(`DELETE FROM gulimall_pms_test.pms_search_sync WHERE spu_id=${spuId};`)
     }
-    if (ids.spu) sql(`DELETE FROM gulimall_pms_demo.pms_spu_info_desc WHERE spu_id=${ids.spu};`)
+    if (ids.spu) sql(`DELETE FROM gulimall_pms_test.pms_spu_info_desc WHERE spu_id=${ids.spu};`)
     const categories = inserted.get('pms_category') || []
     for (const [table, rowIds] of [...inserted].reverse()) {
       if (table === 'pms_category' || !rowIds.length) continue
-      const db = table.startsWith('wms_') ? 'gulimall_wms_demo' : 'gulimall_pms_demo'
+      const db = table.startsWith('wms_') ? 'gulimall_wms_test' : 'gulimall_pms_test'
       const primary = { pms_attr_group: 'attr_group_id', pms_attr: 'attr_id', pms_brand: 'brand_id', pms_sku_info: 'sku_id' }[table] || 'id'
       sql(`DELETE FROM ${db}.${table} WHERE ${primary} IN (${rowIds.join(',')});`)
     }
     if (categories.length) {
       assert.equal((await admin.call('/api/admin/product/category/delete', 'POST', categories)).status, 200, 'Category cache cleanup failed')
-      sql(`DELETE FROM gulimall_pms_demo.pms_category WHERE cat_id IN (${categories.join(',')});`)
+      sql(`DELETE FROM gulimall_pms_test.pms_category WHERE cat_id IN (${categories.join(',')});`)
     }
     if (admin.csrf) await admin.call('/api/auth/logout', 'POST')
   }

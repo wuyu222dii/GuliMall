@@ -1,3 +1,4 @@
+import { assertTestEnvironment } from './test-environment.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
@@ -5,7 +6,8 @@ import { readFileSync, unlinkSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { createHash, randomUUID } from 'node:crypto'
 
-if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Set GULIMALL_ACCEPTANCE=1 and load the local .env; only use the local *_demo databases.')
+if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Set GULIMALL_ACCEPTANCE=1 and use scripts/test.ps1 for isolated *_test databases.')
+await assertTestEnvironment()
 const base = 'http://127.0.0.1:88'
 const label = `stage3_${randomUUID().replaceAll('-', '')}`
 const ids = { categories: [], brands: [], groups: [], attrs: [], warehouses: [], products: [], demands: [], purchases: [] }
@@ -61,13 +63,13 @@ async function merge(items, purchaseId = null) {
 }
 const receive = (id) => success('/api/admin/ware/purchase/received', 'POST', [id])
 const finish = (id, items) => admin.call('/api/admin/ware/purchase/done', 'POST', { id, items })
-function stock(sku, ware) { return Number(sql(`SELECT COALESCE(SUM(stock),0) FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id=${sku} AND ware_id=${ware};`)) }
+function stock(sku, ware) { return Number(sql(`SELECT COALESCE(SUM(stock),0) FROM gulimall_wms_test.wms_ware_sku WHERE sku_id=${sku} AND ware_id=${ware};`)) }
 
 test('stage 3 administration, local images and procurement acceptance', async (t) => {
   let productId, product, sku1, sku2, warehouse, otherWarehouse, uploaded
   try {
     await admin.call('/api/auth/csrf')
-    const credentials = process.env.ADMIN_TEST_PASSWORD ? { username: process.env.ADMIN_USER || 'admin', password: process.env.ADMIN_TEST_PASSWORD } : JSON.parse(readFileSync('.tools/admin-access.json', 'utf8'))
+    const credentials = process.env.ADMIN_TEST_PASSWORD ? { username: process.env.ADMIN_USER || 'admin', password: process.env.ADMIN_TEST_PASSWORD } : JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE || '.tools/admin-access.json', 'utf8'))
     assert.equal((await admin.call('/api/auth/admin/login', 'POST', credentials)).status, 200)
     await member.call('/api/auth/csrf')
     assert.equal((await member.call('/api/auth/login', 'POST', { username: 'demo_a', password: 'Demo12345!' })).status, 200)
@@ -113,7 +115,7 @@ test('stage 3 administration, local images and procurement acceptance', async (t
     await t.test('multi-SKU save is local, validates combinations and keeps SKU identities on editing', async () => {
       const bad = structuredClone(product); bad.skus[1].attr[0].attrValue = 'Red'
       assert.equal((await admin.call('/api/admin/product/spuinfo/editor', 'POST', bad)).status, 400)
-      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_demo.pms_spu_info WHERE spu_name='${product.spuName}';`), '0')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_spu_info WHERE spu_name='${product.spuName}';`), '0')
       productId = (await success('/api/admin/product/spuinfo/editor', 'POST', product)).id; ids.products.push(productId)
       product = (await success(`/api/admin/product/spuinfo/editor/${productId}`)).product
       assert.equal(product.publishStatus, 0, 'Create must remain a draft')
@@ -132,7 +134,7 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       await success('/api/admin/product/admin/catalog/attrs', 'POST', { ...attr, attrName: `${label}_renamed_color` })
       const renamed = (await success(`/api/admin/product/spuinfo/editor/${productId}`)).product
       assert.ok(renamed.skus.every((s) => s.attr[0].attrName === `${label}_renamed_color`))
-      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_sms_demo.sms_spu_bounds WHERE spu_id=${productId};`), '0')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_sms_test.sms_spu_bounds WHERE spu_id=${productId};`), '0')
       assert.equal((await admin.call('/api/admin/product/skuinfo/update', 'POST', { skuId: sku1, spuId: 900001 })).status, 400)
       assert.equal((await admin.call('/api/admin/product/skuinfo/delete', 'POST', [sku1])).status, 409)
       assert.equal((await admin.call(`/api/admin/product/admin/catalog/brands/${product.brandId}`, 'DELETE')).status, 409)
@@ -166,7 +168,7 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       const p1 = await merge([d1]), p2 = await merge([d2]); await receive(p1); await receive(p2)
       assert.ok((await Promise.all([finish(p1, [{ itemId: d1, status: 3 }]), finish(p2, [{ itemId: d2, status: 3 }])])).every((r) => r.status === 200))
       assert.equal(stock(sku1, otherWarehouse), 5)
-      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id=${sku1} AND ware_id=${otherWarehouse};`), '1')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_wms_test.wms_ware_sku WHERE sku_id=${sku1} AND ware_id=${otherWarehouse};`), '1')
       const ok = await demand(sku1, warehouse, 2), failed = await demand(sku2, warehouse, 4)
       const id = await merge([ok, failed]); await receive(id)
       assert.equal((await finish(id, [{ itemId: ok, status: 3 }])).status, 400)
@@ -195,20 +197,20 @@ test('stage 3 administration, local images and procurement acceptance', async (t
     })
   } finally {
     if (thirdStopped) service('Start')
-    for (const id of ids.purchases) sql(`DELETE FROM gulimall_wms_demo.wms_purchase WHERE id=${id};`)
-    for (const id of ids.demands) sql(`DELETE FROM gulimall_wms_demo.wms_purchase_detail WHERE id=${id};`)
+    for (const id of ids.purchases) sql(`DELETE FROM gulimall_wms_test.wms_purchase WHERE id=${id};`)
+    for (const id of ids.demands) sql(`DELETE FROM gulimall_wms_test.wms_purchase_detail WHERE id=${id};`)
     for (const id of ids.products) {
-      const skus = sql(`SELECT sku_id FROM gulimall_pms_demo.pms_sku_info WHERE spu_id=${id};`).split(/\s+/).filter(Boolean).map(Number)
+      const skus = sql(`SELECT sku_id FROM gulimall_pms_test.pms_sku_info WHERE spu_id=${id};`).split(/\s+/).filter(Boolean).map(Number)
       if (skus.length) {
-        sql(`DELETE FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_demo.pms_sku_images WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_demo.pms_sku_sale_attr_value WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_demo.pms_sku_info WHERE sku_id IN (${skus.join(',')});`)
+        sql(`DELETE FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_test.pms_sku_images WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_test.pms_sku_sale_attr_value WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_test.pms_sku_info WHERE sku_id IN (${skus.join(',')});`)
       }
-      sql(`DELETE FROM gulimall_pms_demo.pms_product_attr_value WHERE spu_id=${id}; DELETE FROM gulimall_pms_demo.pms_spu_images WHERE spu_id=${id}; DELETE FROM gulimall_pms_demo.pms_spu_info_desc WHERE spu_id=${id}; DELETE FROM gulimall_pms_demo.pms_spu_info WHERE id=${id} AND spu_name='${label}_phone';`)
+      sql(`DELETE FROM gulimall_pms_test.pms_product_attr_value WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_images WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info_desc WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info WHERE id=${id} AND spu_name='${label}_phone';`)
     }
     for (const kind of ['attrs', 'groups', 'brands', 'categories']) for (const id of [...ids[kind]].reverse()) {
       await success(`/api/admin/product/admin/catalog/${kind}/${id}`, 'DELETE')
-      if (kind === 'categories') sql(`DELETE FROM gulimall_pms_demo.pms_category WHERE cat_id=${id};`)
+      if (kind === 'categories') sql(`DELETE FROM gulimall_pms_test.pms_category WHERE cat_id=${id};`)
     }
-    for (const id of ids.warehouses) sql(`DELETE FROM gulimall_wms_demo.wms_ware_info WHERE id=${id};`)
+    for (const id of ids.warehouses) sql(`DELETE FROM gulimall_wms_test.wms_ware_info WHERE id=${id};`)
     if (imageName) { assert.match(imageName, /^[a-f0-9]{32}\.png$/); const root = resolve(process.env.UPLOAD_DIR || '.data/uploads'); const path = resolve(root, imageName); assert.equal(dirname(path), root); unlinkSync(path) }
     await admin.call('/api/auth/logout', 'POST'); await member.call('/api/auth/logout', 'POST')
   }

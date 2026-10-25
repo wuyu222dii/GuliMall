@@ -1,5 +1,7 @@
 # 真实下单与库存锁定（阶段 6）
 
+阶段 9 起，运行验收统一使用 [独立测试入口](RUNBOOK.md)，不再允许直接向演示库运行旧脚本；下方历史结果保留当时的验收边界。
+
 阶段 7 已扩展支付、到期关单、库存扣减/释放和消息补偿，见 [PAYMENTS.md](PAYMENTS.md)。下文保留阶段 6 的交付与历史验收边界；真实支付宝沙箱仍待账号开通后补验。
 
 沿用 Java 8 / Spring Boot 2.1.8、共享 Redis Session 和现有业务分层。复用订单、明细、操作历史和库存工作单；订单库新增提交记录。订单和库存各自使用本地事务，通过订单号幂等接口和持久化状态恢复，不引入 Seata。
@@ -64,8 +66,7 @@
 ```powershell
 # 已有演示库，完成备份并确认本阶段尚未迁移后执行一次：
 ./scripts/services.ps1 Stop
-docker compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" exec mysqldump -ugulimall --no-tablespaces --single-transaction --databases gulimall_oms_demo gulimall_wms_demo' |
-  Set-Content .tools/order-stock-before.sql -Encoding utf8
+./scripts/backup.ps1 -Environment Demo
 # 上一步必须成功并确认备份文件非空，再继续：
 Get-Content infra/migrations/004-order-creation.sql -Raw |
   docker compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -ugulimall'
@@ -77,12 +78,10 @@ npm run lint
 npm run build
 ```
 
-默认单元检查不连业务库。真实运行验收使用本机独立 `_demo` 库，创建专用双会员、地址、商品和仓库；测试结束释放/清理自己的锁定、订单、工作单、购物车及索引，保留演示会员与种子库存。不得与其他故障验收或人工演示并发运行。
+默认单元检查不连业务库。当前运行验收使用独立 gulimall-test / `_test` 库，创建专用双会员、地址、商品和仓库；测试结束释放/清理自己的锁定、订单、工作单、购物车及索引，保留种子数据。不得与其他故障验收或人工演示并发运行。
 
 ```powershell
-$env:GULIMALL_ACCEPTANCE='1'
-$env:GULIMALL_FAULTS='1'
-node --test scripts/order.acceptance.mjs
+./scripts/test.ps1 -Suite Order
 ```
 
 验收覆盖 20 路重复提交、双会员争最后一件、多商品回滚、单 SKU 不跨仓、确认令牌到期/失效、价格与地址快照、购物车版本保护，以及仓储/购物车不可用、响应丢失、锁库后杀订单进程、创建超时期间释放未知与恢复。为避免等待 15/5 分钟，仅修改自己测试令牌/订单的到期字段来加速期限场景。

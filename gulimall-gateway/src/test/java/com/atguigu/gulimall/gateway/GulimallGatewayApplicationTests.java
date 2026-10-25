@@ -5,6 +5,7 @@ import org.junit.Ignore;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @Ignore("Legacy manual demo: may mutate databases or call paid external APIs; replace with isolated tests before enabling.")
+@org.springframework.test.context.ActiveProfiles("test")
 @SpringBootTest
 public class GulimallGatewayApplicationTests {
 

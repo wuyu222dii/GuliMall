@@ -1,11 +1,13 @@
+import { assertTestEnvironment } from './test-environment.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { randomBytes, randomUUID } from 'node:crypto'
 
-// Explicit opt-in: this writes disposable fixtures only to the local *_demo databases.
+// Explicit opt-in: this writes disposable fixtures only to the local *_test databases.
 if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Set GULIMALL_ACCEPTANCE=1 and load the local .env before running.')
+await assertTestEnvironment()
 const base = 'http://127.0.0.1:88'
 const runId = randomUUID().replaceAll('-', '')
 const label = `accept_${runId}`
@@ -21,7 +23,7 @@ function sql(statement) {
 function phone() {
   let value
   do { value = `139${String(randomBytes(4).readUInt32BE() % 100000000).padStart(8, '0')}` }
-  while (phones.includes(value) || sql(`SELECT COUNT(*) FROM gulimall_ums_demo.ums_member WHERE mobile='${value}';`) !== '0')
+  while (phones.includes(value) || sql(`SELECT COUNT(*) FROM gulimall_ums_test.ums_member WHERE mobile='${value}';`) !== '0')
   phones.push(value)
   return value
 }
@@ -83,7 +85,7 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       assert.equal((await anonymous.call('/api/auth/register', { method: 'POST', body: { username: `blocked_${runId.slice(0, 7)}`, phone: number, password, code: otp.data.developmentCode } })).status, 400)
       a = await register('a')
       b = await register('b')
-      const stored = sql(`SELECT password FROM gulimall_ums_demo.ums_member WHERE id=${a.account.id};`)
+      const stored = sql(`SELECT password FROM gulimall_ums_test.ums_member WHERE id=${a.account.id};`)
       assert.ok(stored.startsWith('$2a$') && stored !== password, 'Only BCrypt hashes may be persisted')
       const reuse = await anonymous.call('/api/auth/register', { method: 'POST', body: { username: `replay_${runId.slice(0, 7)}`, phone: a.account.phone, password, code: a.code } })
       assert.equal(reuse.status, 400, 'A successful registration consumes its code')
@@ -110,7 +112,7 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       })))
       assert.equal(results.filter((r) => r.status === 200).length, 1)
       assert.ok(results.every((r) => [200, 400, 409].includes(r.status)))
-      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_ums_demo.ums_member WHERE mobile='${racePhone}';`), '1')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_ums_test.ums_member WHERE mobile='${racePhone}';`), '1')
       const winner = results.findIndex((r) => r.status === 200)
       accounts.push({ id: results[winner].data.user.id, username: names[winner], phone: racePhone })
     })
@@ -147,8 +149,8 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       assert.equal((await a.client.call(`/api/member/addresses/${addressId}`, { method: 'PUT', body: address })).status, 200)
     })
     await t.test('order listing, details and payment use the server member identity', async () => {
-      sql(`INSERT INTO gulimall_oms_demo.oms_order(member_id,order_sn,status,pay_amount) VALUES (${a.account.id},'acceptA_${runId}',0,1),(${b.account.id},'acceptB_${runId}',0,1);`)
-      const orderId = Number(sql(`SELECT id FROM gulimall_oms_demo.oms_order WHERE order_sn='acceptA_${runId}';`))
+      sql(`INSERT INTO gulimall_oms_test.oms_order(member_id,order_sn,status,pay_amount) VALUES (${a.account.id},'acceptA_${runId}',0,1),(${b.account.id},'acceptB_${runId}',0,1);`)
+      const orderId = Number(sql(`SELECT id FROM gulimall_oms_test.oms_order WHERE order_sn='acceptA_${runId}';`))
       const list = await a.client.call(`/api/order/mine?memberId=${b.account.id}`)
       assert.equal(list.status, 200); assert.ok(list.data.page.totalCount >= 1)
       assert.ok(list.data.page.list.every((x) => x.memberId === a.account.id))
@@ -172,7 +174,7 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       const admin = new Client(); await admin.init()
       const access = process.env.ADMIN_TEST_PASSWORD
         ? { username: process.env.ADMIN_USER || 'admin', password: process.env.ADMIN_TEST_PASSWORD }
-        : JSON.parse(readFileSync('.tools/admin-access.json', 'utf8'))
+        : JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE || '.tools/admin-access.json', 'utf8'))
       const login = await admin.call('/api/auth/admin/login', { method: 'POST', body: access })
       assert.equal(login.status, 200, login.data.msg); assert.equal(login.data.user.admin, true)
       const members = await admin.call('/api/admin/member/member/list')
@@ -181,7 +183,7 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       const brand = { name: label, logo: 'http://localhost:5173/demo-product.svg', showStatus: 1, firstLetter: 'A', sort: 0 }
       assert.equal((await admin.call('/api/admin/product/brand/save', { method: 'POST', body: brand, csrf: false })).status, 403)
       assert.equal((await admin.call('/api/admin/product/brand/save', { method: 'POST', body: brand })).status, 200)
-      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_demo.pms_brand WHERE name='${label}';`), '1')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_brand WHERE name='${label}';`), '1')
       assert.equal((await admin.call('/api/member/addresses')).status, 403)
       assert.equal((await admin.call('/api/admin/product/brand/delete', { method: 'GET' })).status, 405)
       assert.equal((await admin.call('/api/admin/product/brand/delete', { method: 'HEAD' })).status, 405)
@@ -198,8 +200,8 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       assert.equal((await old.call('/api/order/mine')).status, 401)
     })
   } finally {
-    sql(`DELETE FROM gulimall_pms_demo.pms_brand WHERE name='${label}'; DELETE FROM gulimall_oms_demo.oms_order WHERE order_sn IN ('acceptA_${runId}','acceptB_${runId}'); DELETE FROM gulimall_ums_demo.ums_member_receive_address WHERE name='${label}';`)
-    for (const account of accounts) sql(`DELETE FROM gulimall_ums_demo.ums_member WHERE id=${account.id} AND username='${account.username}';`)
+    sql(`DELETE FROM gulimall_pms_test.pms_brand WHERE name='${label}'; DELETE FROM gulimall_oms_test.oms_order WHERE order_sn IN ('acceptA_${runId}','acceptB_${runId}'); DELETE FROM gulimall_ums_test.ums_member_receive_address WHERE name='${label}';`)
+    for (const account of accounts) sql(`DELETE FROM gulimall_ums_test.ums_member WHERE id=${account.id} AND username='${account.username}';`)
     for (const number of phones) {
       const result = spawnSync('docker', ['compose', 'exec', '-T', 'redis', 'redis-cli', 'DEL', `sms:code:${number}`, `sms:rate:${number}`], { encoding: 'utf8', windowsHide: true })
       assert.equal(result.status, 0, 'OTP fixture cleanup failed')

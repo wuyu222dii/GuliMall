@@ -1,5 +1,7 @@
 # 阶段 2：商品浏览、详情与可售性
 
+阶段 9 起，运行验收统一使用 [独立测试入口](RUNBOOK.md)，不再允许直接向演示库运行旧脚本；下方历史结果保留当时的验收边界。
+
 验收日期：2026-10-25。保留现有 Java 8 / Spring Boot 2.1.8、MyBatis Plus 和 React 分层。本文记录商品库浏览与详情；阶段 4 已将搜索页接入 ES，见 [SEARCH.md](SEARCH.md)。
 
 ## 消费者接口
@@ -75,17 +77,13 @@ Java 新增离线 Mapper 解析、缺失商品 404、库存失败不造假测试
 . ./scripts/env.ps1
 ./scripts/services.ps1 Start
 ./scripts/dev.ps1 Smoke
-$env:GULIMALL_ACCEPTANCE = '1'
-$env:GULIMALL_FAULTS = '1'
-node --test scripts/product.acceptance.mjs
-node --test scripts/auth.acceptance.mjs
-Remove-Item Env:GULIMALL_ACCEPTANCE
-Remove-Item Env:GULIMALL_FAULTS
+./scripts/test.ps1 -Suite Product
+./scripts/test.ps1 -Suite Auth
 ```
 
 管理员密码使用临时 ADMIN_TEST_PASSWORD，或本机私有 `.tools/admin-access.json`，与 [认证说明](AUTHENTICATION.md) 一致。勿在命令历史、Git 或日志中写入真实密码。
 
-运行脚本仅向本机 `_demo` 库创建唯一标记的测试分类、品牌、SPU/SKU、属性与库存，finally 清理自己的记录与缓存。`GULIMALL_FAULTS=1` 会停止并恢复本工作区标记的仓储 JVM，须在独立本机演示环境执行；不停止 Docker 容器或其他项目进程。未启用该开关时，该故障用例明确跳过。
+当前 test.ps1 入口仅向独立 `_test` 库创建唯一标记的分类、品牌、SPU/SKU、属性与库存，finally 清理自己的记录与缓存。运行器自动启用故障场景，会停止并恢复本工作区标记的仓储 JVM；不可与人工演示或其他测试并行。
 
 本轮 5 个商品业务用例全部通过（含父用例共 6 项），包括组合筛选/分页、完整详情、多销售属性与同名参数组、下架与锁定库存、分类缓存和仓储故障恢复；认证回归 8 个业务场景通过（共 9 项）。后端 9 项 Java 测试、5 项 Node 本地检查、PowerShell 自检、前端构建及 lint 均通过。旧手工集成演示继续隔离，不计入业务通过数。
 

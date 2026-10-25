@@ -1,9 +1,11 @@
+import { assertTestEnvironment } from './test-environment.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { randomUUID, randomInt } from 'node:crypto'
-if(process.env.GULIMALL_ACCEPTANCE!=='1') throw new Error('Set GULIMALL_ACCEPTANCE=1; only use the isolated local *_demo environment.')
+if(process.env.GULIMALL_ACCEPTANCE!=='1') throw new Error('Set GULIMALL_ACCEPTANCE=1; only use the isolated local *_test environment.')
+await assertTestEnvironment()
 const base='http://127.0.0.1:88', label='stage5_'+randomUUID().replaceAll('-','')
 const members=[], stopped=new Set()
 let product,productId,sku1,sku2
@@ -30,17 +32,17 @@ const check=(sku,checked)=>ok(a,'/api/cart/items/checked','PUT',{skuId:sku,check
 const merge=(body)=>a.call('/api/cart/merge','POST',body)
 async function until(check,message){for(let i=0;i<50;i++){try{if(await check())return}catch{}await new Promise(r=>setTimeout(r,1000))}assert.fail(message)}
 async function login(client,username,password='Demo12345!'){await client.call('/api/auth/csrf');await ok(client,'/api/auth/login','POST',{username,password})}
-function member(suffix){const username=label+suffix,phone='138'+String(randomInt(100000000)).padStart(8,'0');const id=Number(sql(`INSERT INTO gulimall_ums_demo.ums_member(username,password,mobile,status) SELECT '${username}',password,'${phone}',1 FROM gulimall_ums_demo.ums_member WHERE id=900001; SELECT LAST_INSERT_ID();`));assert.ok(id>900002);members.push({id,username});return username}
+function member(suffix){const username=label+suffix,phone='138'+String(randomInt(100000000)).padStart(8,'0');const id=Number(sql(`INSERT INTO gulimall_ums_test.ums_member(username,password,mobile,status) SELECT '${username}',password,'${phone}',1 FROM gulimall_ums_test.ums_member WHERE id=900001; SELECT LAST_INSERT_ID();`));assert.ok(id>900002);members.push({id,username});return username}
 
 test('stage 5 server cart and atomic guest merge acceptance',async t=>{
   try{
-    await admin.call('/api/auth/csrf');await ok(admin,'/api/auth/admin/login','POST',JSON.parse(readFileSync('.tools/admin-access.json','utf8')))
+    await admin.call('/api/auth/csrf');await ok(admin,'/api/auth/admin/login','POST',JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE || '.tools/admin-access.json','utf8')))
     await login(a,member('_a'));await login(b,member('_b'))
     const makeSku=(color,price)=>({skuName:label+'_'+color,skuTitle:label+'_'+color,price,images:[{imgUrl:'/demo-product.svg',defaultImg:1}],attr:[{attrId:900002,attrName:'颜色',attrValue:color}]})
     product={spuName:label,spuDescription:'Cart acceptance fixture',catalogId:900003,brandId:900001,weight:'0.1',images:['/demo-product.svg'],decript:[],baseAttrs:[],skus:[makeSku('Red','12.34'),makeSku('Blue','20.00')]}
     productId=(await ok(admin,'/api/admin/product/spuinfo/editor','POST',product)).id
     product=(await ok(admin,`/api/admin/product/spuinfo/editor/${productId}`)).product;[sku1,sku2]=product.skus.map(i=>i.skuId)
-    sql(`INSERT INTO gulimall_wms_demo.wms_ware_sku(sku_id,ware_id,stock,stock_locked) VALUES(${sku1},900001,5,0);`)
+    sql(`INSERT INTO gulimall_wms_test.wms_ware_sku(sku_id,ware_id,stock,stock_locked) VALUES(${sku1},900001,5,0);`)
     await ok(admin,`/api/admin/product/search-sync/${productId}/publish?status=1`,'POST')
     await t.test('member identity, direct service access, CSRF and cross-tab owner guards protect carts',async()=>{
       assert.equal((await guest.call('/api/cart?memberId='+members[0].id)).status,401)
@@ -119,10 +121,10 @@ test('stage 5 server cart and atomic guest merge acceptance',async t=>{
     for(const module of stopped)service('Start',module)
     if(productId){
       await until(async()=>(await admin.call(`/api/admin/product/search-sync/${productId}/publish?status=0`,'POST')).status===200,'Could not remove indexed fixture')
-      if(sku1&&sku2)sql(`DELETE FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id IN(${sku1},${sku2});DELETE FROM gulimall_pms_demo.pms_sku_images WHERE sku_id IN(${sku1},${sku2});DELETE FROM gulimall_pms_demo.pms_sku_sale_attr_value WHERE sku_id IN(${sku1},${sku2});DELETE FROM gulimall_pms_demo.pms_sku_info WHERE spu_id=${productId};`)
-      sql(`DELETE FROM gulimall_pms_demo.pms_search_sync WHERE spu_id=${productId};DELETE FROM gulimall_pms_demo.pms_product_attr_value WHERE spu_id=${productId};DELETE FROM gulimall_pms_demo.pms_spu_images WHERE spu_id=${productId};DELETE FROM gulimall_pms_demo.pms_spu_info_desc WHERE spu_id=${productId};DELETE FROM gulimall_pms_demo.pms_spu_info WHERE id=${productId} AND spu_name='${label}';`)
+      if(sku1&&sku2)sql(`DELETE FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN(${sku1},${sku2});DELETE FROM gulimall_pms_test.pms_sku_images WHERE sku_id IN(${sku1},${sku2});DELETE FROM gulimall_pms_test.pms_sku_sale_attr_value WHERE sku_id IN(${sku1},${sku2});DELETE FROM gulimall_pms_test.pms_sku_info WHERE spu_id=${productId};`)
+      sql(`DELETE FROM gulimall_pms_test.pms_search_sync WHERE spu_id=${productId};DELETE FROM gulimall_pms_test.pms_product_attr_value WHERE spu_id=${productId};DELETE FROM gulimall_pms_test.pms_spu_images WHERE spu_id=${productId};DELETE FROM gulimall_pms_test.pms_spu_info_desc WHERE spu_id=${productId};DELETE FROM gulimall_pms_test.pms_spu_info WHERE id=${productId} AND spu_name='${label}';`)
     }
-    for(const m of members){redis(['DEL',`gulimall:cart:{${m.id}}:items`,`gulimall:cart:{${m.id}}:merges`]);sql(`DELETE FROM gulimall_ums_demo.ums_member WHERE id=${m.id} AND username='${m.username}';`)}
+    for(const m of members){redis(['DEL',`gulimall:cart:{${m.id}}:items`,`gulimall:cart:{${m.id}}:merges`]);sql(`DELETE FROM gulimall_ums_test.ums_member WHERE id=${m.id} AND username='${m.username}';`)}
     for(const client of [a,b,admin])await client.call('/api/auth/logout','POST')
   }
 })

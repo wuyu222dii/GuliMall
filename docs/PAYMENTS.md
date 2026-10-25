@@ -1,5 +1,7 @@
 # 支付、库存结算与可靠消息（阶段 7）
 
+阶段 9 起，运行验收统一使用 [独立测试入口](RUNBOOK.md)，不再允许直接向演示库运行旧脚本；下方历史结果保留当时的验收边界。
+
 **当前验收范围：接入代码及本地验证。用户尚未开通支付宝沙箱账号，已确认先完成代码和本地验收。真实沙箱付款、公网异步回调未验收，不将本地测试网关标成支付宝沙箱。**
 
 保留 Java 8 / Spring Boot 2.1.8 和现有支付宝 SDK 4.9.28.ALL。订单库新增一张交易事件表，复用支付流水、订单操作历史、库存工作单与本地事务；不引入 Seata、自动退款或通用消息框架。
@@ -108,9 +110,7 @@ npm run build
 ```powershell
 node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-ui.test.mjs scripts/payment-ui.test.mjs
 ./scripts/scripts.test.ps1
-$env:GULIMALL_ACCEPTANCE='1'
-$env:GULIMALL_FAULTS='1'
-node --test scripts/payment.acceptance.mjs
+./scripts/test.ps1 -Suite Payment
 ```
 
 脚本创建独立 RabbitMQ 虚拟主机和专用会员、商品、订单；生成真正的 RSA2 请求/响应，使用官方 SDK 验签。覆盖并发通知、支付/关单竞争、回调丢失、broker 停止、订单重启、未路由消息、扣减提交后杀消费者、已确认消息丢失和 Redis 停止。只调整自己的测试期限/事件时间、只清空自己的虚拟主机队列来加速故障场景，不等待自然 30 分钟。30 分钟 TTL 声明及计时消息投递单独校验。
