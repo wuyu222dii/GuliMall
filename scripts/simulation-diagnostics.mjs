@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url'
 
 const tcp=port=>new Promise(resolve=>{const socket=connect({host:'127.0.0.1',port});const done=value=>{socket.destroy();resolve(value)};socket.setTimeout(1000,()=>done(false));socket.once('error',()=>done(false));socket.once('connect',()=>done(true))})
 export async function diagnose({run=(args)=>spawnSync('docker',args,{encoding:'utf8',windowsHide:true,timeout:15000}),request=(url)=>fetch(url,{signal:AbortSignal.timeout(2000)}),probe=tcp,environment=process.env.GULIMALL_TEST==='1'?'Test':'Demo'}={}) {
-  const checks=[],project=environment==='Test'?'gulimall-test':'gulimall-demo'
+  const checks=[],project=environment==='Test'?'gulimall-test':process.env.COMPOSE_PROJECT_NAME||'gulimall-demo'
   const add=(name,ok,reason,log,recovery)=>checks.push({name,state:ok?'ready':'unavailable',reason:ok?'就绪':reason,log,recovery})
   const docker=run(['info','--format','{{.OSType}}']);const engine=docker.status===0&&docker.stdout.trim()==='linux'
   add('Docker',engine,'Linux 引擎不可用或查询超时',null,'打开 Docker Desktop，等待 Linux 引擎就绪')

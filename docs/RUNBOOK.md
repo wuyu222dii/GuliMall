@@ -1,4 +1,4 @@
-# 本地验收、演示部署与备份恢复（阶段 9–17）
+# 本地验收、演示部署与备份恢复（阶段 9–20）
 
 保留 Java 8、Boot 2.1.8 和现有分层。真实支付宝沙箱及公网通知仍待账号开通补验；下述端到端交易使用明确标识的 LOCAL_TEST 网关和真实 RSA2 验签，不使用真实资金。短信为开发验证码，图片为本地文件。物流仅记录公司和运单号，不接轨迹、自动退款、多商户、集群或 Kubernetes。
 
@@ -61,7 +61,7 @@ node gulimall-web/node_modules/@playwright/test/cli.js install chromium
 
 68 个既有业务场景串行执行，故障场景不跳过，日志在 `.tools/test/<suite>.log`。包括身份与地址归属、金额、并发锁库、支付验签和重复通知、付款/关单竞争、发货门禁、重复收货、响应丢失、杀进程、Redis/ES/RabbitMQ 停止及恢复。旧的直接 `node ...acceptance.mjs` 演示库入口已关闭，统一使用 test.ps1。
 
-Diagnostics 另行验证 ES、RabbitMQ、仓储与模拟网关停止/恢复定位。Browser 另行串行运行两轮完整页面交易及取消，用不同会员与商品核对库存、金额、隔离、终态停止轮询及 375px 页面。依赖、脱敏 artifact 和失败恢复说明见 [SIMULATION.md](SIMULATION.md)。三类套件均不连接演示库，不并行执行。
+Diagnostics 另行验证 ES、RabbitMQ、仓储与模拟网关停止/恢复定位。Browser 串行运行两轮 Chromium 完整交易及两项 Edge 场景，用独立夹具核对库存、金额、隔离、终态查询、会话失效、同一确认多标签及 375px 键盘操作，见 [BROWSER-REGRESSION.md](BROWSER-REGRESSION.md)。依赖、脱敏 artifact 和恢复说明见 [SIMULATION.md](SIMULATION.md)。三类套件不连接演示库，不并行执行。
 
 测试卷保留，便于排错和重复运行；业务脚本清理各自临时夹具。不要把测试配置复制到 .env。源码基线变化后如确需重建测试库，先保存诊断，仅对确认属于 gulimall-test 的测试卷处理；不要删除演示卷。
 
@@ -95,6 +95,8 @@ Diagnostics 另行验证 ES、RabbitMQ、仓储与模拟网关停止/恢复定�
 ES 是可重建的派生索引；RabbitMQ 交换机/队列由应用声明，库存事件由未消费的 SQL outbox 重放，付款截止时间由数据库扫描补偿，不把队列内消息作为唯一备份。恢复后仍须核对异常付款状态 9 和未知关闭状态 8，不自动退款或发货。
 
 ## 恢复步骤与演练边界
+
+Demo 冷备份的完整自动演练使用独立的 `demo-restore.ps1`，详见 [DEMO-RESTORE.md](DEMO-RESTORE.md)。它暂停原环境，在新项目、新卷和私有副本目录恢复所有依赖，验证原交易、消息补偿及恢复后继续交易，退出清理并恢复原常驻模式。Test Recovery 仍只允许 `_test` 备份；只读 Demo 审计仍不启动补偿。下面保留手工步骤及 Test 演练说明，不可将 Test 入口指向 Demo 来绕过保护。
 
 不要把 dump 直接导入现有演示或真实业务库。先在**全新实例/空数据卷**验证：
 
@@ -160,3 +162,21 @@ Browser 两轮完整页面交易通过（23.0s / 19.2s），含图片、双 SKU�
 新的 Demo 冷备份已在隔离只读实例核对 71 张表、三笔相同交易、两处本地图片引用及 Redis，均一致；临时资源已清理。Test Recovery 再次通过 Session、图片、AOF、付款台账、事件重放与 ES 重建。证据索引 `.tools/stage17-evidence.json`，演示数据、.env 和原模拟密钥保留；常驻 8080 / 18170 恢复健康。
 
 状态机与期限没有变更，沿用阶段 13 自然 30 分钟证据。本轮完成本机步骤核对，未由第二位操作者在全新机器验收；真实平台、公网、多浏览器、实体手机、容量与高可用仍不在通过结论内。
+
+## 阶段 18 本机交接准备
+
+执行入口、三个预检模式与独立机器待办见 [HANDOFF-SETUP.md](HANDOFF-SETUP.md)。clean-check.ps1 导出 Git 索引快照，在含空格路径从源码构建；Runtime 在随机独立项目和空卷运行成功交易/取消及整套重启，结束清理本次资源并恢复原常驻模式。预装工具需在源码之外，机器依赖缓存可复用，不承诺离线或全新操作系统安装。
+
+2026-10-26 本机验收通过：十三项目构建、29 项 Java（9 项历史忽略）、30 项默认 Node、PowerShell 自检、前端 build/lint；独立环境检索、注册、下单、模拟付款、发货收货、取消及重启保留正确。失败路径也已实际恢复原模式。私有证据 `.tools/stage18-evidence.json`，最终导出 `.tools/clean 69823a90`；原人工交易、库存、配置与密钥保留，18 项诊断健康。本轮未重新执行整套 All/Browser；独立机器与第二位操作者仍待补。
+
+## 阶段 19 浏览器验收
+
+Browser 当前包含两轮 Chromium 完整交易和两项本机 Edge 场景，先实际检查 Edge 能否启动，缺失不会暂停常驻环境。完整命令、确认页地址、多标签语义、会话失效方式与脱敏策略见 [BROWSER-REGRESSION.md](BROWSER-REGRESSION.md)。
+
+2026-10-26 四项通过，默认 Node 32 项、PowerShell 自检及前端 lint/build 通过；修复同一确认页在新标签中重新创建请求的问题。失败后的原模式恢复也已验证，人工数据与密钥保留，18 项诊断健康。证据 `.tools/stage19-evidence.json`，主日志 `.tools/stage19-browser-final.log`。本轮未重跑 Java/All/Recovery；自然 Session TTL、跨内核浏览器和实体设备仍未验收，真实第三方未接入。
+
+## 阶段 20 完整 Demo 恢复与最终核对
+
+最终整理 2026-10-27，实际运行日志 2026-10-26。步骤及完整结果见 [DEMO-RESTORE.md](DEMO-RESTORE.md)。源 Demo 冷备份恢复到独立五项依赖、网络和六个新卷；原三笔交易及库存/支付台账保留，两轮恢复浏览器交易和冷检查点消息补偿通过。第二次导入后整份 71 表 SQL 哈希相同，显式 UTF-8 和中文快照检查防止恢复乱码；ES 从商品库重建后等待可检索。
+
+Test Recovery 复验通过，原 `_test` 保护不变；Node 36 项、PowerShell 自检、前端 lint 通过。最终索引 `.tools/stage20-evidence.json` 包含冻结归档及文件哈希，保存有效轮次、失败排查日志和脱敏截图。原环境配置、密钥、台账、图片、业务 SQL 与库存保留，18 项诊断健康。未重复 Java/All/原 Browser/自然期限，独立机器、第二人和真实第三方继续待补。

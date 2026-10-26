@@ -20,7 +20,7 @@ foreach ($taskModule in $Modules) {
         foreach ($taskProcess in $taskProcesses) { Stop-Process -Id $taskProcess.ProcessId; Write-Output "Stopped $taskName PID $($taskProcess.ProcessId)" }
     } elseif ($taskProcesses.Count -eq 0) {
         if (-not (Test-Path -LiteralPath $taskJar)) { throw "Build $taskName before starting it." }
-        $taskProcess = Start-Process -FilePath (Join-Path $env:JAVA_HOME 'bin/java.exe') -ArgumentList @('-Xms32m', '-Xmx256m', $taskMarker, '-Dfile.encoding=UTF-8', '-jar', ('"' + $taskJar + '"')) -WorkingDirectory $taskWorkspace -RedirectStandardOutput (Join-Path $taskLogs "$taskName.log") -RedirectStandardError (Join-Path $taskLogs "$taskName.err.log") -WindowStyle Hidden -PassThru
+        $taskProcess = Start-Process -FilePath (Join-Path $env:JAVA_HOME 'bin/java.exe') -ArgumentList @('-Xms32m', '-Xmx256m', ('"'+$taskMarker+'"'), '-Dfile.encoding=UTF-8', '-jar', ('"' + $taskJar + '"')) -WorkingDirectory $taskWorkspace -RedirectStandardOutput (Join-Path $taskLogs "$taskName.log") -RedirectStandardError (Join-Path $taskLogs "$taskName.err.log") -WindowStyle Hidden -PassThru
         Write-Output "Started $taskName PID $($taskProcess.Id)"
     } else { Write-Output "$taskName already running" }
 }

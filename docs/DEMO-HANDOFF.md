@@ -1,8 +1,10 @@
 # 本地模拟商城交接检查表
 
-本轮交付阶段 14–17，继续使用本机模拟付款、开发验证码与真实本地图片。商品、订单、库存、会话和消息走真实业务处理；不接真实第三方或公网。操作前确认没有测试或备份任务正在执行。
+本机模拟交付已扩展至阶段 19，独立机器/第二位操作者仍待补。继续使用本机模拟付款、开发验证码与真实本地图片；商品、订单、库存、会话和消息走真实处理，不接真实第三方或公网。操作前确认没有测试或备份任务正在执行。
 
 ## 1. 准备、启动与诊断
+
+阶段 18 的工具准备、结构化预检、Git 干净导出及本机隔离运行步骤见 [HANDOFF-SETUP.md](HANDOFF-SETUP.md)。独立机器与第二位操作者验收仍待补。
 
 1. 首次机器准备按 [开发说明](DEVELOPMENT.md) 配置 JDK 8、Maven、Node/npm 与 Docker Desktop Linux 引擎，完成 setup 和构建；已有库禁止重跑初始化或删卷。
 2. 管理员账号与 BCrypt 摘要在 .env，明文密码由环境所有者私下保管；忘记时使用已提供的交互工具生成新摘要，不能从摘要反推密码。不要使用测试环境配置替换 .env。
@@ -38,13 +40,13 @@ node --test @checks
 ./scripts/scripts.test.ps1
 ./scripts/test.ps1 -Suite All
 ./scripts/test.ps1 -Suite Diagnostics
-# 安装锁定依赖后，仅需安装 Chromium，无需 npx：
+# 安装锁定依赖、准备本机 Edge 后安装 Chromium，无需 npx：
 node gulimall-web/node_modules/@playwright/test/cli.js install chromium
 ./scripts/test.ps1 -Suite Browser
 ./scripts/test.ps1 -Suite Recovery
 ```
 
-串行执行。运行套件暂停常驻环境，成功和失败后均恢复原模式；缺少浏览器/生产构建会在暂停前拒绝。Browser 每次两轮完整页面交易，各轮数据隔离，并验证 375px、刷新、会员边界及终态停轮询。测试只使用 _test 库，不读取或清理人工会员及交易。
+串行执行。运行套件暂停常驻环境，成功和失败后均恢复原模式；缺少 Chromium/Edge/生产构建会在暂停前拒绝。Browser 每次两轮 Chromium 完整交易和两项 Edge 场景，数据隔离，并验证 375px 键盘、会话失效、同一确认地址的多标签防重、刷新、会员边界及终态停轮询，见 [浏览器回归](BROWSER-REGRESSION.md)。测试只使用 _test 库，不读取或清理人工会员及交易。
 
 截图在 output/playwright；失败截图遮罩输入和状态消息，trace 只保留动作时序。完整 DOM、请求/响应正文和输入值不归档，排障结合截图、步骤与服务日志。证据索引 `.tools/stage17-evidence.json`，具体报告路径在其中；这些文件与备份均私有，不进入 Git。
 
@@ -54,10 +56,12 @@ node gulimall-web/node_modules/@playwright/test/cli.js install chromium
 ./scripts/backup.ps1 -Environment Demo
 # 替换为上一步输出的实际目录：
 ./scripts/backup-audit.ps1 -Backup '.data/backups/本次目录'
+# 在维护窗口完整恢复 Demo 副本，必须提供原匹配密钥：
+./scripts/demo-restore.ps1 -Backup '.data/backups/本次目录' -PaymentConfig '.tools/simulation/payment-config.json'
 ```
 
 冷备份同时暂停业务及模拟网关，保存 SQL、Redis、图片与 payment-ledger.json，完成后恢复原模式。模拟签名配置 `.tools/simulation/payment-config.json` 和 .env 单独私下保管；没有原匹配密钥，不能用重新生成密钥绕过台账指纹。
 
-审计在新实例只读核对同一交易、库存、金额、图片和 Redis，不启动补偿，不切换当前配置。真正恢复先保留原环境并按 [运行手册](RUNBOOK.md) 在全新实例验证；恢复后核对状态 8/9 与库存，再人工决定切换。不要向当前库直接导入 dump。
+审计在新实例只读核对同一交易、库存、金额、图片和 Redis，不启动补偿，不切换当前配置。[完整恢复入口](DEMO-RESTORE.md) 则暂停原环境，在独立副本启动业务并验证补偿、继续交易，结束清理本次资源并恢复原模式。状态 8/9 仍按既有规则处理，不直接改库。不要向当前库导入 dump。
 
 本机已完成命令与浏览器步骤核对；尚未由第二位操作者在全新机器独立演练。真实支付宝、短信、OSS、公网回调、实体手机、多浏览器、容量和高可用不在本轮验收范围。

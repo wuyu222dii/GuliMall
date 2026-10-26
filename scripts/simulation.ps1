@@ -1,4 +1,4 @@
-param([ValidateSet('Start','Stop','Status','Diagnose')][string]$Action='Start',[switch]$Json)
+param([ValidateSet('Start','Stop','Status','Diagnose')][string]$Action='Start',[switch]$Json,[ValidatePattern('^gulimall-(demo|handoff-[a-f0-9]{32})$')][string]$ProjectName='gulimall-demo')
 $ErrorActionPreference='Stop'
 $simulationRoot=Split-Path $PSScriptRoot -Parent
 $simulationOriginal=@{};Get-ChildItem Env: | ForEach-Object {$simulationOriginal[$_.Name]=$_.Value}
@@ -24,14 +24,21 @@ function Simulation-Healthy {
 }
 Push-Location $simulationRoot
 try {
+    if($ProjectName -ne 'gulimall-demo'){
+        $ownerFile=Join-Path $simulationRoot '.tools/handoff-owner.json'
+        if(-not(Test-Path -LiteralPath $ownerFile)){throw 'Isolated simulation requires a clean-check ownership record.'}
+        $ownerRecord=Get-Content -LiteralPath $ownerFile -Raw|ConvertFrom-Json
+        if($ownerRecord.project -ne $ProjectName -or $ownerRecord.workspace -ne $simulationRoot){throw 'Isolated simulation ownership does not match this workspace.'}
+    }
     if($Action -eq 'Diagnose') {
         . "$PSScriptRoot/env.ps1"
+        $env:COMPOSE_PROJECT_NAME=$ProjectName
         if($Json){& node (Join-Path $PSScriptRoot 'simulation-diagnostics.mjs') --json}else{& node (Join-Path $PSScriptRoot 'simulation-diagnostics.mjs')}
         if($LASTEXITCODE -ne 0){exit $LASTEXITCODE};return
     }
-    if($env:GULIMALL_TEST -eq '1' -or ($env:COMPOSE_PROJECT_NAME -and $env:COMPOSE_PROJECT_NAME -ne 'gulimall-demo')){throw 'Leave the isolated test environment before operating the simulation.'}
+    if($env:GULIMALL_TEST -eq '1' -or ($env:COMPOSE_PROJECT_NAME -and $env:COMPOSE_PROJECT_NAME -ne $ProjectName)){throw 'Leave the isolated test environment before operating the simulation.'}
     . "$PSScriptRoot/env.ps1"
-    $env:COMPOSE_FILE=Join-Path $simulationRoot 'compose.yaml';$env:COMPOSE_PROJECT_NAME='gulimall-demo'
+    $env:COMPOSE_FILE=Join-Path $simulationRoot 'compose.yaml';$env:COMPOSE_PROJECT_NAME=$ProjectName
     if($Action -eq 'Status') {
         $active=(Test-Path -LiteralPath $simulationState) -and (Get-Content $simulationState -Raw|ConvertFrom-Json).active
         Write-Output ("Simulation requested: $active; healthy: $(Simulation-Healthy); gateway processes: $(@(Simulation-GatewayProcesses).Count)")

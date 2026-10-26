@@ -1,4 +1,4 @@
-# 常驻本地模拟商城（阶段 10–17）
+# 常驻本地模拟商城（阶段 10–19）
 
 本轮只使用本机服务：支付为 LOCAL_TEST，验证码为 development，图片真实写入本地。数据库、Redis Session、商品、购物车、订单、库存、消息、发货和收货仍走真实业务逻辑，不通过前端改状态制造成功。不接真实支付宝、短信或 OSS，不开放公网。
 
@@ -82,9 +82,9 @@ node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-u
 
 运行验收期间会暂停常驻环境；独立 gulimall-test 和 `_test` 库执行结束后，恢复调用前的模拟模式。不要与人工操作或另一轮验收并行。Recovery 的两套交易现在也使用持久台账，冷备份前暂停网关，在全新实例恢复后核对付款、关闭和库存结果。测试用台账在 `.data/test-simulation`，与常驻台账分离，测试恢复不读取演示签名密钥。
 
-Browser 使用锁定的开发依赖 @playwright/test 和 Chromium。先执行前端 npm ci、生产构建，并运行 `node gulimall-web/node_modules/@playwright/test/cli.js install chromium`；无需全局安装或 npx。缺少浏览器或构建产物时，在暂停常驻环境前拒绝执行。
+Browser 使用锁定开发依赖 @playwright/test、Chromium 与本机 Edge。先执行前端 npm ci、生产构建，并运行 `node gulimall-web/node_modules/@playwright/test/cli.js install chromium`；无需全局安装或 npx。缺少浏览器、Edge 无法启动或缺构建时，在暂停常驻环境前拒绝执行。
 
-每次 Browser 串行执行两轮完整页面交易，各轮创建独立会员/商品/采购，验证成功付款、发货收货、付款失败/放弃、取消释放、刷新、会员隔离和 375px 页面；不伪造 API 成功响应或直接改库。只读 API/SQL 用于核对结果。测试台账为 `.data/test-simulation/browser/trades.json`，匹配私有配置 `.tools/test/browser-payment.json`；测试数据留在 _test，不读演示会员凭据。
+每次 Browser 串行执行两轮 Chromium 完整交易和两项 Edge 关键/边界场景。覆盖付款、履约、取消、会话失效重登、返回刷新、同一确认地址多标签提交和 375px 键盘操作；不伪造成功或直接改库。只读 API/SQL 核对结果。测试台账为 `.data/test-simulation/browser/trades.json`，匹配 `.tools/test/browser-payment.json`；数据留在 _test，不读演示凭据。具体边界及复制确认页行为见 [BROWSER-REGRESSION.md](BROWSER-REGRESSION.md)。
 
 截图与结果在 Git 忽略的 output/playwright，场景编号记录在 `.tools/test/browser-runs`。失败截图遮罩输入和状态消息；trace.zip 只保留动作时序，禁用 DOM/网络正文和源码，不保存输入值、Cookie 或错误回显。自动 DOM 错误上下文与原始 trace 会清理，因此不包含完整 DOM 回放；需结合遮罩截图和步骤摘要排查。测试成功和失败都恢复原运行模式。
 
@@ -102,7 +102,9 @@ Remove-Item Env:GULIMALL_SIMULATION
 
 ## 未来替换接口
 
-演示冷备份额外提供 `./scripts/backup-audit.ps1 -Backup '.data/backups/实际目录'`：在临时 MySQL/Redis 只读核对订单、金额、库存工作单、支付台账、图片和 Redis，不启动业务补偿或切换当前环境。校验失败或 3317/6390 占用时拒绝。待处理与异常状态按原值报告；实际恢复补偿继续用 Test 的 Recovery，详细边界见 [运行手册](RUNBOOK.md)。
+演示冷备份提供 `./scripts/backup-audit.ps1 -Backup '.data/backups/实际目录'`：在临时 MySQL/Redis 只读核对订单、金额、库存工作单、支付台账、图片和 Redis，不启动业务补偿或切换当前环境。校验失败或 3317/6390 占用时拒绝，待处理与异常状态按原值报告。
+
+Demo 完整恢复使用 `./scripts/demo-restore.ps1 -Backup '.data/backups/实际目录' -PaymentConfig '.tools/simulation/payment-config.json'`。入口在原环境完全停止后，将备份恢复到全新独立依赖与副本目录，验证原交易、继续交易和消息补偿，再清理副本并恢复常驻环境；必须有原匹配密钥。不能与其他验收或人工操作并行，详细步骤见 [DEMO-RESTORE.md](DEMO-RESTORE.md)。Test Recovery 的 `_test` 保护保持不变。
 
 - 支付保留现有付款/通知/查单/关单接口及 AlipayTemplate；未来独立验证真实沙箱，不把本地网关改标签冒充真实平台。
 - 短信经 SmsSender.send(phone,code,validMinutes) 交付；验证码及频率/有效期/消费仍由认证服务管理。当前只有开发实现，real 模式拒绝启动，失败发送不会返回验证码或留下可用的未送达验证码。

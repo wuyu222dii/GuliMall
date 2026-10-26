@@ -4,6 +4,8 @@
 
 ## 工具与配置
 
+首次交接先看 [干净目录与预检](HANDOFF-SETUP.md)：不依赖其他人的私有 .tools，Build/Environment/Simulation 分别检查构建、本地基础环境和启动条件；同机隔离验收不代表独立机器通过。
+
 需要 JDK **8**、Maven 3.6+、Node 20.19+/npm，以及 Docker Desktop Linux 容器引擎和 Compose v2（支持 `up --wait`）。设置 `JAVA_HOME`，将 Maven、Node/npm 和 Docker 加入 PATH。
 
 本次实际验证：Temurin 8u504、Maven 3.8.1、Node 24.22.1、npm 10.9.2。Docker Desktop 4.96.3（CLI/Engine 29.9.2、Compose 5.6.1）和 WSL 3.0.3 已安装，重启后 Linux 引擎与五个容器均正常。系统 Java 没有改动，本机隔离工具不随 Git 分发。当前机器说明见 [DOCKER-SETUP.md](DOCKER-SETUP.md)。
@@ -69,7 +71,7 @@ node --test @checks
 新增检查包括：
 
 - Java：认证、商品、图片、搜索、购物车、订单与锁库，以及 RSA2、金额边界、履约门禁、测试环境保护、管理员摘要工具、网关来源限制、短信失败清理、存储替换及安全处理进度，共 29 项。
-- Node：基线、商品、购物车、支付、安全回跳、订单、真实库名保护、静态部署、模拟台账/重试、诊断、错误边界、trace 脱敏、启动前拒绝与备份审计，共 27 项。先安装锁定的前端开发依赖，默认检查仍不连接业务库。
+- Node：基线、商品、购物车、支付、安全回跳、订单、真实库名保护、静态部署、模拟台账/重试、诊断、错误边界、trace 脱敏、启动前拒绝、备份审计、原子配置拒绝及阶段 19 Edge 预检/确认页回跳，共 32 项。先安装锁定的前端开发依赖，默认检查仍不连接业务库。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
 这些默认检查不连接数据库。阶段 9 起统一以 `./scripts/test.ps1 -Suite All` 运行 68 个业务场景，使用独立 Compose 项目、卷和五个 `_test` 库；会暂停演示环境，结束后恢复。直接向演示库运行 acceptance 脚本会被拒绝。支付使用独立测试密钥与 RabbitMQ 虚拟主机，真实沙箱尚待开通后验收。故障验收必须串行运行，详见 [RUNBOOK.md](RUNBOOK.md)。

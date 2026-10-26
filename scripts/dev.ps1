@@ -8,6 +8,12 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'env.ps1')
 Push-Location $taskRoot
 try {
+    if ($Action -in @('Build','Check','Run')) {
+        $taskMode=if($Action -eq 'Check'){'Environment'}else{'Build'}
+        & "$PSScriptRoot/preflight.ps1" -Mode $taskMode
+        if($LASTEXITCODE -ne 0){throw 'Preflight failed; no build or infrastructure operation was started.'}
+        if($Action -eq 'Check'){return}
+    }
     foreach ($taskKey in @('DB_PASSWORD', 'MYSQL_ROOT_PASSWORD', 'REDIS_PASSWORD', 'RABBITMQ_PASSWORD', 'INTERNAL_API_TOKEN')) {
         $taskValue = [Environment]::GetEnvironmentVariable($taskKey, 'Process')
         if ([string]::IsNullOrWhiteSpace($taskValue) -or $taskValue -eq 'CHANGE_ME') { throw "Configure $taskKey in .env first." }
@@ -22,11 +28,7 @@ try {
         else { & docker info --format '{{.ServerVersion}}' }
         if ($LASTEXITCODE -ne 0) { throw 'Docker operation failed. Check Docker Desktop and service health.' }
     }
-    if ($Action -in @('Build', 'Run', 'Check')) {
-        if (-not $env:JAVA_HOME -or -not (Test-Path -LiteralPath (Join-Path $env:JAVA_HOME 'bin/java.exe'))) { throw 'Set JAVA_HOME to a JDK 8 installation.' }
-        $taskJavaVersion = & (Join-Path $env:JAVA_HOME 'bin/java.exe') -version 2>&1 | Out-String
-        if ($taskJavaVersion -notmatch 'version "1\.8\.') { throw 'This baseline requires JDK 8.' }
-        if (-not (Get-Command mvn -ErrorAction SilentlyContinue)) { throw 'Add Maven 3.6+ to PATH.' }
+    if ($Action -in @('Build', 'Run')) {
         if ($Action -eq 'Build') {
             & mvn -B '-Dfile.encoding=UTF-8' install
             if ($LASTEXITCODE -ne 0) { throw 'Backend build/tests failed.' }
@@ -38,11 +40,6 @@ try {
             if (-not $Module) { throw 'Run requires -Module.' }
             & mvn -f "$Module/pom.xml" spring-boot:run
             if ($LASTEXITCODE -ne 0) { throw 'Service exited with an error.' }
-        } else {
-            & mvn -version
-            & node --version
-            & npm --version
-            if ($LASTEXITCODE -ne 0) { throw 'Node/npm is unavailable.' }
         }
     }
     if ($Action -eq 'Smoke') {
