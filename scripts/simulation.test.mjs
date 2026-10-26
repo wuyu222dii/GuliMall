@@ -28,3 +28,47 @@ test('simulation refuses unmanaged ports before stopping services or changing co
   } finally {if(listening)await new Promise(resolve=>server.close(resolve))}
 })
 
+const folder=()=>'.tools/simulation-unit-'+randomUUID()
+const until=async(check,message)=>{for(let i=0;i<80;i++){if(await check())return;await new Promise(r=>setTimeout(r,100))}assert.fail(message)}
+async function issue(gateway,sn) {
+  const params={app_id:gateway.config.appId,method:'alipay.trade.page.pay',sign_type:'RSA2',notify_url:gateway.config.notifyUrl,return_url:gateway.config.returnUrl+'?orderSn='+sn,biz_content:JSON.stringify({out_trade_no:sn,total_amount:'3.75',seller_id:gateway.config.sellerId,time_expire:'2099-01-01 00:00:00',subject:'unit'})}
+  const data=Object.keys(params).sort().map(k=>k+'='+params[k]).join('&')
+  params.sign=sign('RSA-SHA256',Buffer.from(data),createPrivateKey({key:Buffer.from(gateway.config.merchantPrivate,'base64'),format:'der',type:'pkcs8'})).toString('base64')
+  return fetch(gateway.url+'/gateway.do',{method:'POST',body:new URLSearchParams(params)})
+}
+const checkout=(gateway,sn,action)=>fetch(`${gateway.url}/checkout/${sn}/${action}`,{method:'POST',body:new URLSearchParams({nonce:gateway.trades.get(sn).nonce}),redirect:'manual'})
+
+test('persistent payment survives restart, retries notifications and preserves terminal states',async()=>{
+  const directory=folder(),config=testConfig(directory+'/keys.json'),dataFile=directory+'/trades.json',sn='a'.repeat(32),failed='b'.repeat(32),closed='c'.repeat(32)
+  let acknowledge=false,notices=0
+  const receiver=createServer(async(req,res)=>{for await(const chunk of req){}notices++;res.writeHead(acknowledge?200:503);res.end(acknowledge?'success':'retry')})
+  await new Promise(r=>receiver.listen(0,'127.0.0.1',r));config.notifyUrl='http://127.0.0.1:'+receiver.address().port+'/notify'
+  let gateway=await createPaymentGateway({config,dataFile})
+  try {
+    assert.equal((await issue(gateway,sn)).status,200);assert.equal((await checkout(gateway,sn,'pay')).status,303)
+    const paid={...gateway.trades.get(sn)};assert.equal(paid.state,'TRADE_SUCCESS');assert.equal(paid.notifyAcknowledged,false)
+    assert.equal((await issue(gateway,failed)).status,200);assert.equal((await checkout(gateway,failed,'fail')).status,200);assert.equal(gateway.trades.get(failed).state,'WAIT_BUYER_PAY')
+    await issue(gateway,closed);gateway.put(closed,{state:'TRADE_CLOSED'})
+    await gateway.close();acknowledge=true;gateway=await createPaymentGateway({config,dataFile})
+    await until(()=>gateway.trades.get(sn).notifyAcknowledged,'Unconfirmed notification did not retry on restart')
+    assert.equal(gateway.trades.get(sn).tradeNo,paid.tradeNo);assert.equal(gateway.trades.get(sn).paidAt,paid.paidAt)
+    assert.equal((await checkout(gateway,sn,'pay')).status,303);assert.equal(gateway.trades.get(sn).paidAt,paid.paidAt)
+    assert.match(await(await issue(gateway,sn)).text(),/已完成模拟付款/)
+    assert.equal((await issue(gateway,closed)).status,409);assert.equal((await checkout(gateway,closed,'pay')).status,409)
+    acknowledge=false;gateway.put(failed,{state:'TRADE_SUCCESS',paidAt:paid.paidAt});const attempts=notices
+    await until(()=>notices>attempts,'Five-second retry timer did not run');acknowledge=true
+    await until(()=>gateway.trades.get(failed).notifyAcknowledged,'Notification acknowledgement did not persist')
+    assert(JSON.parse(readFileSync(dataFile)).trades.find(t=>t.orderSn===failed).notifyAcknowledged)
+  } finally {await gateway.close();receiver.closeAllConnections();await new Promise(r=>receiver.close(r))}
+})
+
+test('corrupt ledgers, mismatched keys and write failures never become empty successful payments',async()=>{
+  const directory=folder(),config=testConfig(directory+'/keys.json'),dataFile=directory+'/trades.json'
+  let gateway=await createPaymentGateway({config,dataFile});await issue(gateway,'d'.repeat(32));await gateway.close()
+  const before=readFileSync(dataFile),other=testConfig(folder()+'/keys.json')
+  await assert.rejects(createPaymentGateway({config:other,dataFile}),/keys do not match/);assert.deepEqual(readFileSync(dataFile),before)
+  writeFileSync(dataFile,'broken');await assert.rejects(createPaymentGateway({config,dataFile}));assert.equal(readFileSync(dataFile,'utf8'),'broken')
+  const impossible=directory+'/directory-ledger';mkdirSync(impossible)
+  gateway=await createPaymentGateway({config,dataFile:impossible+'/file.json'});mkdirSync(impossible+'/file.json')
+  try {assert.equal((await issue(gateway,'e'.repeat(32))).status,503);assert.equal(gateway.trades.size,0);assert.equal((await fetch(gateway.url+'/health')).status,503)}finally{await gateway.close()}
+})

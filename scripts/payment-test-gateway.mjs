@@ -4,6 +4,7 @@ import { generateKeyPairSync, createPrivateKey, createPublicKey, sign, verify, r
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { paymentLedger } from './simulation-ledger.mjs'
 
 const body64 = (value) => value.toString('base64')
 const privateKey = (value) => createPrivateKey({ key: Buffer.from(value, 'base64'), format: 'der', type: 'pkcs8' })
@@ -18,21 +19,32 @@ export function testConfig(path = '.tools/payment-test-config.json') {
   const config = { mode: 'LOCAL_TEST', appId: 'local-test-app', sellerId: 'local-test-seller', merchantPrivate: body64(merchant.privateKey), merchantPublic: body64(merchant.publicKey), providerPrivate: body64(provider.privateKey), providerPublic: body64(provider.publicKey), controlToken: randomBytes(32).toString('hex'), notifyUrl: 'http://127.0.0.1:88/api/payments/alipay/notify', returnUrl: 'http://127.0.0.1:5173/payment/return' }
   mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, JSON.stringify(config, null, 2)); return config
 }
-export async function createPaymentGateway({ config, port = 0 } = {}) {
+export async function createPaymentGateway({ config, port = 0, dataFile } = {}) {
   if (!config || config.mode !== 'LOCAL_TEST') throw new Error('Explicit local test configuration required')
-  const trades = new Map(), options = { down: false, badResponseSignature: false, closeDelay: 0, closeUnknown: false, skipNotify: false }
+  const ledger=paymentLedger(config,dataFile),trades=ledger.trades, options = { down: false, badResponseSignature: false, closeDelay: 0, closeUnknown: false, skipNotify: false }
+  let storageFailed=false
+  const notifying=new Map()
   const sockets = new Set(), provider = privateKey(config.providerPrivate), merchant = publicKey(config.merchantPublic)
+  if(!createPublicKey(provider).export({format:'der',type:'spki'}).equals(Buffer.from(config.providerPublic,'base64'))||!createPublicKey(privateKey(config.merchantPrivate)).export({format:'der',type:'spki'}).equals(Buffer.from(config.merchantPublic,'base64')))throw new Error('Simulation public and private keys do not match')
   const signed = data => sign('RSA-SHA256', Buffer.from(data), provider).toString('base64')
   const put = (sn, changes = {}) => {
-    const original = trades.get(sn) || { orderSn: sn, tradeNo: 'test_' + randomUUID().replaceAll('-', ''), state: 'WAIT_BUYER_PAY', amount: '0.10', paidAt: null, nonce: randomBytes(24).toString('hex'), notifyUrl: config.notifyUrl, returnUrl: config.returnUrl + '?orderSn=' + sn }
-    Object.assign(original, changes); trades.set(sn, original); return original
+    const original = trades.get(sn) || { orderSn: sn, tradeNo: 'test_' + randomUUID().replaceAll('-', ''), state: 'WAIT_BUYER_PAY', amount: '0.10', paidAt: null, nonce: randomBytes(24).toString('hex'), notifyUrl: config.notifyUrl, returnUrl: config.returnUrl + '?orderSn=' + sn, notifyId:randomUUID(),notifyAcknowledged:false }
+    try{return ledger.put({...original,...changes})}catch(error){storageFailed=true;throw error}
   }
-  const notify = async (sn, overrides = {}) => {
+  const sendNotice = async (sn, overrides = {}) => {
     const trade = trades.get(sn); if (!trade) throw new Error('Unknown fixture trade')
-    const params = { app_id: config.appId, seller_id: config.sellerId, out_trade_no: sn, trade_no: trade.tradeNo, trade_status: trade.state, total_amount: trade.amount, gmt_payment: trade.paidAt || providerTime(), notify_type: 'trade_status_sync', notify_id: randomUUID(), sign_type: 'RSA2', ...overrides }
+    const params = { app_id: config.appId, seller_id: config.sellerId, out_trade_no: sn, trade_no: trade.tradeNo, trade_status: trade.state, total_amount: trade.amount, gmt_payment: trade.paidAt || providerTime(), notify_type: 'trade_status_sync', notify_id: trade.notifyId, sign_type: 'RSA2', ...overrides }
     if (overrides.sign === undefined) params.sign = signed(canonical(params, true))
-    const response = await fetch(trade.notifyUrl, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(params), signal: AbortSignal.timeout(15000) })
-    return { status: response.status, body: await response.text() }
+    const response = await fetch(trade.notifyUrl, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(params), signal: AbortSignal.timeout(dataFile?5000:15000) })
+    const result={status:response.status,body:await response.text()}
+    if(dataFile&&Object.keys(overrides).length===0&&result.status===200&&result.body==='success')put(sn,{notifyAcknowledged:true})
+    return result
+  }
+  const notify=(sn,overrides={})=>{
+    if(dataFile&&notifying.has(sn))return notifying.get(sn)
+    const pending=sendNotice(sn,overrides)
+    if(!dataFile)return pending
+    notifying.set(sn,pending);pending.finally(()=>notifying.delete(sn)).catch(()=>{});return pending
   }
   const reply = (res, method, data) => {
     const signature = options.badResponseSignature ? Buffer.from('bad signature').toString('base64') : signed(JSON.stringify(data))
@@ -45,7 +57,7 @@ export async function createPaymentGateway({ config, port = 0 } = {}) {
       for await (const chunk of req) { chunks.push(chunk); if (chunks.reduce((sum, item) => sum + item.length, 0) > 262144) throw new Error('Request too large') }
       const raw = Buffer.concat(chunks).toString('utf8')
       if (url.pathname === '/health' && req.method === 'GET') {
-        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ mode: 'LOCAL_TEST', ready: true, persistent: false })); return
+        res.writeHead(storageFailed?503:200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ mode: 'LOCAL_TEST', ready: !storageFailed&&!options.down, persistent: !!dataFile })); return
       }
       if (url.pathname === '/control') {
         if (req.headers.authorization !== 'Bearer ' + config.controlToken) { res.writeHead(403); res.end(); return }
@@ -66,8 +78,9 @@ export async function createPaymentGateway({ config, port = 0 } = {}) {
         if (params.method === 'alipay.trade.page.pay') {
           if (biz.seller_id !== config.sellerId || !/^\d+(\.\d{1,2})?$/.test(biz.total_amount || '') || !biz.time_expire) throw new Error('Invalid signed business fields')
           if (existing?.state === 'TRADE_CLOSED') { page(res, '<p>Trade already closed. Return to the original order.</p>', 409); return }
+          if (existing&&['TRADE_SUCCESS','TRADE_FINISHED'].includes(existing.state)) {page(res,`<p>此订单已完成模拟付款。</p><a href="${escape(existing.returnUrl)}">返回订单</a>`);return}
           const trade = put(sn, { amount: Number(biz.total_amount).toFixed(2), subject: biz.subject, expiresAt: biz.time_expire, notifyUrl: params.notify_url, returnUrl: params.return_url })
-          page(res, `<p>Order: ${escape(sn)}</p><p>Total: ¥${escape(trade.amount)}</p><p>${escape(trade.subject)}</p><form method="post" action="/checkout/${sn}/pay"><input type="hidden" name="nonce" value="${trade.nonce}"><button type="submit">Confirm local test payment</button></form><p><a href="${escape(trade.returnUrl)}">Return without paying</a></p>`); return
+          page(res, `<p>Order: ${escape(sn)}</p><p>Total: ¥${escape(trade.amount)}</p><p>${escape(trade.subject)}</p><form method="post" action="/checkout/${sn}/pay"><input type="hidden" name="nonce" value="${trade.nonce}"><button type="submit">确认模拟付款</button></form><form method="post" action="/checkout/${sn}/fail"><input type="hidden" name="nonce" value="${trade.nonce}"><button type="submit">模拟付款失败</button></form><p><a href="${escape(trade.returnUrl)}">返回订单（不付款）</a></p>`); return
         }
         if (!existing) { reply(res, params.method, { code: '40004', msg: 'Business Failed', sub_code: 'ACQ.TRADE_NOT_EXIST', sub_msg: 'Local fixture trade absent' }); return }
         if (params.method === 'alipay.trade.query') {
@@ -77,31 +90,42 @@ export async function createPaymentGateway({ config, port = 0 } = {}) {
         }
         if (params.method === 'alipay.trade.close') {
           if (options.closeDelay) await new Promise(resolve => setTimeout(resolve, options.closeDelay))
-          if (!options.closeUnknown && ['WAIT_BUYER_PAY', 'TRADE_CLOSED'].includes(existing.state)) { existing.state = 'TRADE_CLOSED'; reply(res, params.method, { code: '10000', msg: 'Success', out_trade_no: sn, trade_no: existing.tradeNo }) }
+          if (!options.closeUnknown && ['WAIT_BUYER_PAY', 'TRADE_CLOSED'].includes(existing.state)) { put(sn,{state:'TRADE_CLOSED'}); reply(res, params.method, { code: '10000', msg: 'Success', out_trade_no: sn, trade_no: existing.tradeNo }) }
           else reply(res, params.method, { code: '40004', msg: 'Business Failed', sub_code: 'ACQ.TRADE_STATUS_ERROR', sub_msg: 'Local close result not confirmed' })
           return
         }
         throw new Error('Unsupported SDK method')
       }
-      const payment = url.pathname.match(/^\/checkout\/([a-f0-9]{32})\/pay$/)
+      const payment = url.pathname.match(/^\/checkout\/([a-f0-9]{32})\/(pay|fail)$/)
       if (payment && req.method === 'POST') {
         const trade = trades.get(payment[1]), fields = new URLSearchParams(raw)
         if (!trade || fields.get('nonce') !== trade.nonce) throw new Error('Unknown local payment')
+        if(['TRADE_SUCCESS','TRADE_FINISHED'].includes(trade.state)){res.writeHead(303,{Location:trade.returnUrl});res.end();return}
         if (trade.state === 'TRADE_CLOSED' || trade.expiresAt && trade.expiresAt <= providerTime()) { page(res, '<p>The local trade has expired or closed.</p>', 409); return }
-        trade.state = 'TRADE_SUCCESS'; trade.paidAt ||= providerTime()
+        if(options.down){res.writeHead(503);res.end('local provider unavailable');return}
+        if(payment[2]==='fail'){page(res,`<p>模拟支付失败。订单仍待付款，可返回后重试或取消。</p><a href="${escape(trade.returnUrl)}">返回订单</a>`);return}
+        put(trade.orderSn,{state:'TRADE_SUCCESS',paidAt:trade.paidAt||providerTime(),notifyAcknowledged:false})
         if (!options.skipNotify) { try { await notify(trade.orderSn) } catch { /* The application's verified query is exercised as fallback. */ } }
         res.writeHead(303, { Location: trade.returnUrl }); res.end(); return
       }
       page(res, '<p>Open a signed form from the local GuliMall payment page.</p>')
-    } catch { if (!res.headersSent) { res.writeHead(400); res.end('Invalid local test request') } else res.end() }
+    } catch { if (!res.headersSent) { res.writeHead(storageFailed?503:400); res.end(storageFailed?'Local payment storage unavailable':'Invalid local test request') } else res.end() }
   })
   server.on('connection', socket => { sockets.add(socket); socket.on('close', () => sockets.delete(socket)) })
-  await new Promise(resolve => server.listen(port, '127.0.0.1', resolve))
-  return { url: `http://127.0.0.1:${server.address().port}`, config, options, trades, put, notify, async close() { for (const socket of sockets) socket.destroy(); await new Promise(resolve => server.close(resolve)) } }
+  await new Promise((resolve,reject) => {server.once('error',reject);server.listen(port, '127.0.0.1', resolve)})
+  const retry=()=>{if(options.skipNotify||options.down)return;for(const trade of trades.values())if(['TRADE_SUCCESS','TRADE_FINISHED'].includes(trade.state)&&!trade.notifyAcknowledged)notify(trade.orderSn).catch(()=>{})}
+  const timer=dataFile?setInterval(retry,5000):null
+  if(timer){timer.unref();retry()}
+  return { url: `http://127.0.0.1:${server.address().port}`, config, options, trades, put, notify, async close() {if(timer)clearInterval(timer);await Promise.allSettled([...notifying.values()]);for (const socket of sockets) socket.destroy(); await new Promise(resolve => server.close(resolve)) } }
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.env.GULIMALL_ACCEPTANCE !== '1') throw new Error('Explicit GULIMALL_ACCEPTANCE=1 is required for the local fixture gateway.')
-  const config = testConfig(process.env.PAYMENT_TEST_CONFIG || '.tools/payment-test-config.json')
-  const gateway = await createPaymentGateway({ config, port: Number(process.env.PAYMENT_TEST_PORT || 18170) })
+  const simulation=process.argv.includes('--simulation')
+  if(simulation&&process.env.GULIMALL_SIMULATION!=='1')throw new Error('Use scripts/simulation.ps1 for the persistent gateway')
+  if(simulation&&(!process.env.PAYMENT_TEST_DATA||process.env.PAYMENT_TEST_PORT!=='18170'))throw new Error('Standing simulation requires its ledger and the single local port 18170')
+  const configPath=process.env.PAYMENT_TEST_CONFIG || '.tools/payment-test-config.json'
+  if(simulation&&existsSync(process.env.PAYMENT_TEST_DATA)&&!existsSync(configPath))throw new Error('Restore the original simulation keys before opening an existing ledger')
+  const config = testConfig(configPath)
+  const gateway = await createPaymentGateway({ config, port: Number(process.env.PAYMENT_TEST_PORT || 18170),dataFile:simulation?process.env.PAYMENT_TEST_DATA:undefined })
   console.log(JSON.stringify({ mode: 'LOCAL_TEST', url: gateway.url, configuration: process.env.PAYMENT_TEST_CONFIG || '.tools/payment-test-config.json' }))
 }

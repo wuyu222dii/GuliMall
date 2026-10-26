@@ -12,7 +12,7 @@ function Simulation-GatewayProcesses { @(Get-CimInstance Win32_Process -Filter "
 function Simulation-Healthy {
     try {
         $health=Invoke-RestMethod 'http://127.0.0.1:18170/health' -TimeoutSec 3
-        if($health.mode -ne 'LOCAL_TEST' -or -not $health.ready){return $false}
+        if($health.mode -ne 'LOCAL_TEST' -or -not $health.ready -or -not $health.persistent){return $false}
         foreach($name in @('product','member','coupon','ware','order','search','auth-server','third-party','cart','gateway')) {
             $instances=Invoke-RestMethod ('http://127.0.0.1:18848/nacos/v1/ns/instance/list?serviceName=gulimall-'+$name+'&healthyOnly=true') -TimeoutSec 3
             if(@($instances.hosts | Where-Object {$_.healthy -and $_.ip -eq '127.0.0.1'}).Count -ne 1){return $false}
