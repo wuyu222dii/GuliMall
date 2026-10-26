@@ -31,41 +31,41 @@ export default function Header() {
           <div>
             {user ? (
               <>
-                Welcome, {user.username || user.phone}
+                欢迎，{user.username || user.phone}
                 <span style={{ margin: '0 8px' }}>|</span>
-                <button type="button" className="header-signout" onClick={signOut}>Sign out</button>
+                <button type="button" className="header-signout" onClick={signOut}>退出登录</button>
               </>
             ) : (
               <>
-                <Link to="/login">Hello, sign in</Link>
+                <Link to="/login">你好，请登录</Link>
                 <span style={{ margin: '0 8px' }}>|</span>
-                <Link to="/register">Register free</Link>
+                <Link to="/register">免费注册</Link>
               </>
             )}
           </div>
           <div>
-            {user?.admin ? <Link to="/admin">管理入口</Link> : <><Link to="/member/orders" style={{ marginRight: 16 }}>My orders</Link><Link to="/member/address">Shipping addresses</Link></>}
+            {user?.admin ? <Link to="/admin">管理入口</Link> : <><Link to="/member/orders" style={{ marginRight: 16 }}>我的订单</Link><Link to="/member/address">收货地址</Link></>}
           </div>
         </div>
       </div>
 
       {error && <div className="error-msg container" role="alert">{error}</div>}
-      {user && !user.admin && location.pathname !== '/cart' && (cartError || pendingCount > 0) && <div className="error-msg container" role="alert">Cart needs attention; your saved data is kept. <Link to="/cart">View cart / retry merge</Link></div>}
+      {user && !user.admin && location.pathname !== '/cart' && (cartError || pendingCount > 0) && <div className="error-msg container" role="alert">购物车需要处理，原有数据已保留。 <Link to="/cart">查看购物车 / 重试合并</Link></div>}
 
       <div className="header-main">
         <div className="container">
           <Link to="/" className="logo">
             Gulimall
-            <span>Quality living starts here</span>
+            <span>品质生活，从这里开始</span>
           </Link>
 
           <form className="search-box" onSubmit={handleSearch}>
-            <input name="keyword" aria-label="Search products" placeholder="Search products..." />
-            <button type="submit">Search</button>
+            <input name="keyword" aria-label="搜索商品" placeholder="搜索商品…" />
+            <button type="submit">搜索</button>
           </form>
 
           <Link to="/cart" className="header-cart">
-            🛒 Cart
+            🛒 购物车
             {totalCount > 0 && <span className="cart-badge">{totalCount}</span>}
           </Link>
         </div>
@@ -73,12 +73,12 @@ export default function Header() {
 
       <nav className="category-nav">
         <div className="container">
-          <div className="nav-all">All categories</div>
+          <div className="nav-all">全部分类</div>
           <div className="nav-links">
-            <Link to="/">Home</Link>
-            <Link to="/search">Product search</Link>
-            <Link to="/cart">Cart</Link>
-            <Link to="/member/orders">My orders</Link>
+            <Link to="/">首页</Link>
+            <Link to="/search">商品搜索</Link>
+            <Link to="/cart">购物车</Link>
+            <Link to="/member/orders">我的订单</Link>
           </div>
         </div>
       </nav>

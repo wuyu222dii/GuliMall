@@ -29,20 +29,20 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2>{admin ? '管理员登录' : 'Sign in to Gulimall'}</h2>
+        <h2>{admin ? '管理员登录' : '登录谷粒商城'}</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="login-username">{admin ? '管理员账号' : 'Username / Phone'}</label>
+            <label htmlFor="login-username">{admin ? '管理员账号' : '用户名或手机号'}</label>
             <input id="login-username" name="username" autoComplete="username" className="input" required maxLength={64} value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
           </div>
           <div className="form-group">
-            <label htmlFor="login-password">Password</label>
+            <label htmlFor="login-password">密码</label>
             <input id="login-password" name="password" autoComplete="current-password" className="input" required type="password" maxLength={64} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </div>
           {error && <div className="error-msg" role="alert">{error}</div>}
-          <button type="submit" disabled={busy} className="btn btn-primary" style={{ width: '100%', marginTop: 16 }}>{busy ? 'Signing in…' : 'Sign in'}</button>
+          <button type="submit" disabled={busy} className="btn btn-primary" style={{ width: '100%', marginTop: 16 }}>{busy ? '正在登录…' : '登录'}</button>
         </form>
-        <div className="auth-footer">{admin ? <Link to="/login">会员登录</Link> : <>Don&apos;t have an account? <Link to="/register">Register now</Link><br /><Link to="/admin/login">管理员登录</Link></>}</div>
+        <div className="auth-footer">{admin ? <Link to="/login">会员登录</Link> : <>还没有账号？ <Link to="/register">立即注册</Link><br /><Link to="/admin/login">管理员登录</Link></>}</div>
       </div>
     </div>
   )

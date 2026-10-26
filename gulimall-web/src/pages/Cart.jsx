@@ -19,24 +19,24 @@ export default function Cart() {
   }
   const disabled = loading || busy || checking
   return <div className="container catalog-page">
-    <div className="admin-toolbar"><h1 className="page-title">My cart</h1><button className="btn btn-outline" disabled={disabled} onClick={() => { setCheckoutError(''); refresh() }}>Refresh cart / retry merge</button></div>
-    {owner === 'guest' && <p className="purchase-notice">Guest cart is kept on this browser. Sign in to merge it once with your member cart.</p>}
-    {pendingCount > 0 && <p className="purchase-notice" role="status">{pendingCount} guest items are kept locally while merging is pending. Adjust quantities or remove server items if capacity is exceeded, then retry. They will not be merged into another account.</p>}
-    {(error || checkoutError) && <p className="error-msg" role="alert">{error || checkoutError} Your cart has been kept.</p>}
-    {loading && <p role="status">Refreshing prices, availability and cart…</p>}
-    {!items.length && !loading && !error && !pendingCount && <div className="empty-state card"><p>Your cart is empty</p><Link className="btn btn-primary" to="/search">Start shopping</Link></div>}
+    <div className="admin-toolbar"><h1 className="page-title">我的购物车</h1><button className="btn btn-outline" disabled={disabled} onClick={() => { setCheckoutError(''); refresh() }}>刷新购物车 / 重试合并</button></div>
+    {owner === 'guest' && <p className="purchase-notice">访客购物车保存在本浏览器，登录后会幂等合并到会员购物车。</p>}
+    {pendingCount > 0 && <p className="purchase-notice" role="status">{pendingCount} 件访客商品等待合并，本地副本已保留。超出容量时请先调整数量或移除服务端商品，再重试；不会合并到其他账号。</p>}
+    {(error || checkoutError) && <p className="error-msg" role="alert">{error || checkoutError} 原购物车已保留。</p>}
+    {loading && <p role="status">正在刷新价格、可售状态和购物车…</p>}
+    {!items.length && !loading && !error && !pendingCount && <div className="empty-state card"><p>购物车为空</p><Link className="btn btn-primary" to="/search">去选购</Link></div>}
     {!!items.length && <>
-      <div className="admin-table-wrap"><table className="cart-table"><thead><tr><th>Select</th><th>Product / availability</th><th>Unit price</th><th>Quantity</th><th>Subtotal</th><th>Actions</th></tr></thead><tbody>
+      <div className="admin-table-wrap"><table className="cart-table"><thead><tr><th>勾选</th><th>商品 / 可售状态</th><th>单价</th><th>数量</th><th>小计</th><th>操作</th></tr></thead><tbody>
         {items.map((item) => <tr key={item.skuId}>
-          <td><input type="checkbox" aria-label={`Select SKU ${item.skuId}`} checked={item.checked !== false} disabled={disabled} onChange={(e) => act(() => setChecked(item.skuId, e.target.checked))} /></td>
-          <td><div className="cart-product"><img src={productImage(item.skuDefaultImg)} alt="" onError={(e) => { if (e.currentTarget.getAttribute('src') !== IMAGE_FALLBACK) e.currentTarget.src = IMAGE_FALLBACK }} /><div><Link to={`/product/${item.skuId}`}>{item.skuName}</Link><p className={item.status === 'AVAILABLE' && !error ? 'admin-note' : 'error-msg'}>{error ? 'Refresh required' : item.message || 'Price check required'}</p></div></div></td>
-          <td className="price">{loading || error || item.price == null ? 'Unavailable' : `¥${Number(item.price).toFixed(2)}`}</td>
-          <td><div className="qty-control"><button aria-label={`Decrease SKU ${item.skuId}`} disabled={disabled || item.count <= 1} onClick={() => act(() => updateCount(item.skuId, item.count - 1))}>−</button><span aria-label={`Quantity SKU ${item.skuId}`}>{item.count}</span><button aria-label={`Increase SKU ${item.skuId}`} disabled={disabled || item.count >= 999} onClick={() => act(() => updateCount(item.skuId, item.count + 1))}>+</button></div></td>
-          <td className="price">{loading || error || item.price == null ? 'Unavailable' : `¥${(Number(item.price) * item.count).toFixed(2)}`}</td>
-          <td><button className="btn btn-outline" aria-label={`Remove SKU ${item.skuId}`} disabled={disabled} onClick={() => act(() => removeItem(item.skuId))}>Remove</button></td>
+          <td><input type="checkbox" aria-label={`勾选 SKU ${item.skuId}`} checked={item.checked !== false} disabled={disabled} onChange={(e) => act(() => setChecked(item.skuId, e.target.checked))} /></td>
+          <td><div className="cart-product"><img src={productImage(item.skuDefaultImg)} alt="" onError={(e) => { if (e.currentTarget.getAttribute('src') !== IMAGE_FALLBACK) e.currentTarget.src = IMAGE_FALLBACK }} /><div><Link to={`/product/${item.skuId}`}>{item.skuName}</Link><p className={item.status === 'AVAILABLE' && !error ? 'admin-note' : 'error-msg'}>{error ? '请刷新后确认' : item.message || '请刷新价格后确认'}</p></div></div></td>
+          <td className="price">{loading || error || item.price == null ? '暂不可用' : `¥${Number(item.price).toFixed(2)}`}</td>
+          <td><div className="qty-control"><button aria-label={`减少 SKU ${item.skuId}`} disabled={disabled || item.count <= 1} onClick={() => act(() => updateCount(item.skuId, item.count - 1))}>−</button><span aria-label={`数量 SKU ${item.skuId}`}>{item.count}</span><button aria-label={`增加 SKU ${item.skuId}`} disabled={disabled || item.count >= 999} onClick={() => act(() => updateCount(item.skuId, item.count + 1))}>+</button></div></td>
+          <td className="price">{loading || error || item.price == null ? '暂不可用' : `¥${(Number(item.price) * item.count).toFixed(2)}`}</td>
+          <td><button className="btn btn-outline" aria-label={`移除 SKU ${item.skuId}`} disabled={disabled} onClick={() => act(() => removeItem(item.skuId))}>移除</button></td>
         </tr>)}
       </tbody></table></div>
-      <div className="cart-footer"><button className="btn btn-outline" disabled={disabled} onClick={() => act(clearCart)}>{pendingCount ? 'Clear saved cart and retry merge' : 'Clear cart'}</button><div className="cart-total">Selected total: <span className="price">{loading || error || totalAmount == null ? 'Unavailable' : `¥${Number(totalAmount).toFixed(2)}`}</span></div><button className="btn btn-primary btn-lg" disabled={disabled || !readyToCheckout || pendingCount > 0} onClick={checkout}>{checking ? 'Checking products…' : owner === 'guest' ? 'Sign in to checkout' : 'Checkout selected'}</button></div>
+      <div className="cart-footer"><button className="btn btn-outline" disabled={disabled} onClick={() => act(clearCart)}>{pendingCount ? '清空已保存购物车并重试合并' : '清空购物车'}</button><div className="cart-total">已选合计： <span className="price">{loading || error || totalAmount == null ? '暂不可用' : `¥${Number(totalAmount).toFixed(2)}`}</span></div><button className="btn btn-primary btn-lg" disabled={disabled || !readyToCheckout || pendingCount > 0} onClick={checkout}>{checking ? '正在校验商品…' : owner === 'guest' ? '登录后结算' : '结算已选商品'}</button></div>
     </>}
   </div>
 }

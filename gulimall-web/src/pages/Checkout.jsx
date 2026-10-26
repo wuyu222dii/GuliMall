@@ -62,7 +62,7 @@ export default function Checkout() {
       const res = await submitOrder(user.id, request.token, request.addressId)
       if (useAuthStore.getState().user?.id !== user.id) return
       setResult(res.result); await useCartStore.getState().refresh()
-    } catch (e) { setError(`${e.message} Check the saved request or retry the same submission; do not create a second order.`) }
+    } catch (e) { setError(`${e.message} 请查询原提交或重试同一请求，避免创建第二笔订单。`) }
     finally { setBusy(false) }
   }
   const startNew = () => { sessionStorage.removeItem(key); setRetry((value) => value + 1) }
@@ -77,27 +77,27 @@ export default function Checkout() {
     finally { setBusy(false) }
   }
   return <div className="container catalog-page">
-    <h1 className="page-title">Confirm order</h1>
+    <h1 className="page-title">确认订单</h1>
     {error && <p className="error-msg" role="alert">{error}</p>}
-    {loading ? <p role="status">Checking your saved request, current prices and addresses…</p> : result?.order ? <section className="card order-summary">
-      <h2>{orderStatuses[result.order.status] || 'Order saved'}</h2>
-      <p className="order-number">Order No.: {result.order.orderSn}</p>
-      <p>Total due: <strong className="price">¥{Number(result.order.payAmount).toFixed(2)}</strong></p>
+    {loading ? <p role="status">正在核对原提交、最新价格和地址…</p> : result?.order ? <section className="card order-summary">
+      <h2>{orderStatuses[result.order.status] || '订单已保存'}</h2>
+      <p className="order-number">订单号： {result.order.orderSn}</p>
+      <p>应付合计： <strong className="price">¥{Number(result.order.payAmount).toFixed(2)}</strong></p>
       <p>{result.order.receiverName} · {result.order.receiverProvince}{result.order.receiverCity}{result.order.receiverRegion} {result.order.receiverDetailAddress}</p>
       {result.items.map((item) => <p key={item.skuId}>{item.skuName} × {item.skuQuantity} — ¥{Number(item.realAmount).toFixed(2)}</p>)}
-      {result.order.status === 0 && <p className="purchase-notice">Stock is locked. Use the payment page to pay or check the result before the fixed payment deadline.</p>}
-      {[6, 7].includes(result.order.status) && <p role="status">The server is confirming the inventory result and will recover after a restart. This request will keep the same order number.</p>}
+      {result.order.status === 0 && <p className="purchase-notice">库存已锁定，请在付款期限内付款或查询结果。</p>}
+      {[6, 7].includes(result.order.status) && <p role="status">服务端正在确认库存结果，重启后会继续恢复，本次请求保持同一订单号。</p>}
       {result.order.status === 4 && <p>{result.order.failureReason}</p>}
-      {[0, 1, 4, 8, 9].includes(result.order.status) && <p><Link className="btn btn-primary" to={`/payment/${result.order.orderSn}`}>Payment / inventory status</Link></p>}
-      <div className="admin-toolbar"><Link className="btn btn-primary" to="/member/orders">My orders</Link><Link className="btn btn-outline" to="/cart">View cart</Link>{canStartNewConfirmation(result.order.status) && <button className="btn btn-outline" onClick={startNew}>Start a new confirmation</button>}</div>
+      {[0, 1, 4, 8, 9].includes(result.order.status) && <p><Link className="btn btn-primary" to={`/payment/${result.order.orderSn}`}>付款 / 库存状态</Link></p>}
+      <div className="admin-toolbar"><Link className="btn btn-primary" to="/member/orders">我的订单</Link><Link className="btn btn-outline" to="/cart">查看购物车</Link>{canStartNewConfirmation(result.order.status) && <button className="btn btn-outline" onClick={startNew}>开始下一次确认</button>}</div>
     </section> : confirmation && <>
-      <section className="card order-summary"><h2>Shipping address</h2>
-        {confirmation.addresses.length ? <fieldset disabled={busy || !!attempt}><legend className="admin-note">Choose an address belonging to your account</legend>{confirmation.addresses.map((address) => <label className="order-address" key={address.id}><input type="radio" name="order-address" checked={addressId === address.id} onChange={() => setAddressId(address.id)} /><span>{address.name} · {address.phone}<br />{address.province}{address.city}{address.region} {address.detailAddress}</span></label>)}</fieldset> : <Link to="/member/address">Add a shipping address, then refresh this confirmation.</Link>}
+      <section className="card order-summary"><h2>收货地址</h2>
+        {confirmation.addresses.length ? <fieldset disabled={busy || !!attempt}><legend className="admin-note">请选择本人收货地址</legend>{confirmation.addresses.map((address) => <label className="order-address" key={address.id}><input type="radio" name="order-address" checked={addressId === address.id} onChange={() => setAddressId(address.id)} /><span>{address.name} · {address.phone}<br />{address.province}{address.city}{address.region} {address.detailAddress}</span></label>)}</fieldset> : <Link to="/member/address">添加收货地址后刷新本次确认。</Link>}
       </section>
-      <section className="card order-summary"><h2>Order items</h2>{confirmation.items.map((item) => <p key={item.skuId}>{item.skuName} × {item.count} — ¥{(Number(item.price) * item.count).toFixed(2)}</p>)}<p className="admin-note">Freight ¥0.00. Confirmation valid until {new Date(confirmation.expiresAt).toLocaleString()}. Prices are checked again before submission.</p></section>
-      <div className="cart-footer"><span>Total due: <strong className="price">¥{Number(confirmation.totalAmount).toFixed(2)}</strong></span><button className="btn btn-primary btn-lg" disabled={busy || !addressId} onClick={submit}>{busy ? 'Submitting…' : attempt ? 'Retry same submission' : 'Place order'}</button></div>
+      <section className="card order-summary"><h2>订单商品</h2>{confirmation.items.map((item) => <p key={item.skuId}>{item.skuName} × {item.count} — ¥{(Number(item.price) * item.count).toFixed(2)}</p>)}<p className="admin-note">运费 ¥0.00，确认有效期至 {new Date(confirmation.expiresAt).toLocaleString('zh-CN')}. 提交前会再次校验价格。</p></section>
+      <div className="cart-footer"><span>应付合计： <strong className="price">¥{Number(confirmation.totalAmount).toFixed(2)}</strong></span><button className="btn btn-primary btn-lg" disabled={busy || !addressId} onClick={submit}>{busy ? '正在提交…' : attempt ? '重试原提交' : '提交订单'}</button></div>
     </>}
-    <div className="admin-toolbar"><button className="btn btn-outline" disabled={busy || loading} onClick={() => setRetry((value) => value + 1)}>{attempt ? 'Check saved request' : 'Refresh confirmation'}</button><Link to="/cart">Return to cart</Link></div>
-    {attempt && !result && <button className="btn btn-outline" disabled={busy || loading} onClick={replace}>Replace confirmation safely</button>}
+    <div className="admin-toolbar"><button className="btn btn-outline" disabled={busy || loading} onClick={() => setRetry((value) => value + 1)}>{attempt ? '查询原提交' : '刷新确认信息'}</button><Link to="/cart">返回购物车</Link></div>
+    {attempt && !result && <button className="btn btn-outline" disabled={busy || loading} onClick={replace}>安全替换确认信息</button>}
   </div>
 }

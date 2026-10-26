@@ -2,20 +2,20 @@ export const emptyGuest = () => ({ version: 2, guestId: crypto.randomUUID(), gue
 export function readGuest(raw) {
   if (!raw) return emptyGuest()
   const data = JSON.parse(raw)
-  const invalid = () => { throw new Error('Local cart is unreadable. Keep a backup before clearing site storage.') }
+  const invalid = () => { throw new Error('本地购物车无法读取，请先备份，再决定是否清理浏览器存储。') }
   const local = data?.version === 2 ? data : Array.isArray(data?.state?.items) ? { ...emptyGuest(), guestItems: data.state.items } : invalid()
   if (!Array.isArray(local.guestItems) || !local.pending || typeof local.pending !== 'object' || Array.isArray(local.pending) || typeof local.guestId !== 'string') invalid()
   return local
 }
 export function validQuantity(count) {
-  if (!Number.isInteger(count) || count < 1 || count > 999) throw new Error('Quantity must be a whole number from 1 to 999.')
+  if (!Number.isInteger(count) || count < 1 || count > 999) throw new Error('数量必须为 1–999 的整数。')
 }
 export function claimGuest(local, owner) {
   if (local.pending[owner]) return local.pending[owner]
   if (!local.guestItems.length) return null
   for (const item of local.guestItems) {
     validQuantity(item.count)
-    if (!Number.isSafeInteger(item.skuId) || item.skuId < 1) throw new Error('Invalid guest SKU. Remove it before merging.')
+    if (!Number.isSafeInteger(item.skuId) || item.skuId < 1) throw new Error('访客商品编号无效，请移除后重试合并。')
   }
   const batch = { id: local.guestId, items: local.guestItems.map((i) => ({ ...i, checked: i.checked !== false })) }
   local.pending[owner] = batch

@@ -20,11 +20,12 @@ export default function MemberAddress() {
 
   const loadAddresses = async () => {
     setLoading(true)
+    setError('')
     try {
       const res = await getAddressList({ page: 1, limit: 50 })
       if (res.code === 0) setAddresses(res.page?.list || [])
     } catch (e) {
-      console.error(e)
+      setError(e.message)
     } finally {
       setLoading(false)
     }
@@ -35,7 +36,7 @@ export default function MemberAddress() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.name || !form.phone || !form.detailAddress) {
-      setError('Please fill in all required fields')
+      setError('请填写所有必填项')
       return
     }
     setError('')
@@ -46,7 +47,7 @@ export default function MemberAddress() {
         setForm(EMPTY_FORM)
         loadAddresses()
       } else {
-        setError(res.msg || 'Failed to save')
+        setError(res.msg || '保存失败，请重试')
       }
     } catch (e) {
       setError(e.message)
@@ -54,7 +55,7 @@ export default function MemberAddress() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this address?')) return
+    if (!confirm('确认删除此收货地址？')) return
     try {
       await deleteAddress([id])
       loadAddresses()
@@ -66,37 +67,37 @@ export default function MemberAddress() {
   return (
     <div className="container" style={{ paddingTop: 16, paddingBottom: 40 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 className="page-title" style={{ margin: 0, border: 'none' }}>Shipping addresses</h1>
+        <h1 className="page-title" style={{ margin: 0, border: 'none' }}>收货地址</h1>
         <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : '+ Add address'}
+          {showForm ? '取消' : '新增地址'}
         </button>
       </div>
 
       {showForm && (
         <form className="address-form" onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
           <div className="form-group">
-            <label>Recipient</label>
-            <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <label htmlFor="address-name">收件人</label>
+            <input id="address-name" required className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Phone</label>
-            <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <label htmlFor="address-phone">手机号</label>
+            <input id="address-phone" required className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Province</label>
-            <input className="input" value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} />
+            <label htmlFor="address-province">省份</label>
+            <input id="address-province" required className="input" value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>City</label>
-            <input className="input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            <label htmlFor="address-city">城市</label>
+            <input id="address-city" required className="input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>District</label>
-            <input className="input" value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} />
+            <label htmlFor="address-region">区县</label>
+            <input id="address-region" required className="input" value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Street address</label>
-            <input className="input" value={form.detailAddress} onChange={(e) => setForm({ ...form, detailAddress: e.target.value })} />
+            <label htmlFor="address-detailAddress">详细地址</label>
+            <input id="address-detailAddress" required className="input" value={form.detailAddress} onChange={(e) => setForm({ ...form, detailAddress: e.target.value })} />
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, marginBottom: 16 }}>
             <input
@@ -104,15 +105,16 @@ export default function MemberAddress() {
               checked={form.defaultStatus === 1}
               onChange={(e) => setForm({ ...form, defaultStatus: e.target.checked ? 1 : 0 })}
             />
-            Set as default address
+            设为默认地址
           </label>
           {error && <div className="error-msg">{error}</div>}
-          <button type="submit" className="btn btn-primary">Save</button>
+          <button type="submit" className="btn btn-primary">保存</button>
         </form>
       )}
+      {!showForm && error && <div role="alert" className="error-msg">{error}<button className="btn btn-outline" onClick={loadAddresses}>重试加载地址</button></div>}
 
       {loading ? (
-        <div className="loading">Loading...</div>
+        <div className="loading">正在加载…</div>
       ) : addresses.length > 0 ? (
         <div className="address-list">
           {addresses.map((addr) => (
@@ -131,13 +133,13 @@ export default function MemberAddress() {
                 style={{ padding: '4px 12px', fontSize: 12 }}
                 onClick={() => handleDelete(addr.id)}
               >
-                Delete
+                删除
               </button>
             </div>
           ))}
         </div>
-      ) : (
-        <div className="empty-state card" style={{ padding: 40 }}>No shipping addresses yet</div>
+      ) : error ? null : (
+        <div className="empty-state card" style={{ padding: 40 }}>暂无收货地址</div>
       )}
     </div>
   )

@@ -26,7 +26,7 @@ request.interceptors.response.use(
     if (data?.csrfToken) csrfToken = data.csrfToken
     if (response.config.url.endsWith('/logout')) csrfToken = null
     if (data?.code !== undefined && data.code !== 0) {
-      const error = new Error(data.msg || 'Request failed')
+      const error = new Error(data.msg || '请求失败，请重试')
       error.status = data.code
       return Promise.reject(error)
     }
@@ -39,9 +39,9 @@ request.interceptors.response.use(
       window.dispatchEvent(new Event('gulimall:unauthorized'))
     }
     const failure = new Error(error.response?.data?.msg || (status >= 500
-      ? 'The service is temporarily unavailable. Please retry.'
-      : error.code === 'ECONNABORTED' ? 'The request timed out. Please retry.'
-        : error.message || 'Unable to connect. Please retry.'))
+      ? '服务暂不可用，请稍后重试。'
+      : error.code === 'ECONNABORTED' ? '请求超时，请查询原操作后再重试。'
+        : error.message || '连接失败，请重试。'))
     failure.status = status
     return Promise.reject(failure)
   }

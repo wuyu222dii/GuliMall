@@ -9,7 +9,7 @@ const local = () => readGuest(localStorage.getItem(storageKey))
 const saveLocal = (data) => localStorage.setItem(storageKey, JSON.stringify(data))
 const locked = (action, required = false) => {
   if (navigator.locks) return navigator.locks.request(storageKey, action)
-  if (required) return Promise.reject(new Error('This browser cannot safely merge carts. Your local copy is kept; use a browser supporting Web Locks.'))
+  if (required) return Promise.reject(new Error('当前浏览器无法安全合并购物车，本地副本已保留，请使用支持 Web Locks 的浏览器。'))
   return Promise.resolve().then(action)
 }
 let generation = 0
@@ -29,7 +29,7 @@ export const useCartStore = create((set, get) => ({
     const owner = get().owner, revision = generation
     if (flight?.owner === owner) return flight.promise
     if (owner === 'admin') {
-      set({ items: [], loading: false, error: 'Use a member account to shop. Administrator sessions cannot own member carts.', readyToCheckout: false })
+      set({ items: [], loading: false, error: '请使用会员账号购物，管理员账号不使用会员购物车。', readyToCheckout: false })
       return Promise.resolve(false)
     }
     set({ loading: true, error: '', readyToCheckout: false })
@@ -42,7 +42,7 @@ export const useCartStore = create((set, get) => ({
             try {
               const result = await getSkuInfo(saved.skuId)
               const reason = unavailableReason(result.item)
-              return { ...saved, ...result.item.info, count: saved.count, checked: saved.checked !== false, status: reason ? 'UNAVAILABLE' : 'AVAILABLE', message: reason || 'Available' }
+              return { ...saved, ...result.item.info, count: saved.count, checked: saved.checked !== false, status: reason ? 'UNAVAILABLE' : 'AVAILABLE', message: reason || '可购买' }
             } catch (e) { return { ...saved, price: null, status: e.status === 404 ? 'DELETED' : 'SERVICE_UNAVAILABLE', message: e.message } }
           }))
           if (active()) { const totals = cartTotals(items); set({ items, totalAmount: totals.totalAmount, readyToCheckout: totals.readyToCheckout }) }
@@ -81,9 +81,9 @@ export const useCartStore = create((set, get) => ({
     return promise
   },
   mutate: async (remote, guest) => {
-    if (get().busy || get().loading) throw new Error('Cart is synchronizing. Please wait and retry.')
+    if (get().busy || get().loading) throw new Error('购物车同步中，请稍后重试。')
     const owner = get().owner, revision = generation
-    if (owner === 'admin') throw new Error('Use a member account to shop.')
+    if (owner === 'admin') throw new Error('请使用会员账号购物。')
     set({ busy: true, error: '', readyToCheckout: false })
     try {
       if (owner === 'guest') await locked(() => { const value = local(); guest(value.guestItems, value); value.guestId = crypto.randomUUID(); saveLocal(value) })
@@ -99,7 +99,7 @@ export const useCartStore = create((set, get) => ({
     return get().mutate((owner) => api.addCart(owner, sku.skuId, count), (items) => {
       const existing = items.find((i) => i.skuId === sku.skuId)
       if (existing) { validQuantity(existing.count + count); existing.count += count }
-      else { if (items.length >= 100) throw new Error('Cart holds at most 100 SKUs.'); items.push({ skuId: sku.skuId, skuName: sku.skuName || sku.skuTitle, skuDefaultImg: sku.skuDefaultImg, price: sku.price, count, checked: true }) }
+      else { if (items.length >= 100) throw new Error('购物车最多保存 100 个 SKU。'); items.push({ skuId: sku.skuId, skuName: sku.skuName || sku.skuTitle, skuDefaultImg: sku.skuDefaultImg, price: sku.price, count, checked: true }) }
     })
   },
   updateCount: async (skuId, count) => { validQuantity(count); return get().mutate((owner) => api.updateCartCount(owner, skuId, count), (items) => { const item = items.find((i) => i.skuId === skuId); if (item) item.count = count }) },
@@ -107,10 +107,10 @@ export const useCartStore = create((set, get) => ({
   removeItem: (skuId) => get().mutate((owner) => api.removeCart(owner, skuId), (items, data) => { data.guestItems = items.filter((i) => i.skuId !== skuId) }),
   clearCart: () => get().mutate(api.clearCart, (_, data) => { data.guestItems = [] }),
   selected: async () => {
-    if (get().owner === 'guest' || get().owner === 'admin') throw new Error('Sign in with a member account to check out.')
+    if (get().owner === 'guest' || get().owner === 'admin') throw new Error('请使用会员账号登录后结算。')
     const owner = get().owner
     await get().refresh()
-    if (get().owner !== owner || get().busy || get().error || get().pendingCount) throw new Error('Refresh the cart and finish guest-cart merging first.')
+    if (get().owner !== owner || get().busy || get().error || get().pendingCount) throw new Error('请先刷新购物车并完成访客合并。')
     return (await api.getSelected(owner)).cart
   },
 }))

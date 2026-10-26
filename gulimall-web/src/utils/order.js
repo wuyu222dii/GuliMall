@@ -8,6 +8,6 @@ export function orderAttributes(value) {
       if (text) return text
     }
   } catch { /* Old or incomplete snapshots remain visible without exposing raw metadata. */ }
-  return 'Specifications unavailable'
+  return '规格暂不可用'
 }
-export const orderTime = (value) => !value ? '—' : Number.isNaN(new Date(value).getTime()) ? 'Time unavailable' : new Date(value).toLocaleString()
+export const orderTime = (value) => !value ? '—' : Number.isNaN(new Date(value).getTime()) ? '时间暂不可用' : new Date(value).toLocaleString('zh-CN')

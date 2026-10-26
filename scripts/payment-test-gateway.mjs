@@ -57,7 +57,7 @@ export async function createPaymentGateway({ config, port = 0, dataFile } = {}) 
     const signature = options.badResponseSignature ? Buffer.from('bad signature').toString('base64') : signed(JSON.stringify(data))
     res.writeHead(200, { 'Content-Type': 'application/json;charset=UTF-8' }); res.end(JSON.stringify({ [method.replaceAll('.', '_') + '_response']: data, sign: signature }))
   }
-  const page = (res, html, status = 200) => { res.writeHead(status, { 'Content-Type': 'text/html;charset=UTF-8', 'Cache-Control': 'no-store' }); res.end(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Local payment verification</title><style>body{font:16px/1.6 system-ui;margin:24px;max-width:700px;color:#222}button,a{font:inherit;padding:10px 16px}strong{color:#b51e24}input{font:inherit}</style><body><h1>Local payment verification</h1><p><strong>This is not Alipay sandbox. No real funds or account are used.</strong></p>${html}</body></html>`) }
+  const page = (res, html, status = 200) => { res.writeHead(status, { 'Content-Type': 'text/html;charset=UTF-8', 'Cache-Control': 'no-store' }); res.end(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>本地模拟付款</title><style>body{font:16px/1.6 system-ui;margin:24px;max-width:700px;color:#222}button,a{font:inherit;padding:10px 16px}strong{color:#b51e24}input{font:inherit}</style><body><h1>本地模拟付款</h1><p><strong>当前为本地模拟付款，不是支付宝沙箱，不使用真实资金或账号。</strong></p>${html}</body></html>`) }
   const server = createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://127.0.0.1'), chunks = []
@@ -85,10 +85,10 @@ export async function createPaymentGateway({ config, port = 0, dataFile } = {}) 
         if (params.method === 'alipay.trade.page.pay') {
           if (biz.seller_id !== config.sellerId || !/^\d+(\.\d{1,2})?$/.test(biz.total_amount || '') || !biz.time_expire) throw new Error('Invalid signed business fields')
           if(dataFile&&(params.notify_url!==config.notifyUrl||params.return_url!==config.returnUrl+(config.returnUrl.includes('?')?'&':'?')+'orderSn='+sn))throw new Error('Persistent simulation addresses do not match the local configuration')
-          if (existing?.state === 'TRADE_CLOSED') { page(res, '<p>Trade already closed. Return to the original order.</p>', 409); return }
+          if (existing?.state === 'TRADE_CLOSED') { page(res, '<p>交易已关闭，请返回原订单。</p>', 409); return }
           if (existing&&['TRADE_SUCCESS','TRADE_FINISHED'].includes(existing.state)) {page(res,`<p>此订单已完成模拟付款。</p><a href="${escape(existing.returnUrl)}">返回订单</a>`);return}
           const trade = put(sn, { amount: Number(biz.total_amount).toFixed(2), subject: biz.subject, expiresAt: biz.time_expire, notifyUrl: params.notify_url, returnUrl: params.return_url })
-          page(res, `<p>Order: ${escape(sn)}</p><p>Total: ¥${escape(trade.amount)}</p><p>${escape(trade.subject)}</p><form method="post" action="/checkout/${sn}/pay"><input type="hidden" name="nonce" value="${trade.nonce}"><button type="submit">确认模拟付款</button></form><form method="post" action="/checkout/${sn}/fail"><input type="hidden" name="nonce" value="${trade.nonce}"><button type="submit">模拟付款失败</button></form><p><a href="${escape(trade.returnUrl)}">返回订单（不付款）</a></p>`); return
+          page(res, `<p>订单号：${escape(sn)}</p><p>合计：¥${escape(trade.amount)}</p><p>${escape(trade.subject)}</p><form method="post" action="/checkout/${sn}/pay"><input type="hidden" name="nonce" value="${trade.nonce}"><button type="submit">确认模拟付款</button></form><form method="post" action="/checkout/${sn}/fail"><input type="hidden" name="nonce" value="${trade.nonce}"><button type="submit">模拟付款失败</button></form><p><a href="${escape(trade.returnUrl)}">返回订单（不付款）</a></p>`); return
         }
         if (!existing) { reply(res, params.method, { code: '40004', msg: 'Business Failed', sub_code: 'ACQ.TRADE_NOT_EXIST', sub_msg: 'Local fixture trade absent' }); return }
         if (params.method === 'alipay.trade.query') {
@@ -110,14 +110,14 @@ export async function createPaymentGateway({ config, port = 0, dataFile } = {}) 
         const trade = trades.get(payment[1]), fields = new URLSearchParams(raw)
         if (!trade || fields.get('nonce') !== trade.nonce) throw new Error('Unknown local payment')
         if(['TRADE_SUCCESS','TRADE_FINISHED'].includes(trade.state)){res.writeHead(303,{Location:trade.returnUrl});res.end();return}
-        if (trade.state === 'TRADE_CLOSED' || trade.expiresAt && trade.expiresAt <= providerTime()) { page(res, '<p>The local trade has expired or closed.</p>', 409); return }
+        if (trade.state === 'TRADE_CLOSED' || trade.expiresAt && trade.expiresAt <= providerTime()) { page(res, '<p>模拟交易已到期或已关闭。</p>', 409); return }
         if(options.down){res.writeHead(503);res.end('local provider unavailable');return}
         if(payment[2]==='fail'){page(res,`<p>模拟支付失败。订单仍待付款，可返回后重试或取消。</p><a href="${escape(trade.returnUrl)}">返回订单</a>`);return}
         put(trade.orderSn,{state:'TRADE_SUCCESS',paidAt:trade.paidAt||providerTime(),notifyAcknowledged:false})
         if (!options.skipNotify) { try { await notify(trade.orderSn) } catch { /* The application's verified query is exercised as fallback. */ } }
         res.writeHead(303, { Location: trade.returnUrl }); res.end(); return
       }
-      page(res, '<p>Open a signed form from the local GuliMall payment page.</p>')
+      page(res, '<p>请从商城付款页打开已签名的模拟付款表单。</p>')
     } catch { if (!res.headersSent) { res.writeHead(storageFailed?503:400); res.end(storageFailed?'Local payment storage unavailable':'Invalid local test request') } else res.end() }
   })
   server.on('connection', socket => { sockets.add(socket); socket.on('close', () => sockets.delete(socket)) })

@@ -18,5 +18,5 @@ test('selected totals handle decimal prices, invalid items and quantity boundari
   assert.equal(cartTotals([{count:1,checked:true,price:null,status:'DELETED'}]).totalAmount,null)
   for (const count of [0,-1,1.5,1000,NaN]) assert.throws(()=>validQuantity(count))
   assert.throws(()=>readGuest('broken'),SyntaxError)
-  assert.throws(()=>readGuest('{"version":3,"guestItems":[{"skuId":1,"count":2}]}'),/unreadable/)
+  assert.throws(()=>readGuest('{"version":3,"guestItems":[{"skuId":1,"count":2}]}'),/无法读取/)
 })

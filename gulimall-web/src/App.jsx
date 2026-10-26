@@ -19,14 +19,16 @@ import AdminCatalog from './pages/admin/AdminCatalog'
 import AdminProcurement from './pages/admin/AdminProcurement'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminSearchSync from './pages/admin/AdminSearchSync'
+import PageErrorBoundary from './components/PageErrorBoundary'
 
 export default function App() {
   const { ready, error, initialize } = useAuthStore()
   useEffect(() => { initialize() }, [initialize])
   return (
     <BrowserRouter>
-      {!ready ? <div className="loading container">Checking session…</div> : <>
-      {error && <div className="error-msg" role="alert">{error} <button className="btn btn-outline" onClick={initialize}>Retry</button></div>}
+      <PageErrorBoundary>
+      {!ready ? <div className="loading container">正在核对登录状态…</div> : <>
+      {error && <div className="error-msg" role="alert">{error} <button className="btn btn-outline" onClick={initialize}>重试</button></div>}
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
@@ -35,6 +37,7 @@ export default function App() {
           <Route path="cart" element={<Cart />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="*" element={<main className="catalog-page"><h1>页面不存在</h1><p>请检查地址，或返回首页继续浏览。</p><a className="btn btn-primary" href="/">返回首页</a></main>} />
           <Route path="admin/login" element={<Login />} />
           <Route element={<AdminRoute />}>
             <Route path="admin" element={<AdminLayout />}>
@@ -58,6 +61,7 @@ export default function App() {
         </Route>
       </Routes>
       </>}
+      </PageErrorBoundary>
     </BrowserRouter>
   )
 }

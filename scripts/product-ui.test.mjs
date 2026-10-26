@@ -5,11 +5,11 @@ import { IMAGE_FALLBACK, leafCategories, productImage, unavailableReason } from 
 test('purchase controls require a published product, a real price and known stock', () => {
   const item = { onSale: true, hasStock: true, info: { price: '19.99' } }
   assert.equal(unavailableReason(item), '')
-  assert.match(unavailableReason({ ...item, hasStock: null }), /Stock is unavailable/)
-  assert.match(unavailableReason({ ...item, hasStock: false }), /out of stock/)
-  assert.match(unavailableReason({ ...item, onSale: false }), /off shelf/)
-  assert.match(unavailableReason({ ...item, info: { price: null } }), /Price is unavailable/)
-  assert.match(unavailableReason({ ...item, info: { price: -1 } }), /Price is unavailable/)
+  assert.match(unavailableReason({ ...item, hasStock: null }), /库存暂不可用/)
+  assert.match(unavailableReason({ ...item, hasStock: false }), /缺货/)
+  assert.match(unavailableReason({ ...item, onSale: false }), /下架/)
+  assert.match(unavailableReason({ ...item, info: { price: null } }), /价格暂不可用/)
+  assert.match(unavailableReason({ ...item, info: { price: -1 } }), /价格暂不可用/)
 })
 test('catalog labels use category names and image fallback stays local', () => {
   assert.deepEqual(leafCategories([{ catId: 1, name: '数码', catLevel: 1, children: [

@@ -3,8 +3,8 @@ import { IMAGE_FALLBACK, productImage } from '../utils/product'
 
 export default function ProductCard({ product }) {
   const img = productImage(product.skuDefaultImg)
-  const name = product.skuTitle || product.skuName || 'Product'
-  const price = product.price == null ? 'Price unavailable' : Number(product.price).toFixed(2)
+  const name = product.skuTitle || product.skuName || '商品'
+  const price = product.price == null ? '价格暂不可用' : Number(product.price).toFixed(2)
 
   return (
     <Link to={`/product/${product.skuId}`} className="product-card">

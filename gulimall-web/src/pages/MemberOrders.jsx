@@ -36,24 +36,24 @@ export default function MemberOrders() {
     setBusy(true); setError(''); setNotice('')
     try {
       const res = await (action.type === 'cancel' ? cancelOrder(user.id, action.id) : receiveOrder(user.id, action.id))
-      if (useAuthStore.getState().user?.id === user.id) { setNotice(`Order status: ${orderStatuses[res.order.status]}. ${res.order.status === 8 ? 'Payment closure is not confirmed. Inventory stays reserved; refresh later.' : ''}`); setRetry((value) => value + 1) }
-    } catch (e) { setError(`${e.message} Refresh the original order before retrying.`) }
+      if (useAuthStore.getState().user?.id === user.id) { setNotice(`订单状态： ${orderStatuses[res.order.status]}. ${res.order.status === 8 ? '付款关闭结果尚未确认，库存仍被锁定，请稍后刷新。' : ''}`); setRetry((value) => value + 1) }
+    } catch (e) { setError(`${e.message} 请先刷新原订单再重试。`) }
     finally { setBusy(false); setAction(null) }
   }
   return <div className="container catalog-page">
-    <div className="admin-toolbar"><h1 className="page-title">My orders</h1><button className="btn btn-outline" disabled={loading || busy} onClick={() => setRetry((value) => value + 1)}>Refresh orders</button></div>
+    <div className="admin-toolbar"><h1 className="page-title">我的订单</h1><button className="btn btn-outline" disabled={loading || busy} onClick={() => setRetry((value) => value + 1)}>刷新订单</button></div>
     {error && <p className="error-msg" role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
-    {loading ? <p role="status">Loading orders…</p> : orders.length ? orders.map((order) => <section className="card order-summary" key={order.id}>
-      <h2>{orderStatuses[order.status] || 'Unknown'}</h2><p className="order-number">Order No.: {order.orderSn}</p><p>Total: ¥{Number(order.payAmount).toFixed(2)}</p><p>Recipient: {order.receiverName} · {orderTime(order.createTime)}</p>
+    {loading ? <p role="status">正在加载订单…</p> : orders.length ? orders.map((order) => <section className="card order-summary" key={order.id}>
+      <h2>{orderStatuses[order.status] || '未知状态'}</h2><p className="order-number">订单号： {order.orderSn}</p><p>合计：¥{Number(order.payAmount).toFixed(2)}</p><p>收件人： {order.receiverName} · {orderTime(order.createTime)}</p>
       {order.failureReason && <p>{order.failureReason}</p>}
-      <div className="admin-actions"><button className="btn btn-outline" disabled={busy} onClick={() => show(order.id)}>View order {order.orderSn}</button>
-        {[0, 8].includes(order.status) && <button className="btn btn-outline" disabled={busy} onClick={() => setAction({ id: order.id, type: 'cancel' })}>{order.status === 8 ? 'Retry cancellation check' : 'Cancel unpaid order'}</button>}
-        {order.status === 2 && <button className="btn btn-primary" disabled={busy} onClick={() => setAction({ id: order.id, type: 'receive' })}>Confirm receipt</button>}</div>
-      {action?.id === order.id && <div className="admin-confirm"><p>{action.type === 'cancel' ? 'Cancel this unpaid order? Stock is released only after the payment closure is confirmed. If payment already succeeded, the paid order is kept.' : 'Confirm that you have received this package? This completes the order.'}</p><div className="admin-actions"><button className="btn btn-primary" disabled={busy} onClick={perform}>{busy ? 'Checking…' : action.type === 'cancel' ? 'Confirm cancellation' : 'Confirm package received'}</button><button className="btn btn-outline" disabled={busy} onClick={() => setAction(null)}>Go back</button></div></div>}
-      {[0, 1, 4, 8, 9].includes(order.status) && <p><Link className="btn btn-outline" to={`/payment/${order.orderSn}`}>Payment / inventory status</Link></p>}
+      <div className="admin-actions"><button className="btn btn-outline" disabled={busy} onClick={() => show(order.id)}>查看订单 {order.orderSn}</button>
+        {[0, 8].includes(order.status) && <button className="btn btn-outline" disabled={busy} onClick={() => setAction({ id: order.id, type: 'cancel' })}>{order.status === 8 ? '重试取消确认' : '取消待付款订单'}</button>}
+        {order.status === 2 && <button className="btn btn-primary" disabled={busy} onClick={() => setAction({ id: order.id, type: 'receive' })}>确认收货</button>}</div>
+      {action?.id === order.id && <div className="admin-confirm"><p>{action.type === 'cancel' ? '确认取消此待付款订单？只有确认未付款关闭后才会释放库存；已付款订单会保留。' : '确认已收到包裹？确认后订单将完成。'}</p><div className="admin-actions"><button className="btn btn-primary" disabled={busy} onClick={perform}>{busy ? '正在校验…' : action.type === 'cancel' ? '确认取消' : '确认已收到包裹'}</button><button className="btn btn-outline" disabled={busy} onClick={() => setAction(null)}>返回</button></div></div>}
+      {[0, 1, 4, 8, 9].includes(order.status) && <p><Link className="btn btn-outline" to={`/payment/${order.orderSn}`}>付款 / 库存状态</Link></p>}
       {detail?.order.id === order.id && <OrderDetails detail={detail} />}
-    </section>) : !error && <div className="empty-state card"><p>No orders yet</p><Link className="btn btn-primary" to="/search">Go shopping</Link></div>}
-    {totalPage > 1 && <div className="pagination"><button disabled={page <= 1 || loading || busy} onClick={() => setPage(page - 1)}>Previous</button><span>{page} / {totalPage}</span><button disabled={page >= totalPage || loading || busy} onClick={() => setPage(page + 1)}>Next</button></div>}
+    </section>) : !error && <div className="empty-state card"><p>暂无订单</p><Link className="btn btn-primary" to="/search">去选购</Link></div>}
+    {totalPage > 1 && <div className="pagination"><button disabled={page <= 1 || loading || busy} onClick={() => setPage(page - 1)}>上一页</button><span>{page} / {totalPage}</span><button disabled={page >= totalPage || loading || busy} onClick={() => setPage(page + 1)}>下一页</button></div>}
   </div>
 }

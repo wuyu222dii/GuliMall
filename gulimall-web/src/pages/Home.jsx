@@ -32,7 +32,7 @@ export default function Home() {
         if (advRes.status === 'fulfilled' && advRes.value?.code === 0) {
           setBanners(advRes.value.page?.list || [])
         }
-        if (catData.status === 'rejected' || skuRes.status === 'rejected') setError('Products could not be loaded. Please retry.')
+        if (catData.status === 'rejected' || skuRes.status === 'rejected') setError('商品加载失败，请重试。')
       } catch (e) {
         console.error(e)
       } finally {
@@ -70,25 +70,25 @@ export default function Home() {
             </div>
           ))}
           {catalog.length === 0 && !loading && (
-            <div className="category-item">No category data available</div>
+            <div className="category-item">暂无分类数据</div>
           )}
         </div>
 
         <div style={{ flex: 1 }}>
           {banners.length > 0 ? (
             <div className="home-banner" style={{ background: '#e4393c' }}>
-              {banners[0].name || 'Gulimall — Quality Products'}
+              {banners[0].name || '谷粒商城 · 品质商品'}
             </div>
           ) : (
-            <div className="home-banner">Gulimall · Quality Living</div>
+            <div className="home-banner">谷粒商城 · 品质生活</div>
           )}
         </div>
       </div>
 
-      <h2 className="section-title">Hot Picks</h2>
+      <h2 className="section-title">商品精选</h2>
       {loading ? (
-        <div className="loading">Loading...</div>
-      ) : error ? <div className="empty-state" role="alert"><p>{error}</p><button className="btn btn-outline" onClick={() => setRetry(retry + 1)}>Retry</button></div> : products.length > 0 ? (
+        <div className="loading">正在加载…</div>
+      ) : error ? <div className="empty-state" role="alert"><p>{error}</p><button className="btn btn-outline" onClick={() => setRetry(retry + 1)}>重试</button></div> : products.length > 0 ? (
         <div className="product-grid">
           {products.map((p) => (
             <ProductCard key={p.skuId} product={p} />
@@ -96,7 +96,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="empty-state">
-          No products are currently available.
+          暂无可售商品。
         </div>
       )}
     </div>

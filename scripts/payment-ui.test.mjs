@@ -1,6 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { paymentTarget, memberRedirect } from '../gulimall-web/src/utils/payment.js'
+import { paymentTarget, memberRedirect, paymentSettled } from '../gulimall-web/src/utils/payment.js'
+test('payment polling stops only for completed orders or confirmed closed releases', () => {
+  assert.equal(paymentSettled({status:3}),true)
+  assert.equal(paymentSettled({status:4,inventoryStatus:2}),true)
+  for(const status of [0,1,2,4,6,7,8,9,undefined])assert.equal(paymentSettled({status,inventoryStatus:0}),false)
+})
 test('payment actions accept only sandbox endpoints or explicitly marked loopback tests', () => {
   assert.ok(paymentTarget('https://openapi-sandbox.dl.alipaydev.com/gateway.do', 'ALIPAY_SANDBOX'))
   assert.ok(paymentTarget('http://127.0.0.1:18170/gateway.do', 'LOCAL_TEST'))

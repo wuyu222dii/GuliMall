@@ -5,10 +5,10 @@ export function productImage(path) {
 }
 
 export function unavailableReason(item) {
-  if (!item?.onSale) return 'This product is off shelf and cannot be purchased.'
-  if (item.info?.price == null || !Number.isFinite(Number(item.info.price)) || Number(item.info.price) < 0) return 'Price is unavailable. Retry before purchasing.'
-  if (item.hasStock === null || item.hasStock === undefined) return 'Stock is unavailable. Retry before purchasing.'
-  return item.hasStock ? '' : 'This product is out of stock.'
+  if (!item?.onSale) return '商品已下架，不能购买。'
+  if (item.info?.price == null || !Number.isFinite(Number(item.info.price)) || Number(item.info.price) < 0) return '价格暂不可用，请刷新后再购买。'
+  if (item.hasStock === null || item.hasStock === undefined) return '库存暂不可用，请刷新后再购买。'
+  return item.hasStock ? '' : '商品缺货。'
 }
 
 export function leafCategories(tree, prefix = '') {
