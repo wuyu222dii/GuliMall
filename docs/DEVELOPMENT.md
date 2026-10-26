@@ -1,6 +1,6 @@
 # 本地开发与运行验收
 
-阶段 0–13 本地验收已通过，真实支付宝沙箱与公网回调仍待补验。日常演示统一使用 `./scripts/simulation.ps1 Start|Stop|Status`，浏览器 8080，持久模拟支付网关 18170；准备好构建产物后无需手工替换支付配置，见 [SIMULATION.md](SIMULATION.md)。独立测试、静态部署、两套交易演示及备份恢复见 [RUNBOOK.md](RUNBOOK.md)。下单见 [ORDERS.md](ORDERS.md)，支付与消息边界见 [PAYMENTS.md](PAYMENTS.md)，履约见 [FULFILLMENT.md](FULFILLMENT.md)，整体进度见 [implementation-plan.md](implementation-plan.md)。
+阶段 0–17 本地验收已通过，真实第三方继续后置。日常演示统一使用 `./scripts/simulation.ps1 Start|Stop|Status|Diagnose`，浏览器 8080，持久模拟支付网关 18170；准备好构建产物后无需手工替换支付配置，见 [SIMULATION.md](SIMULATION.md)。独立测试与备份恢复见 [RUNBOOK.md](RUNBOOK.md)，中文交接见 [DEMO-HANDOFF.md](DEMO-HANDOFF.md)。下单见 [ORDERS.md](ORDERS.md)，支付与消息边界见 [PAYMENTS.md](PAYMENTS.md)，履约见 [FULFILLMENT.md](FULFILLMENT.md)，整体进度见 [implementation-plan.md](implementation-plan.md)。
 
 ## 工具与配置
 
@@ -56,7 +56,8 @@ MySQL 镜像仅在**空数据卷首次初始化**时执行：
 ## 构建与安全检查
 
 ```powershell
-node --test scripts/baseline.test.mjs
+$checks = @(Get-ChildItem scripts -Filter '*.test.mjs' | Select-Object -ExpandProperty FullName)
+node --test @checks
 ./scripts/scripts.test.ps1
 ./scripts/dev.ps1 Build
 ```
@@ -67,8 +68,8 @@ node --test scripts/baseline.test.mjs
 
 新增检查包括：
 
-- Java：认证、商品、图片、搜索、购物车、订单与锁库，以及 RSA2、金额边界、履约门禁、测试环境保护、管理员摘要工具、网关来源限制、短信失败清理和存储替换边界，共 28 项。
-- Node：基线、商品、购物车、支付目标限制、安全回跳、订单详情、真实库名保护、静态部署、模拟台账/重试/拒绝损坏和连续结算，共 18 项。
+- Java：认证、商品、图片、搜索、购物车、订单与锁库，以及 RSA2、金额边界、履约门禁、测试环境保护、管理员摘要工具、网关来源限制、短信失败清理、存储替换及安全处理进度，共 29 项。
+- Node：基线、商品、购物车、支付、安全回跳、订单、真实库名保护、静态部署、模拟台账/重试、诊断、错误边界、trace 脱敏、启动前拒绝与备份审计，共 27 项。先安装锁定的前端开发依赖，默认检查仍不连接业务库。
 - PowerShell：脚本语法、随机凭据、非覆盖初始化、字面值加载、环境优先级和非法配置拒绝。
 
 这些默认检查不连接数据库。阶段 9 起统一以 `./scripts/test.ps1 -Suite All` 运行 68 个业务场景，使用独立 Compose 项目、卷和五个 `_test` 库；会暂停演示环境，结束后恢复。直接向演示库运行 acceptance 脚本会被拒绝。支付使用独立测试密钥与 RabbitMQ 虚拟主机，真实沙箱尚待开通后验收。故障验收必须串行运行，详见 [RUNBOOK.md](RUNBOOK.md)。

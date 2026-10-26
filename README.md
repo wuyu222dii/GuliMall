@@ -2,7 +2,7 @@
 
 Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / Vite 前端。
 
-阶段 0–13 的本地验收已通过，当前提供常驻模拟商城；真实支付宝沙箱及公网回调仍为待补验项。
+阶段 0–17 的本地验收已通过，当前提供中文常驻模拟商城、运行诊断、完整浏览器回归及演示备份只读审计；真实第三方接入继续后置。
 
 已实现管理员录入多 SKU 商品、采购入库、上下架与搜索、会员注册登录、购物车、幂等下单与原子锁库、支付处理、发货和确认收货。金额与归属由服务端校验；订单、库存通过本地事务、持久化事件、幂等消费与扫描补偿恢复。
 
@@ -10,6 +10,7 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 
 - [开发环境、构建与启动说明](docs/DEVELOPMENT.md)
 - [常驻模拟商城：启动、付款、恢复和未来接口替换](docs/SIMULATION.md)
+- [中文演示检查表与交接步骤](docs/DEMO-HANDOFF.md)
 - [独立测试、演示部署、交易演示与备份恢复](docs/RUNBOOK.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
 - [认证接口、管理员配置与安全验收](docs/AUTHENTICATION.md)
@@ -36,6 +37,7 @@ java '-Dloader.main=com.atguigu.gulimall.auth.tool.AdminPasswordTool' -cp gulima
 ./scripts/search-index.ps1
 ./scripts/simulation.ps1 Start
 ./scripts/simulation.ps1 Status
+./scripts/simulation.ps1 Diagnose
 ```
 
 setup.ps1 为 .env 生成随机密码，不覆盖已有配置。默认数据库使用独立的 _demo 后缀，SQL 初始化仅用于空数据卷。停止使用 `./scripts/dev.ps1 Down`，保留数据卷。
@@ -65,7 +67,8 @@ setup.ps1 为 .env 生成随机密码，不覆盖已有配置。默认数据库�
 ## 本地自检
 
 ```powershell
-node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-ui.test.mjs scripts/payment-ui.test.mjs scripts/order-ui.test.mjs scripts/deployment.test.mjs scripts/simulation.test.mjs
+$checks = @(Get-ChildItem scripts -Filter '*.test.mjs' | Select-Object -ExpandProperty FullName)
+node --test @checks
 ./scripts/scripts.test.ps1
 # Windows 重建 jar 前先停止服务。
 ./scripts/simulation.ps1 Stop
@@ -73,11 +76,16 @@ node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-u
 ./scripts/simulation.ps1 Start
 # 串行运行，会暂时停止演示环境，结束后恢复：
 ./scripts/test.ps1 -Suite All
+./scripts/test.ps1 -Suite Diagnostics
+node gulimall-web/node_modules/@playwright/test/cli.js install chromium
+./scripts/test.ps1 -Suite Browser
 ./scripts/test.ps1 -Suite Recovery
 ```
 
-默认检查不连接业务库：28 项 Java、18 项 Node 及 PowerShell 自检；旧手工集成演示的 9 项忽略不计入通过。运行回归覆盖 68 个业务场景，另有浏览器完整交易、自然 30 分钟关单、成功交易、失败补偿和全新实例恢复演练。测试使用独立 gulimall-test 容器/卷和五个 `_test` 库；脚本核对实际数据库，拒绝演示库。测试前暂停常驻模拟环境，结束后恢复原模式；不可与人工演示或另一轮测试并行。
+默认检查不连接业务库：29 项 Java、27 项 Node 及 PowerShell 自检；旧手工集成演示的 9 项忽略不计入通过。运行回归覆盖 68 个业务场景，另有四类诊断故障、连续两轮 Chromium 完整交易与取消、自然 30 分钟关单、成功/失败补偿和全新实例恢复。Browser 使用锁定的开发依赖，缺浏览器或构建产物时在停环境前拒绝，失败保留脱敏截图和动作 trace。测试使用独立 gulimall-test 容器/卷和五个 `_test` 库，拒绝演示库；结束恢复原模拟模式，不清理人工交易。不可与人工演示或另一轮测试并行。
 
 成功/失败交易分别运行 `./scripts/test.ps1 -Suite Success` / `Failure`。演示库冷备份运行 `./scripts/backup.ps1 -Environment Demo`，模拟模式同时暂停网关并保存支付台账；匹配签名密钥须单独私有保管。恢复先在全新实例验证，具体步骤见 [运行手册](docs/RUNBOOK.md)。SQL、Redis、图片、台账与校验清单保存于 Git 忽略的私有目录，不覆盖源数据。
+
+`./scripts/backup-audit.ps1 -Backup <备份目录>` 在临时 MySQL/Redis 中只读核对演示快照、交易关联和数据完整性，不启动业务补偿或覆盖原环境；报告保存在 .tools，结束清理本次实例与卷。
 
 后置内容：真实沙箱与公网回调、真实短信/OSS、技术栈升级、自动退款售后、角色权限和运营报表。当前未提供高可用集群、在线热备或负载容量承诺。

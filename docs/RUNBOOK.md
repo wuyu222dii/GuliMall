@@ -1,8 +1,10 @@
-# 本地验收、演示部署与备份恢复（阶段 9–13）
+# 本地验收、演示部署与备份恢复（阶段 9–17）
 
 保留 Java 8、Boot 2.1.8 和现有分层。真实支付宝沙箱及公网通知仍待账号开通补验；下述端到端交易使用明确标识的 LOCAL_TEST 网关和真实 RSA2 验签，不使用真实资金。短信为开发验证码，图片为本地文件。物流仅记录公司和运单号，不接轨迹、自动退款、多商户、集群或 Kubernetes。
 
 日常模拟操作、付款失败/放弃、自然期限检查、数据路径和未来替换接口见 [SIMULATION.md](SIMULATION.md)。模拟启动配置独立保管，不修改根目录 `.env`；本轮没有真实服务或公网接入。
+
+阶段 14–17 的中文操作检查表见 [DEMO-HANDOFF.md](DEMO-HANDOFF.md)。消费者主线、错误恢复与订单状态提示已统一中文；后台订单详情可查看白名单处理进度，模拟命令支持逐项 Diagnose 与 JSON。
 
 ## 从空环境启动
 
@@ -34,7 +36,8 @@ java '-Dloader.main=com.atguigu.gulimall.auth.tool.AdminPasswordTool' -cp gulima
 mvn -B clean install
 npm --prefix gulimall-web run lint
 npm --prefix gulimall-web run build
-node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-ui.test.mjs scripts/payment-ui.test.mjs scripts/order-ui.test.mjs scripts/deployment.test.mjs scripts/simulation.test.mjs
+$checks = @(Get-ChildItem scripts -Filter '*.test.mjs' | Select-Object -ExpandProperty FullName)
+node --test @checks
 ./scripts/scripts.test.ps1
 ./scripts/simulation.ps1 Start
 ```
@@ -47,6 +50,9 @@ node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-u
 ./scripts/test.ps1 -Suite All
 # 单项：Auth / Product / Admin / Search / Cart / Order / Payment / Fulfillment
 ./scripts/test.ps1 -Suite Fulfillment
+./scripts/test.ps1 -Suite Diagnostics
+node gulimall-web/node_modules/@playwright/test/cli.js install chromium
+./scripts/test.ps1 -Suite Browser
 ```
 
 脚本生成私有 `.tools/test/environment.json`（独立随机数据库/Redis/RabbitMQ 密码和内部令牌）、test_admin 测试管理员配置，以及派生的 `_test` 建表/种子脚本。测试管理员密码 Demo12345! 仅用于隔离的本机测试环境。test profile 指向 pms/sms/ums/oms/wms 五个 `_test` 库，源码中的默认 `_demo` 数据源不变。
@@ -54,6 +60,8 @@ node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-u
 测试使用独立 Compose 项目 **gulimall-test**、网络、六个持久卷、MySQL/Redis/Nacos/ES/RabbitMQ 容器和 `.data/test-uploads`，不复用演示数据。为适配本机资源并保留原脚本端口，运行期间暂停演示 JVM 和容器；如果原环境是模拟模式，也暂停静态入口和模拟网关，finally 恢复原模拟模式及调用者环境变量。不要与人工演示、另一轮验收或 IDE 启动的服务并行。未被 services.ps1 管理的 JVM 须自行停止，测试不能占用别的程序端口。
 
 68 个既有业务场景串行执行，故障场景不跳过，日志在 `.tools/test/<suite>.log`。包括身份与地址归属、金额、并发锁库、支付验签和重复通知、付款/关单竞争、发货门禁、重复收货、响应丢失、杀进程、Redis/ES/RabbitMQ 停止及恢复。旧的直接 `node ...acceptance.mjs` 演示库入口已关闭，统一使用 test.ps1。
+
+Diagnostics 另行验证 ES、RabbitMQ、仓储与模拟网关停止/恢复定位。Browser 另行串行运行两轮完整页面交易及取消，用不同会员与商品核对库存、金额、隔离、终态停止轮询及 375px 页面。依赖、脱敏 artifact 和失败恢复说明见 [SIMULATION.md](SIMULATION.md)。三类套件均不连接演示库，不并行执行。
 
 测试卷保留，便于排错和重复运行；业务脚本清理各自临时夹具。不要把测试配置复制到 .env。源码基线变化后如确需重建测试库，先保存诊断，仅对确认属于 gulimall-test 的测试卷处理；不要删除演示卷。
 
@@ -103,6 +111,17 @@ Recovery 命令自动执行上述过程：将失败场景“已关闭但尚未�
 
 自动恢复脚本只接受 Test 备份和独立测试环境。临时恢复容器/卷在 finally 清理，原测试和演示数据均不覆盖；恢复图片目录与日志保留供核对。结果在 `.tools/test/restore-result.json`。这是本机恢复演练，不代表高可用、在线热备或生产灾备承诺。
 
+演示快照还可执行独立只读审计：
+
+```powershell
+# 使用 backup.ps1 输出的实际目录；不会覆盖或切换当前环境。
+./scripts/backup-audit.ps1 -Backup '.data/backups/本次目录'
+```
+
+入口只接受 Demo 模拟备份，先核对五个库、必需文件、路径范围、SHA256 和台账格式。3317/6390 被占用时拒绝，不停止端口所有者。随后在带唯一标签的新 MySQL/Redis 实例导入快照：MySQL 关闭事件调度、启用 read_only/super_read_only，审计账号仅 SELECT；Redis ACL 仅允许读命令。实际验证写入被拒绝后，核对订单金额/明细、库存边界与工作单、付款台账、本地图片引用及哈希、Redis/Session/购物车键数。
+
+审计不启动业务服务、模拟网关或补偿任务；报告保留待付款、处理中和异常状态，pendingReview/pendingOrders 供后续人工核对，不自动改状态或释放库存。Redis 原有 TTL 自然生效，过期 Session 不被复活。临时实例、卷和配置只按本次唯一标签清理，原备份、环境和私有配置保留。报告在 `.tools/gulimall-audit-<编号>.json`，不含密码、Cookie、验证码或消息正文。它核对快照，实际补偿恢复继续用独立 Test 的 Recovery。
+
 ## 常见故障
 
 | 现象 | 检查与恢复 |
@@ -131,3 +150,13 @@ Recovery 已完成成功交易、支付不可用与 broker 中断补偿、冷备
 自然 30 分钟订单未改期限，15:07:33 到期、15:08:05 核对自动关闭/释放成功。演示冷备份包含原人工订单与模拟台账并校验 SHA256；Recovery 已核对同一交易的恢复台账、订单、库存、Session、图片、AOF、事件重放及 ES 重建，报告 simulationPayments=true。常驻模式在测试及备份后恢复。证据索引 `.tools/stage13-evidence.json`，模拟操作见 [SIMULATION.md](SIMULATION.md)。
 
 历史阶段 9 的空订单基线不再表示当前业务数据：本轮专用演示商品、会员、订单及图片有意保留，原始种子库存仍为 10/1、锁定 0。真实第三方和公网仍未接入。
+
+## 阶段 14–17 验收记录（2026-10-26）
+
+当前默认检查：Java 29 项通过、旧 9 项手工演示仍忽略；Node 27 项通过，PowerShell 自检及前端 lint/build 通过。All 原 68 个业务场景通过，最终处理进度时间展示重打包后履约 9 场景复验通过。Diagnostics 在独立环境实际停止并恢复 ES、RabbitMQ、仓储和模拟网关，均定位正确。
+
+Browser 两轮完整页面交易通过（23.0s / 19.2s），含图片、双 SKU、采购、上架、注册、地址、搜索、购物车、付款、发货收货、失败/放弃及取消；另核对连续购买、刷新、会员隔离与 375px。曾发生的测试失败也验证了原模拟模式恢复和脱敏归档；未把失败轮计入通过数。截图与私有场景编号见 output/playwright 和 .tools/test/browser-runs。
+
+新的 Demo 冷备份已在隔离只读实例核对 71 张表、三笔相同交易、两处本地图片引用及 Redis，均一致；临时资源已清理。Test Recovery 再次通过 Session、图片、AOF、付款台账、事件重放与 ES 重建。证据索引 `.tools/stage17-evidence.json`，演示数据、.env 和原模拟密钥保留；常驻 8080 / 18170 恢复健康。
+
+状态机与期限没有变更，沿用阶段 13 自然 30 分钟证据。本轮完成本机步骤核对，未由第二位操作者在全新机器验收；真实平台、公网、多浏览器、实体手机、容量与高可用仍不在通过结论内。

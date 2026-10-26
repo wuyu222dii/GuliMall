@@ -1,6 +1,8 @@
-# 常驻本地模拟商城（阶段 10–13）
+# 常驻本地模拟商城（阶段 10–17）
 
 本轮只使用本机服务：支付为 LOCAL_TEST，验证码为 development，图片真实写入本地。数据库、Redis Session、商品、购物车、订单、库存、消息、发货和收货仍走真实业务逻辑，不通过前端改状态制造成功。不接真实支付宝、短信或 OSS，不开放公网。
+
+从准备到演示、诊断和恢复的统一步骤见 [中文交接检查表](DEMO-HANDOFF.md)，阶段 14–17 的完成与边界见 [迭代计划 v3](03-增长迭代/迭代计划-v3.md)。
 
 ## 启动与停止
 
@@ -99,6 +101,8 @@ Remove-Item Env:GULIMALL_SIMULATION
 私有记录位于 `.tools/simulation/acceptance.json`，含该次模拟会员登录信息，不提交 Git；结果在 natural-expiry.json。已有记录不会被 prepare 覆盖，重复核对用 verify；新一轮需要先保留旧证据并把记录另存，再创建新记录，不删除已有业务数据。
 
 ## 未来替换接口
+
+演示冷备份额外提供 `./scripts/backup-audit.ps1 -Backup '.data/backups/实际目录'`：在临时 MySQL/Redis 只读核对订单、金额、库存工作单、支付台账、图片和 Redis，不启动业务补偿或切换当前环境。校验失败或 3317/6390 占用时拒绝。待处理与异常状态按原值报告；实际恢复补偿继续用 Test 的 Recovery，详细边界见 [运行手册](RUNBOOK.md)。
 
 - 支付保留现有付款/通知/查单/关单接口及 AlipayTemplate；未来独立验证真实沙箱，不把本地网关改标签冒充真实平台。
 - 短信经 SmsSender.send(phone,code,validMinutes) 交付；验证码及频率/有效期/消费仍由认证服务管理。当前只有开发实现，real 模式拒绝启动，失败发送不会返回验证码或留下可用的未送达验证码。
