@@ -4,6 +4,8 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 
 阶段 0–17 的本地验收已通过，当前提供中文常驻模拟商城、运行诊断、完整浏览器回归及演示备份只读审计；真实第三方接入继续后置。
 
+阶段 18 的干净目录构建、环境/配置预检和本机隔离交易及重启已通过；独立机器和第二位操作者验收仍待补，见 [交接准备](docs/HANDOFF-SETUP.md)。
+
 已实现管理员录入多 SKU 商品、采购入库、上下架与搜索、会员注册登录、购物车、幂等下单与原子锁库、支付处理、发货和确认收货。金额与归属由服务端校验；订单、库存通过本地事务、持久化事件、幂等消费与扫描补偿恢复。
 
 短信使用明确标识的开发验证码，图片保存于本地持久目录，模拟付款走 SDK 表单、RSA2 通知和真实订单/库存流程。常驻 LOCAL_TEST 网关保存交易并重试通知，重启后可恢复；无真实资金。普通启动未配置支付凭据时仍不能付款，请使用下面的模拟入口。物流由管理员填写公司与运单号，不接轨迹服务。
@@ -11,6 +13,7 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 - [开发环境、构建与启动说明](docs/DEVELOPMENT.md)
 - [常驻模拟商城：启动、付款、恢复和未来接口替换](docs/SIMULATION.md)
 - [中文演示检查表与交接步骤](docs/DEMO-HANDOFF.md)
+- [干净目录构建、环境预检与本机隔离交接](docs/HANDOFF-SETUP.md)
 - [独立测试、演示部署、交易演示与备份恢复](docs/RUNBOOK.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
 - [认证接口、管理员配置与安全验收](docs/AUTHENTICATION.md)
@@ -82,7 +85,7 @@ node gulimall-web/node_modules/@playwright/test/cli.js install chromium
 ./scripts/test.ps1 -Suite Recovery
 ```
 
-默认检查不连接业务库：29 项 Java、27 项 Node 及 PowerShell 自检；旧手工集成演示的 9 项忽略不计入通过。运行回归覆盖 68 个业务场景，另有四类诊断故障、连续两轮 Chromium 完整交易与取消、自然 30 分钟关单、成功/失败补偿和全新实例恢复。Browser 使用锁定的开发依赖，缺浏览器或构建产物时在停环境前拒绝，失败保留脱敏截图和动作 trace。测试使用独立 gulimall-test 容器/卷和五个 `_test` 库，拒绝演示库；结束恢复原模拟模式，不清理人工交易。不可与人工演示或另一轮测试并行。
+默认检查不连接业务库：29 项 Java、30 项 Node 及 PowerShell 自检；旧手工集成演示的 9 项忽略不计入通过。运行回归覆盖 68 个业务场景，另有四类诊断故障、连续两轮 Chromium 完整交易与取消、自然 30 分钟关单、成功/失败补偿和全新实例恢复。阶段 18 重新执行干净构建、默认检查及独立空环境接口级成功/取消/重启；未重新执行全部 68 场景或浏览器套件。Browser 使用锁定的开发依赖，缺浏览器或构建产物时在停环境前拒绝，失败保留脱敏截图和动作 trace。测试使用独立 gulimall-test 容器/卷和五个 `_test` 库，拒绝演示库；结束恢复原模拟模式，不清理人工交易。不可与人工演示或另一轮测试并行。
 
 成功/失败交易分别运行 `./scripts/test.ps1 -Suite Success` / `Failure`。演示库冷备份运行 `./scripts/backup.ps1 -Environment Demo`，模拟模式同时暂停网关并保存支付台账；匹配签名密钥须单独私有保管。恢复先在全新实例验证，具体步骤见 [运行手册](docs/RUNBOOK.md)。SQL、Redis、图片、台账与校验清单保存于 Git 忽略的私有目录，不覆盖源数据。
 

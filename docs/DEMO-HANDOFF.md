@@ -4,6 +4,8 @@
 
 ## 1. 准备、启动与诊断
 
+阶段 18 的工具准备、结构化预检、Git 干净导出及本机隔离运行步骤见 [HANDOFF-SETUP.md](HANDOFF-SETUP.md)。独立机器与第二位操作者验收仍待补。
+
 1. 首次机器准备按 [开发说明](DEVELOPMENT.md) 配置 JDK 8、Maven、Node/npm 与 Docker Desktop Linux 引擎，完成 setup 和构建；已有库禁止重跑初始化或删卷。
 2. 管理员账号与 BCrypt 摘要在 .env，明文密码由环境所有者私下保管；忘记时使用已提供的交互工具生成新摘要，不能从摘要反推密码。不要使用测试环境配置替换 .env。
 3. 启动 `./scripts/simulation.ps1 Start`，访问 http://127.0.0.1:8080；后台 `/admin`。执行 Status 或 Diagnose，全部就绪再演示。`Diagnose -Json` 提供结构化结果，失败退出 1，输出的恢复命令需操作者按原因执行。
