@@ -11,7 +11,7 @@ await assertTestEnvironment()
 const base = 'http://127.0.0.1:88'
 const label = `stage3_${randomUUID().replaceAll('-', '')}`
 const ids = { categories: [], brands: [], groups: [], attrs: [], warehouses: [], products: [], demands: [], purchases: [] }
-let imageName; let thirdStopped = false
+let imageName, legacyImageName; let thirdStopped = false
 function sql(statement) {
   const result = spawnSync('docker', ['compose', 'exec', '-T', 'mysql', 'sh', '-c', 'MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -ugulimall --default-character-set=utf8mb4 --batch --skip-column-names'], { input: statement, encoding: 'utf8', windowsHide: true })
   assert.equal(result.status, 0, result.stderr || 'Fixture SQL failed')
@@ -79,6 +79,8 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       }
       assert.equal((await member.call('/api/admin/thirdparty/local/images', 'POST', upload())).status, 403)
       assert.equal((await guest.call('/api/admin/thirdparty/local/images', 'POST', upload())).status, 401)
+      assert.equal((await member.call('/api/admin/thirdparty/images', 'POST', upload())).status, 403)
+      assert.equal((await guest.call('/api/admin/thirdparty/images', 'POST', upload())).status, 401)
       assert.equal((await member.call('http://127.0.0.1:30000/local/images', 'POST', upload())).status, 403)
     })
     await t.test('real image bytes are validated, renamed and publicly readable', async () => {
@@ -86,9 +88,12 @@ test('stage 3 administration, local images and procurement acceptance', async (t
         assert.equal((await admin.call('/api/admin/thirdparty/local/images', 'POST', data)).status, 400)
       }
       assert.equal((await admin.call('/api/admin/thirdparty/local/images', 'POST', upload(Buffer.alloc(2 * 1024 * 1024 + 1)))).status, 413)
-      uploaded = (await success('/api/admin/thirdparty/local/images', 'POST', upload(undefined, 'image/png', '../../outside.png'))).url
+      assert.equal((await admin.call('/api/admin/thirdparty/images','POST',upload(Buffer.from('not an image')))).status,400)
+      uploaded = (await success('/api/admin/thirdparty/images', 'POST', upload(undefined, 'image/png', '../../outside.png'))).url
       assert.match(uploaded, /^\/api\/media\/[a-f0-9]{32}\.png$/)
       imageName = uploaded.split('/').at(-1)
+      const legacy=(await success('/api/admin/thirdparty/local/images','POST',upload())).url;legacyImageName=legacy.split('/').at(-1)
+      assert.equal((await fetch(base+legacy)).status,200)
       const response = await fetch(base + uploaded)
       assert.equal(response.status, 200); assert.match(response.headers.get('content-type'), /image\/png/)
       assert.ok((await response.arrayBuffer()).byteLength > 0)
@@ -211,7 +216,7 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       if (kind === 'categories') sql(`DELETE FROM gulimall_pms_test.pms_category WHERE cat_id=${id};`)
     }
     for (const id of ids.warehouses) sql(`DELETE FROM gulimall_wms_test.wms_ware_info WHERE id=${id};`)
-    if (imageName) { assert.match(imageName, /^[a-f0-9]{32}\.png$/); const root = resolve(process.env.UPLOAD_DIR || '.data/uploads'); const path = resolve(root, imageName); assert.equal(dirname(path), root); unlinkSync(path) }
+    for(const name of [imageName,legacyImageName].filter(Boolean)) { assert.match(name, /^[a-f0-9]{32}\.png$/); const root = resolve(process.env.UPLOAD_DIR || '.data/uploads'); const path = resolve(root, name); assert.equal(dirname(path), root); unlinkSync(path) }
     await admin.call('/api/auth/logout', 'POST'); await member.call('/api/auth/logout', 'POST')
   }
 })

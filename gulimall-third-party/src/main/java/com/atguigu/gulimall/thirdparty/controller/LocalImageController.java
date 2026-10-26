@@ -2,6 +2,7 @@ package com.atguigu.gulimall.thirdparty.controller;
 
 import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.thirdparty.component.LocalImageStore;
+import com.atguigu.gulimall.thirdparty.component.ImageUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
@@ -12,9 +13,10 @@ import java.io.IOException;
 @RestController
 public class LocalImageController {
     @Autowired private LocalImageStore images;
-    @PostMapping("/local/images")
+    @Autowired private ImageUploadService uploads;
+    @PostMapping({"/images","/local/images"})
     public R upload(@RequestParam("file") MultipartFile file) throws IOException {
-        return R.ok().put("url", "/api/media/" + images.save(file));
+        return R.ok().put("url", uploads.save(file));
     }
     @GetMapping("/media/{name:.+}")
     public ResponseEntity<FileSystemResource> image(@PathVariable String name) throws IOException {

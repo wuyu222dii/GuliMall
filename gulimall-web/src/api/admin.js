@@ -10,7 +10,7 @@ export const listSkus = (params) => request.get('/api/admin/product/skuinfo/list
 export const uploadImage = (file) => {
   const form = new FormData()
   form.append('file', file)
-  return request.post('/api/admin/thirdparty/local/images', form)
+  return request.post('/api/admin/thirdparty/images', form)
 }
 export const warehouses = () => request.get('/api/admin/ware/wareinfo/list', { params: { page: 1, limit: 100 } })
 export const saveWarehouse = (data) => request.post('/api/admin/ware/wareinfo/save', data)
