@@ -44,6 +44,9 @@ export async function createPaymentGateway({ config, port = 0 } = {}) {
       const url = new URL(req.url, 'http://127.0.0.1'), chunks = []
       for await (const chunk of req) { chunks.push(chunk); if (chunks.reduce((sum, item) => sum + item.length, 0) > 262144) throw new Error('Request too large') }
       const raw = Buffer.concat(chunks).toString('utf8')
+      if (url.pathname === '/health' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ mode: 'LOCAL_TEST', ready: true, persistent: false })); return
+      }
       if (url.pathname === '/control') {
         if (req.headers.authorization !== 'Bearer ' + config.controlToken) { res.writeHead(403); res.end(); return }
         const command = raw ? JSON.parse(raw) : {}

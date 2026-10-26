@@ -28,6 +28,7 @@ function Wait-TestServices {
 }
 Push-Location $taskRoot
 $taskStopped=$false
+$taskResumeSimulation=(Test-Path .tools/simulation/state.json) -and (Get-Content .tools/simulation/state.json -Raw|ConvertFrom-Json).active
 try {
     . "$PSScriptRoot/env.ps1"
     foreach($taskOverride in @('SPRING_APPLICATION_JSON','SPRING_CONFIG_LOCATION','SPRING_CONFIG_ADDITIONAL_LOCATION','SPRING_DATASOURCE_URL')){if([Environment]::GetEnvironmentVariable($taskOverride,'Process')){throw "Clear $taskOverride before isolated tests; externally supplied service configuration is not accepted"}}
@@ -52,8 +53,8 @@ try {
     $taskAdminPath=Join-Path $taskDirectory 'admin-access.json'
     [IO.File]::WriteAllText($taskAdminPath,(@{username=$taskConfig.ADMIN_USER;password=$taskConfig.ADMIN_TEST_PASSWORD} | ConvertTo-Json),(New-Object Text.UTF8Encoding($false)))
     $env:COMPOSE_FILE=Join-Path $taskRoot 'compose.yaml';$env:COMPOSE_PROJECT_NAME='gulimall-demo'
-    & "$PSScriptRoot/services.ps1" Stop
     $taskStopped=$true
+    if($taskResumeSimulation){& "$PSScriptRoot/simulation.ps1" Stop}else{& "$PSScriptRoot/services.ps1" Stop}
     Docker-Checked -Arguments @('compose','stop')
     foreach($taskProperty in $taskConfig.PSObject.Properties) { [Environment]::SetEnvironmentVariable($taskProperty.Name,[string]$taskProperty.Value,'Process') }
     $env:COMPOSE_FILE=(Join-Path $taskRoot 'compose.yaml')+';'+(Join-Path $taskRoot 'infra/compose.test.yaml')
@@ -99,7 +100,7 @@ try {
             . "$PSScriptRoot/env.ps1"
             $env:COMPOSE_FILE=Join-Path $taskRoot 'compose.yaml';$env:COMPOSE_PROJECT_NAME='gulimall-demo'
             Docker-Checked -Arguments @('compose','up','-d','--wait','--wait-timeout','300')
-            & "$PSScriptRoot/services.ps1" Start
+            if($taskResumeSimulation){& "$PSScriptRoot/simulation.ps1" Start}else{& "$PSScriptRoot/services.ps1" Start}
         }
     } finally {
         Restore-Environment
