@@ -74,10 +74,17 @@ Diagnose 只读检查 Docker、五项容器、十个服务的注册与端口、�
 node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-ui.test.mjs scripts/payment-ui.test.mjs scripts/order-ui.test.mjs scripts/deployment.test.mjs scripts/simulation.test.mjs
 ./scripts/scripts.test.ps1
 ./scripts/test.ps1 -Suite All
+./scripts/test.ps1 -Suite Browser
 ./scripts/test.ps1 -Suite Recovery
 ```
 
 运行验收期间会暂停常驻环境；独立 gulimall-test 和 `_test` 库执行结束后，恢复调用前的模拟模式。不要与人工操作或另一轮验收并行。Recovery 的两套交易现在也使用持久台账，冷备份前暂停网关，在全新实例恢复后核对付款、关闭和库存结果。测试用台账在 `.data/test-simulation`，与常驻台账分离，测试恢复不读取演示签名密钥。
+
+Browser 使用锁定的开发依赖 @playwright/test 和 Chromium。先执行前端 npm ci、生产构建，并运行 `node gulimall-web/node_modules/@playwright/test/cli.js install chromium`；无需全局安装或 npx。缺少浏览器或构建产物时，在暂停常驻环境前拒绝执行。
+
+每次 Browser 串行执行两轮完整页面交易，各轮创建独立会员/商品/采购，验证成功付款、发货收货、付款失败/放弃、取消释放、刷新、会员隔离和 375px 页面；不伪造 API 成功响应或直接改库。只读 API/SQL 用于核对结果。测试台账为 `.data/test-simulation/browser/trades.json`，匹配私有配置 `.tools/test/browser-payment.json`；测试数据留在 _test，不读演示会员凭据。
+
+截图与结果在 Git 忽略的 output/playwright，场景编号记录在 `.tools/test/browser-runs`。失败截图遮罩输入和状态消息；trace.zip 只保留动作时序，禁用 DOM/网络正文和源码，不保存输入值、Cookie 或错误回显。自动 DOM 错误上下文与原始 trace 会清理，因此不包含完整 DOM 回放；需结合遮罩截图和步骤摘要排查。测试成功和失败都恢复原运行模式。
 
 自然期限检查单独运行，显式在演示库保留具有唯一标记的商品、会员、采购和订单：
 

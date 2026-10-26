@@ -1,10 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createServer} from 'node:http'
-import {mkdir,writeFile} from 'node:fs/promises'
+import {mkdir,writeFile,copyFile,readFile} from 'node:fs/promises'
+import {spawnSync} from 'node:child_process'
+import {resolve} from 'node:path'
 import {randomUUID} from 'node:crypto'
 import {createDemoServer} from './serve-demo.mjs'
 import {assertTestEnvironment} from './test-environment.mjs'
+test('missing browser prerequisites fail before the standing environment is stopped',{skip:process.platform!=='win32'},async()=>{
+  const root=resolve('.tools/browser-preflight-'+randomUUID());await mkdir(root+'/scripts',{recursive:true})
+  for(const file of ['test.ps1','env.ps1'])await copyFile('scripts/'+file,root+'/scripts/'+file)
+  const before='DB_HOST=127.0.0.1\n';await writeFile(root+'/.env',before)
+  const env={...process.env};delete env.PSModulePath
+  const result=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',root+'/scripts/test.ps1','-Suite','Browser'],{cwd:root,env,windowsHide:true,encoding:'utf8',timeout:30000})
+  assert.notEqual(result.status,0);assert.match(result.stderr,/Browser prerequisites missing/);assert.doesNotMatch(result.stdout,/Stopped gulimall|Simulation stopped/);assert.equal(await readFile(root+'/.env','utf8'),before)
+})
 
 test('acceptance refuses demo projects and missing test profiles before any network or SQL writes',async()=>{
   const original={...process.env}

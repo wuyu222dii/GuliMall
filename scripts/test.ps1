@@ -1,4 +1,4 @@
-param([ValidateSet('All','Auth','Product','Admin','Search','Cart','Order','Payment','Fulfillment','Success','Failure','Recovery','Diagnostics')][string]$Suite='All')
+param([ValidateSet('All','Auth','Product','Admin','Search','Cart','Order','Payment','Fulfillment','Success','Failure','Recovery','Diagnostics','Browser')][string]$Suite='All')
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path $PSScriptRoot -Parent
 $taskOriginal=@{}
@@ -31,6 +31,10 @@ $taskStopped=$false
 $taskResumeSimulation=(Test-Path .tools/simulation/state.json) -and (Get-Content .tools/simulation/state.json -Raw|ConvertFrom-Json).active
 try {
     . "$PSScriptRoot/env.ps1"
+    if($Suite -eq 'Browser') {
+        & node --input-type=module -e "import {chromium} from './gulimall-web/node_modules/@playwright/test/index.mjs';import {existsSync} from 'node:fs';if(!existsSync(chromium.executablePath())||!existsSync('gulimall-web/dist/index.html'))throw new Error('Build the frontend and install the locked Chromium browser before Browser acceptance');"
+        if($LASTEXITCODE -ne 0){throw 'Browser prerequisites missing; the standing environment was not stopped'}
+    }
     foreach($taskOverride in @('SPRING_APPLICATION_JSON','SPRING_CONFIG_LOCATION','SPRING_CONFIG_ADDITIONAL_LOCATION','SPRING_DATASOURCE_URL')){if([Environment]::GetEnvironmentVariable($taskOverride,'Process')){throw "Clear $taskOverride before isolated tests; externally supplied service configuration is not accepted"}}
     $taskDirectory=Join-Path $taskRoot '.tools/test'
     New-Item -ItemType Directory -Force $taskDirectory | Out-Null
@@ -65,7 +69,10 @@ try {
     & "$PSScriptRoot/services.ps1" Start
     Wait-TestServices
     & "$PSScriptRoot/search-index.ps1"
-    if($Suite -eq 'Diagnostics') {
+    if($Suite -eq 'Browser') {
+        & node scripts/browser-run.mjs
+        if($LASTEXITCODE -ne 0){throw 'Browser acceptance failed; inspect output/playwright (redacted artifacts)'}
+    } elseif($Suite -eq 'Diagnostics') {
         & node scripts/diagnostics.acceptance.mjs
         if($LASTEXITCODE -ne 0){throw 'Diagnostics acceptance failed'}
     } elseif($Suite -in @('Success','Failure','Recovery')) {
