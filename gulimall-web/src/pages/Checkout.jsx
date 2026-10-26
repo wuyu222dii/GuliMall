@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { confirmOrder, submitOrder, getSubmission, retireConfirmation } from '../api/order'
 import { useCartStore } from '../store/cartStore'
 import { useAuthStore } from '../store/authStore'
-import { orderStatuses } from '../utils/payment'
+import { orderStatuses, canStartNewConfirmation } from '../utils/payment'
 
 export default function Checkout() {
   const user = useAuthStore((s) => s.user)
@@ -89,7 +89,7 @@ export default function Checkout() {
       {[6, 7].includes(result.order.status) && <p role="status">The server is confirming the inventory result and will recover after a restart. This request will keep the same order number.</p>}
       {result.order.status === 4 && <p>{result.order.failureReason}</p>}
       {[0, 1, 4, 8, 9].includes(result.order.status) && <p><Link className="btn btn-primary" to={`/payment/${result.order.orderSn}`}>Payment / inventory status</Link></p>}
-      <div className="admin-toolbar"><Link className="btn btn-primary" to="/member/orders">My orders</Link><Link className="btn btn-outline" to="/cart">View cart</Link>{[0, 4].includes(result.order.status) && <button className="btn btn-outline" onClick={startNew}>Start a new confirmation</button>}</div>
+      <div className="admin-toolbar"><Link className="btn btn-primary" to="/member/orders">My orders</Link><Link className="btn btn-outline" to="/cart">View cart</Link>{canStartNewConfirmation(result.order.status) && <button className="btn btn-outline" onClick={startNew}>Start a new confirmation</button>}</div>
     </section> : confirmation && <>
       <section className="card order-summary"><h2>Shipping address</h2>
         {confirmation.addresses.length ? <fieldset disabled={busy || !!attempt}><legend className="admin-note">Choose an address belonging to your account</legend>{confirmation.addresses.map((address) => <label className="order-address" key={address.id}><input type="radio" name="order-address" checked={addressId === address.id} onChange={() => setAddressId(address.id)} /><span>{address.name} · {address.phone}<br />{address.province}{address.city}{address.region} {address.detailAddress}</span></label>)}</fieldset> : <Link to="/member/address">Add a shipping address, then refresh this confirmation.</Link>}

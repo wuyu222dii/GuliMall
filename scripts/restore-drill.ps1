@@ -11,6 +11,7 @@ $taskOriginal=@{};Get-ChildItem Env: | ForEach-Object {$taskOriginal[$_.Name]=$_
 $taskTag='gulimall-restore-'+[guid]::NewGuid().ToString('N')
 $taskMysql=$taskTag+'-mysql';$taskRedis=$taskTag+'-redis';$taskVhost='restore_'+[guid]::NewGuid().ToString('N')
 $taskDirectory=Join-Path $taskRoot ('.data/'+$taskTag)
+$taskGatewayProcess=$null
 function Docker-Checked([string[]]$Arguments){& docker @Arguments;if($LASTEXITCODE -ne 0){throw 'Restore rehearsal operation failed'}}
 Push-Location $taskRoot
 try {
@@ -44,12 +45,22 @@ try {
     Docker-Checked -Arguments @('compose','exec','-T','rabbitmq','rabbitmqctl','set_permissions','-p',$taskVhost,$env:RABBITMQ_USER,'.*','.*','.*')
     $env:DB_PORT='3317';$env:REDIS_PORT='6390';$env:UPLOAD_DIR=Join-Path $taskDirectory 'uploads';$env:SPRING_RABBITMQ_VIRTUAL_HOST=$taskVhost
     $env:GULIMALL_RESTORE_MYSQL=$taskMysql
+    if($taskManifest.simulationPayments) {
+        Copy-Item -LiteralPath (Join-Path $Backup 'payment-ledger.json') -Destination (Join-Path $taskDirectory 'payment-ledger.json')
+        $taskPayment=Get-Content (Join-Path $taskRoot '.tools/test/demo-payment.json') -Raw|ConvertFrom-Json
+        $env:PAYMENT_TEST_CONFIG=Join-Path $taskRoot '.tools/test/demo-payment.json';$env:PAYMENT_TEST_DATA=Join-Path $taskDirectory 'payment-ledger.json';$env:PAYMENT_TEST_PORT='18170';$env:GULIMALL_SIMULATION='1'
+        $env:SPRING_PROFILES_ACTIVE='dev,test,payment-test';$env:ALIPAY_APP_ID=$taskPayment.appId;$env:ALIPAY_PRIVATE_KEY=$taskPayment.merchantPrivate;$env:ALIPAY_PUBLIC_KEY=$taskPayment.providerPublic;$env:ALIPAY_SELLER_ID=$taskPayment.sellerId
+        $env:ALIPAY_GATEWAY_URL='http://127.0.0.1:18170/gateway.do';$env:ALIPAY_NOTIFY_URL='http://127.0.0.1:88/api/payments/alipay/notify';$env:ALIPAY_RETURN_URL=$taskPayment.returnUrl
+        if(Get-NetTCPConnection -LocalPort 18170 -State Listen -ErrorAction SilentlyContinue){throw 'Restore simulation port is occupied'}
+        $taskGatewayProcess=Start-Process -FilePath (Get-Command node).Source -ArgumentList @('"'+(Join-Path $taskRoot 'scripts/payment-test-gateway.mjs')+'"','--simulation') -WorkingDirectory $taskRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $taskDirectory 'gateway.log') -RedirectStandardError (Join-Path $taskDirectory 'gateway.err.log') -PassThru
+    }
     & "$PSScriptRoot/services.ps1" Start
     & node scripts/restore-check.mjs
     if($LASTEXITCODE -ne 0){throw 'Restored business state did not verify'}
     Write-Output 'PASS: fresh restore instances, saved Session, uploaded image, completed order and pending release event recovered.'
 }finally{
     & "$PSScriptRoot/services.ps1" Stop
+    if($taskGatewayProcess -and -not $taskGatewayProcess.HasExited){Stop-Process -Id $taskGatewayProcess.Id}
     foreach($taskResource in @($taskMysql,$taskRedis)){
         & docker inspect $taskResource *> $null
         if($LASTEXITCODE -eq 0){& docker rm -f $taskResource}

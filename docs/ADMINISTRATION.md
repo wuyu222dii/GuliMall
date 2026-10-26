@@ -2,7 +2,7 @@
 
 阶段 9 起，运行验收统一使用 [独立测试入口](RUNBOOK.md)，不再允许直接向演示库运行旧脚本；下方历史结果保留当时的验收边界。
 
-入口为 `http://127.0.0.1:5173/admin`，使用独立管理员登录。普通会员与未登录访问者不能调用管理接口；绕过网关直接访问业务端口也受保护。所有修改请求沿用 Session + CSRF。
+常驻模拟入口为 `http://127.0.0.1:8080/admin`（Vite 开发为 5173），使用独立管理员登录。普通会员与未登录访问者不能调用管理接口；绕过网关直接访问业务端口也受保护。所有修改请求沿用 Session + CSRF。
 
 ## 录入一个双 SKU 商品
 
@@ -28,10 +28,11 @@
 
 ## 本地图片
 
-- 上传：`POST /api/admin/thirdparty/local/images`，multipart 字段 `file`；返回 `url`。
+- 上传：`POST /api/admin/thirdparty/images`，multipart 字段 `file`；返回 `url`。旧 `/api/admin/thirdparty/local/images` 保留为兼容别名。
 - 访问：`GET /api/media/<32位随机名称>.png|jpg`，消费者无需登录。
 - 限制：PNG/JPEG、2 MB、单边最多 4096 像素、总像素最多 800 万；校验真实图像内容后重新编码，不使用客户端文件名。SVG、伪造内容、路径穿越均被拒绝。
 - 保存目录：`UPLOAD_DIR`，默认项目根下 `.data/uploads`。业务服务需从项目根目录启动；`services.ps1` 已如此处理。目录独立于 jar，服务或容器重启不会清空。
+- 阶段 12 经统一校验/重新编码后调用 ImageStorage；本轮只实现 local，非 local 模式明确拒绝启动，不提供空壳 OSS 成功实现。
 - 备份时同时备份数据库与上传目录。编辑器“移除此图片”只移除引用，不删除物理文件，以免破坏其他商品；当前没有孤立图片自动清理任务。
 
 ## API 约定

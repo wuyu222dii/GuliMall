@@ -1,6 +1,8 @@
-# 本地验收、演示部署与备份恢复（阶段 9）
+# 本地验收、演示部署与备份恢复（阶段 9–13）
 
 保留 Java 8、Boot 2.1.8 和现有分层。真实支付宝沙箱及公网通知仍待账号开通补验；下述端到端交易使用明确标识的 LOCAL_TEST 网关和真实 RSA2 验签，不使用真实资金。短信为开发验证码，图片为本地文件。物流仅记录公司和运单号，不接轨迹、自动退款、多商户、集群或 Kubernetes。
+
+日常模拟操作、付款失败/放弃、自然期限检查、数据路径和未来替换接口见 [SIMULATION.md](SIMULATION.md)。模拟启动配置独立保管，不修改根目录 `.env`；本轮没有真实服务或公网接入。
 
 ## 从空环境启动
 
@@ -14,14 +16,13 @@
 java '-Dloader.main=com.atguigu.gulimall.auth.tool.AdminPasswordTool' -cp gulimall-auth-server/target/gulimall-auth-server-0.0.1-SNAPSHOT.jar org.springframework.boot.loader.PropertiesLauncher
 # 在交互终端输入并确认管理员密码。将打印的 BCrypt 摘要用单引号放入 .env 的 ADMIN_PASSWORD_HASH，配置 ADMIN_USER；不要把明文写到参数、日志或聊天。
 ./scripts/search-index.ps1
-./scripts/services.ps1 Start
-./scripts/dev.ps1 Smoke
-./scripts/deploy.ps1 Start
+./scripts/simulation.ps1 Start
+./scripts/simulation.ps1 Status
 ```
 
 浏览器访问 `http://127.0.0.1:8080`，不需要 Vite。管理员登录后在商品同步页面提交全量重建，使空索引包含演示商品。默认会员 demo_a / demo_b，密码 Demo12345!。所有业务服务、基础设施和静态服务器只监听本机；浏览器只走同源 `/api`。静态服务器只提供 `gulimall-web/dist`，支持 React 路由刷新、Cookie 转发、资源类型和文件路径校验，不提供项目目录或内部接口代理。
 
-停止：先 `deploy.ps1 Stop`，再 `services.ps1 Stop` 和 `dev.ps1 Down`。Down 保留卷，不使用 `down -v`。Start 只表示进程创建，仍须等待 Nacos 注册并通过 Smoke。Windows 上重建 jar 前先停止业务服务。日志分别在 `.tools/runtime`、`.tools/static-demo*.log`；Compose 用 `docker compose logs --tail 100 <服务>` 排查。
+停止：`simulation.ps1 Stop`，如需停基础设施再执行 `dev.ps1 Down`。Down 保留卷，不使用 `down -v`。模拟入口等待服务注册和实际 API 就绪；原 services.ps1 Start 只表示进程创建，不能代替就绪检查。Windows 上重建 jar 前先停止业务服务。日志分别在 `.tools/runtime`、`.tools/static-demo*.log`、`.tools/simulation/gateway*.log`；Compose 用 `docker compose logs --tail 100 <服务>` 排查。
 
 已有演示数据库按阶段迁移记录执行增量迁移，不重跑空库 SQL；当前基线 71 张表。阶段 9 没有新增业务表。初始化、已有库升级及本机工具说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
@@ -29,13 +30,13 @@ java '-Dloader.main=com.atguigu.gulimall.auth.tool.AdminPasswordTool' -cp gulima
 
 ```powershell
 # 构建前停止本工作区业务 JVM，避免 Windows jar 占用。
-./scripts/services.ps1 Stop
+./scripts/simulation.ps1 Stop
 mvn -B clean install
 npm --prefix gulimall-web run lint
 npm --prefix gulimall-web run build
-node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-ui.test.mjs scripts/payment-ui.test.mjs scripts/order-ui.test.mjs scripts/deployment.test.mjs
+node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-ui.test.mjs scripts/payment-ui.test.mjs scripts/order-ui.test.mjs scripts/deployment.test.mjs scripts/simulation.test.mjs
 ./scripts/scripts.test.ps1
-./scripts/services.ps1 Start
+./scripts/simulation.ps1 Start
 ```
 
 默认 Java 检查为离线单元/契约测试。旧的 9 项手工集成演示继续忽略，另加 ActiveProfiles(test)；它们不计作业务成功，也不因本阶段重新启用。test profile 在应用上下文启动前要求显式 GULIMALL_TEST=1、COMPOSE_PROJECT_NAME=gulimall-test。五个数据服务提供仅在 test profile 存在、受内部令牌保护的环境检查；HTTP 验收会逐个核对实际 catalog，发现 `_demo` 或其他库立即拒绝。
@@ -50,7 +51,7 @@ node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-u
 
 脚本生成私有 `.tools/test/environment.json`（独立随机数据库/Redis/RabbitMQ 密码和内部令牌）、test_admin 测试管理员配置，以及派生的 `_test` 建表/种子脚本。测试管理员密码 Demo12345! 仅用于隔离的本机测试环境。test profile 指向 pms/sms/ums/oms/wms 五个 `_test` 库，源码中的默认 `_demo` 数据源不变。
 
-测试使用独立 Compose 项目 **gulimall-test**、网络、六个持久卷、MySQL/Redis/Nacos/ES/RabbitMQ 容器和 `.data/test-uploads`，不复用演示数据。为适配本机资源并保留原脚本端口，运行期间暂停演示 JVM 和容器；finally 停止测试环境并恢复演示环境及调用者环境变量。不要与人工演示、另一轮验收或 IDE 启动的服务并行。未被 services.ps1 管理的 JVM 须自行停止，测试不能占用别的程序端口。
+测试使用独立 Compose 项目 **gulimall-test**、网络、六个持久卷、MySQL/Redis/Nacos/ES/RabbitMQ 容器和 `.data/test-uploads`，不复用演示数据。为适配本机资源并保留原脚本端口，运行期间暂停演示 JVM 和容器；如果原环境是模拟模式，也暂停静态入口和模拟网关，finally 恢复原模拟模式及调用者环境变量。不要与人工演示、另一轮验收或 IDE 启动的服务并行。未被 services.ps1 管理的 JVM 须自行停止，测试不能占用别的程序端口。
 
 68 个既有业务场景串行执行，故障场景不跳过，日志在 `.tools/test/<suite>.log`。包括身份与地址归属、金额、并发锁库、支付验签和重复通知、付款/关单竞争、发货门禁、重复收货、响应丢失、杀进程、Redis/ES/RabbitMQ 停止及恢复。旧的直接 `node ...acceptance.mjs` 演示库入口已关闭，统一使用 test.ps1。
 
@@ -69,7 +70,7 @@ node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-u
 
 失败补偿：同样经真实业务接口建商品、入库、注册和下单；签发表单后模拟支付服务不可用，取消保持状态 8 和库存锁定。重启订单服务、停止 RabbitMQ，恢复支付查询后确认关闭，保留未消费的释放事件；此时冷备份 SQL/Redis/图片。恢复 RabbitMQ 后事件补发，订单 4 / 库存 2，库存恢复至采购数量 5。输出 `.tools/test/demo-failure.json` 和对应备份路径，不把网络超时当作已释放。
 
-演示数据保留在独立测试卷及私有报告中，方便核对；不会作为演示库的新商品或真实订单。脚本结束恢复默认演示服务。支付账号、公钥、公网回调和真实沙箱买家操作仍须按 [PAYMENTS.md](PAYMENTS.md) 补验。静态部署时将 ALIPAY_RETURN_URL 配置为 `http://127.0.0.1:8080/payment/return`；Vite 开发使用 5173，通知地址始终须为沙箱可访问的公网入口。
+脚本演示数据保留在独立测试卷及私有报告中，方便核对；不会作为演示库的新商品或真实订单。脚本结束恢复调用前的运行模式。两套脚本共用独立 `.data/test-simulation/payment/trades.json`，对应私有配置 `.tools/test/demo-payment.json`；普通支付验收仍默认内存台账。真实平台账号、公钥、公网回调和买家操作仍须按 [PAYMENTS.md](PAYMENTS.md) 另行补验；本轮模拟通知仅使用本机 88，不需要公网地址。
 
 ## 一致备份
 
@@ -79,7 +80,7 @@ node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-u
 ./scripts/backup.ps1 -Environment Demo -Destination .data/backups/manual-20261025
 ```
 
-脚本确认 Compose 项目，暂时停止本工作区业务 JVM，在没有其他业务写入的维护窗口中保存五库 SQL、Redis RDB 和完整上传目录，生成文件 SHA256 清单，然后重启业务服务。SQL 使用容器内 mysqldump 并直接复制文件，避免 PowerShell 管道破坏中文或二进制内容。失败不写有效 manifest，不覆盖源库或已有备份。
+脚本确认 Compose 项目，暂时停止本工作区业务 JVM；模拟模式还会停止网关及静态入口。在没有其他业务写入的维护窗口中保存五库 SQL、Redis RDB、完整上传目录及模拟支付台账，生成文件 SHA256 清单，然后恢复原运行模式。SQL 使用容器内 mysqldump 并直接复制文件，避免 PowerShell 管道破坏中文或二进制内容。失败不写有效 manifest，不覆盖源库或已有备份。
 
 备份包含订单、明细、库存工作单、支付流水、持久化事件、操作历史、会员数据、购物车/Session 和图片，保留在 Git 忽略的 `.data/backups`。它包含会员资料和密码摘要，按私有文件保管；.env 或 `.tools/test/environment.json` 单独保管，不提交 Git。默认管理员摘要、真实支付配置和启动工具不由数据库备份替代。
 
@@ -96,7 +97,9 @@ ES 是可重建的派生索引；RabbitMQ 交换机/队列由应用声明，库�
 5. 使用新 RabbitMQ 虚拟主机，由应用声明队列；核对未消费事件恢复与库存工作单。创建 ES 映射后由管理员全量重建，核对搜索结果。
 6. 逐项核对金额/订单快照、工作单/锁定库存、支付流水、图片哈希、会话、异常记录与读写权限，再决定是否人工切换演示配置。保留旧环境用于回退，不提供自动覆盖原库的命令。
 
-Recovery 命令自动执行上述过程：将失败场景“已关闭但尚未释放”的冷备份恢复至临时 MySQL 3317 / Redis 6390，使用独立命名的空卷和 RabbitMQ vhost；核对已完成订单、备份中的真实管理员 Session、图片哈希、库存释放事件重放，并从恢复后的商品库重建 ES。还会先提交一个校验和错误的备份，确认在停服务或创建恢复容器前被拒绝。
+模拟备份 manifest 中 `simulationPayments=true` 时，还须把 payment-ledger.json 恢复到新的台账路径，单独恢复原匹配签名配置，再启动网关；公钥指纹不匹配必须停止，不删台账或重新生成密钥绕过。演示环境密钥位于 `.tools/simulation/payment-config.json`，不包含在数据备份中；自动恢复演练使用自己的 Test 配置，不读取此文件。
+
+Recovery 命令自动执行上述过程：将失败场景“已关闭但尚未释放”的冷备份恢复至临时 MySQL 3317 / Redis 6390，使用独立命名的空卷和 RabbitMQ vhost；核对已完成订单、备份中的真实管理员 Session、图片哈希、库存释放事件重放，并从恢复后的商品库重建 ES。同时用原 Test 密钥启动恢复后的持久网关，核对同一成功交易 TRADE_SUCCESS、取消交易 TRADE_CLOSED 与订单/工作单结果。还会先提交一个校验和错误的备份，确认在停服务或创建恢复容器前被拒绝。
 
 自动恢复脚本只接受 Test 备份和独立测试环境。临时恢复容器/卷在 finally 清理，原测试和演示数据均不覆盖；恢复图片目录与日志保留供核对。结果在 `.tools/test/restore-result.json`。这是本机恢复演练，不代表高可用、在线热备或生产灾备承诺。
 
@@ -113,10 +116,18 @@ Recovery 命令自动执行上述过程：将失败场景“已关闭但尚未�
 | 测试启动失败 | 查看 .tools/test/readiness.log 和业务日志；先停止占用端口的非托管进程，确认测试项目/库名，切勿改脚本连演示库 |
 | 静态部署 502 | 检查本机网关 88 和 Nacos 注册，API 超时先查询原订单；静态路由能打开不代表后端健康 |
 
-## 本机验收记录（2026-10-25）
+## 阶段 9 历史验收记录（2026-10-25）
 
 统一 All 入口的八套回归共 68 个业务场景通过，无故障跳过；默认 Java 26 项、Node 13 项、PowerShell 自检及前端 lint/build 通过，旧手工演示 9 项忽略不计入通过数。13 项目构建及部署来源修复后的网关增量构建成功。
 
 Recovery 已完成成功交易、支付不可用与 broker 中断补偿、冷备份、错误校验和拒绝、全新 MySQL/Redis 恢复、Session/图片核对、Redis AOF 容器重建、新 vhost 事件重放及 ES 重建。8080 浏览器登录、刷新订单路由与退出通过，未授权 Origin 和缺少 CSRF 的变更仍被拒绝。
 
 默认演示库仍为 71 张表、两个会员、一个双 SKU 商品，库存 10 / 1、锁定 0，订单/支付流水/交易事件均为 0；十个服务和五个容器健康，演示索引两条。证据索引 `.tools/stage9-evidence.json`，逐套日志和交易/恢复报告在 `.tools/test/`；备份、图片、密钥和运行证据均留在 Git 忽略目录。真实沙箱和公网回调未执行，继续按支付文档补验。
+
+## 阶段 10–13 验收记录（2026-10-26）
+
+28 项 Java、18 项 Node、PowerShell 自检与前端 lint/build 通过，旧手工演示 9 项仍忽略。All 的 68 个业务场景全部通过，短信未送达码拒绝及支付竞争另行回归。浏览器在 8080 从图片/双 SKU/采购一直完成到模拟付款、发货和收货，另一笔订单放弃付款后取消并释放；整套模拟环境重启后会话和付款记录可恢复。
+
+自然 30 分钟订单未改期限，15:07:33 到期、15:08:05 核对自动关闭/释放成功。演示冷备份包含原人工订单与模拟台账并校验 SHA256；Recovery 已核对同一交易的恢复台账、订单、库存、Session、图片、AOF、事件重放及 ES 重建，报告 simulationPayments=true。常驻模式在测试及备份后恢复。证据索引 `.tools/stage13-evidence.json`，模拟操作见 [SIMULATION.md](SIMULATION.md)。
+
+历史阶段 9 的空订单基线不再表示当前业务数据：本轮专用演示商品、会员、订单及图片有意保留，原始种子库存仍为 10/1、锁定 0。真实第三方和公网仍未接入。

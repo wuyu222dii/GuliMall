@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {createServer} from 'node:http'
 import {spawnSync} from 'node:child_process'
 import {randomUUID,createPrivateKey,sign} from 'node:crypto'
-import {readFileSync,existsSync,mkdirSync,writeFileSync,copyFileSync} from 'node:fs'
+import {readFileSync,existsSync,mkdirSync,writeFileSync,copyFileSync,unlinkSync} from 'node:fs'
 import {resolve} from 'node:path'
 import {testConfig,createPaymentGateway} from './payment-test-gateway.mjs'
 
@@ -23,6 +23,9 @@ test('simulation refuses unmanaged ports before stopping services or changing co
   await new Promise((resolve,reject)=>{server.once('error',e=>e.code==='EADDRINUSE'?resolve():reject(e));server.listen(18170,'127.0.0.1',()=>{listening=true;resolve()})})
   try {
     const env={...process.env};delete env.PSModulePath
+    mkdirSync(root+'/jdk/bin',{recursive:true});writeFileSync(root+'/jdk/bin/java.exe','fixture');env.JAVA_HOME=root+'/jdk'
+    for(const key of ['GULIMALL_TEST','SPRING_APPLICATION_JSON','SPRING_CONFIG_LOCATION','SPRING_CONFIG_ADDITIONAL_LOCATION','SPRING_DATASOURCE_URL'])delete env[key]
+    Object.assign(env,{COMPOSE_PROJECT_NAME:'gulimall-demo',DB_HOST:'127.0.0.1',REDIS_HOST:'127.0.0.1',RABBITMQ_HOST:'127.0.0.1',NACOS_ADDR:'127.0.0.1:18848',ELASTICSEARCH_URL:'http://127.0.0.1:19200',PRODUCT_PORT:'10001'})
     const result=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',root+'/scripts/simulation.ps1','Start'],{env,encoding:'utf8',timeout:30000,windowsHide:true})
     assert.notEqual(result.status,0);assert.match(result.stderr,/Port \d+.*unmanaged process/);assert.doesNotMatch(result.stdout,/Stopped gulimall/);assert.equal(readFileSync(root+'/.env','utf8'),before)
   } finally {if(listening)await new Promise(resolve=>server.close(resolve))}
@@ -30,8 +33,8 @@ test('simulation refuses unmanaged ports before stopping services or changing co
 
 const folder=()=>'.tools/simulation-unit-'+randomUUID()
 const until=async(check,message)=>{for(let i=0;i<80;i++){if(await check())return;await new Promise(r=>setTimeout(r,100))}assert.fail(message)}
-async function issue(gateway,sn) {
-  const params={app_id:gateway.config.appId,method:'alipay.trade.page.pay',sign_type:'RSA2',notify_url:gateway.config.notifyUrl,return_url:gateway.config.returnUrl+'?orderSn='+sn,biz_content:JSON.stringify({out_trade_no:sn,total_amount:'3.75',seller_id:gateway.config.sellerId,time_expire:'2099-01-01 00:00:00',subject:'unit'})}
+async function issue(gateway,sn,method='alipay.trade.page.pay') {
+  const params={app_id:gateway.config.appId,method,sign_type:'RSA2',notify_url:gateway.config.notifyUrl,return_url:gateway.config.returnUrl+'?orderSn='+sn,biz_content:JSON.stringify({out_trade_no:sn,total_amount:'3.75',seller_id:gateway.config.sellerId,time_expire:'2099-01-01 00:00:00',subject:'unit'})}
   const data=Object.keys(params).sort().map(k=>k+'='+params[k]).join('&')
   params.sign=sign('RSA-SHA256',Buffer.from(data),createPrivateKey({key:Buffer.from(gateway.config.merchantPrivate,'base64'),format:'der',type:'pkcs8'})).toString('base64')
   return fetch(gateway.url+'/gateway.do',{method:'POST',body:new URLSearchParams(params)})
@@ -59,6 +62,11 @@ test('persistent payment survives restart, retries notifications and preserves t
     await until(()=>notices>attempts,'Five-second retry timer did not run');acknowledge=true
     await until(()=>gateway.trades.get(failed).notifyAcknowledged,'Notification acknowledgement did not persist')
     assert(JSON.parse(readFileSync(dataFile)).trades.find(t=>t.orderSn===failed).notifyAcknowledged)
+    const race='f'.repeat(32);await issue(gateway,race);gateway.options.closeDelay=1000
+    const closing=issue(gateway,race,'alipay.trade.close')
+    assert.equal((await checkout(gateway,race,'pay')).status,303)
+    const closeResult=await(await closing).json();assert.equal(closeResult.alipay_trade_close_response.code,'40004')
+    assert.equal(gateway.trades.get(race).state,'TRADE_SUCCESS','Delayed close must read the current payment result')
   } finally {await gateway.close();receiver.closeAllConnections();await new Promise(r=>receiver.close(r))}
 })
 
@@ -66,9 +74,13 @@ test('corrupt ledgers, mismatched keys and write failures never become empty suc
   const directory=folder(),config=testConfig(directory+'/keys.json'),dataFile=directory+'/trades.json'
   let gateway=await createPaymentGateway({config,dataFile});await issue(gateway,'d'.repeat(32));await gateway.close()
   const before=readFileSync(dataFile),other=testConfig(folder()+'/keys.json')
+  await assert.rejects(createPaymentGateway({config:{...config,controlToken:''}}),/control token/)
+  await assert.rejects(createPaymentGateway({config:{...config,notifyUrl:'https://external.example/notify'}}),/loopback/)
   await assert.rejects(createPaymentGateway({config:other,dataFile}),/keys do not match/);assert.deepEqual(readFileSync(dataFile),before)
+  const malformed=JSON.parse(before);malformed.trades[0].notifyAcknowledged='true';writeFileSync(dataFile,JSON.stringify(malformed))
+  await assert.rejects(createPaymentGateway({config,dataFile}))
   writeFileSync(dataFile,'broken');await assert.rejects(createPaymentGateway({config,dataFile}));assert.equal(readFileSync(dataFile,'utf8'),'broken')
   const impossible=directory+'/directory-ledger';mkdirSync(impossible)
-  gateway=await createPaymentGateway({config,dataFile:impossible+'/file.json'});mkdirSync(impossible+'/file.json')
+  gateway=await createPaymentGateway({config,dataFile:impossible+'/file.json'});unlinkSync(impossible+'/file.json');mkdirSync(impossible+'/file.json')
   try {assert.equal((await issue(gateway,'e'.repeat(32))).status,503);assert.equal(gateway.trades.size,0);assert.equal((await fetch(gateway.url+'/health')).status,503)}finally{await gateway.close()}
 })

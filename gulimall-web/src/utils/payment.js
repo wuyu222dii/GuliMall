@@ -1,4 +1,5 @@
 export const orderStatuses = { 0: 'Pending payment', 1: 'Paid', 2: 'Shipped', 3: 'Completed', 4: 'Closed', 5: 'Invalid order', 6: 'Creating — inventory pending', 7: 'Closing — release pending', 8: 'Closing — payment result pending', 9: 'Payment exception — manual review required' }
+export const canStartNewConfirmation = (status) => Number.isInteger(status) && status >= 0 && status <= 5
 export function paymentTarget(action, mode) {
   const url = new URL(action)
   const sandbox = mode === 'ALIPAY_SANDBOX' && url.protocol === 'https:' && ['openapi-sandbox.dl.alipaydev.com', 'openapi.alipaydev.com'].includes(url.hostname) && !url.port

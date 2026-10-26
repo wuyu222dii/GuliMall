@@ -41,7 +41,11 @@ try {
         Write-Output 'Simulation stopped; infrastructure, database, uploads and payment ledger preserved.'
         return
     }
-    if($env:DB_HOST -and $env:DB_HOST -ne '127.0.0.1'){throw 'The simulation requires the local demo database.'}
+    if(-not $env:JAVA_HOME -or -not(Test-Path -LiteralPath (Join-Path $env:JAVA_HOME 'bin/java.exe'))){throw 'Set JAVA_HOME to JDK 8 before starting the simulation.'}
+    foreach($name in @('DB_HOST','REDIS_HOST','RABBITMQ_HOST')){if([Environment]::GetEnvironmentVariable($name,'Process') -and [Environment]::GetEnvironmentVariable($name,'Process') -ne '127.0.0.1'){throw "Simulation requires loopback $name."}}
+    if($env:NACOS_ADDR -and $env:NACOS_ADDR -notmatch '^127\.0\.0\.1:[0-9]+$'){throw 'Simulation requires loopback Nacos.'}
+    if($env:ELASTICSEARCH_URL){$address=[uri]$env:ELASTICSEARCH_URL;if($address.Scheme -ne 'http' -or $address.Host -ne '127.0.0.1' -or $address.UserInfo){throw 'Simulation requires loopback Elasticsearch.'}}
+    if($env:PRODUCT_PORT -and $env:PRODUCT_PORT -ne '10001'){throw 'Simulation uses product port 10001; resolve custom service ports before starting.'}
     foreach($name in @('SPRING_APPLICATION_JSON','SPRING_CONFIG_LOCATION','SPRING_CONFIG_ADDITIONAL_LOCATION','SPRING_DATASOURCE_URL')){if([Environment]::GetEnvironmentVariable($name,'Process')){throw "Clear $name before starting the controlled simulation."}}
     foreach($name in @('product','member','coupon','ware','order','search','auth-server','third-party','cart','gateway')) {
         if(-not(Test-Path -LiteralPath (Join-Path $simulationRoot "gulimall-$name/target/gulimall-$name-0.0.1-SNAPSHOT.jar"))){throw 'Build the backend before starting the simulation.'}
@@ -58,10 +62,12 @@ try {
     $simulationConfig=Join-Path $simulationDirectory 'payment-config.json'
     if((Test-Path -LiteralPath (Join-Path $simulationRoot '.data/simulation/payment/trades.json')) -and -not(Test-Path -LiteralPath $simulationConfig)){throw 'Restore the original payment keys before opening an existing simulation ledger.'}
     $env:PAYMENT_TEST_CONFIG=$simulationConfig
-    & node --input-type=module -e "import {testConfig} from './scripts/payment-test-gateway.mjs';import {writeFileSync} from 'node:fs';const c=testConfig(process.env.PAYMENT_TEST_CONFIG);c.returnUrl='http://127.0.0.1:8080/payment/return';writeFileSync(process.env.PAYMENT_TEST_CONFIG,JSON.stringify(c,null,2));"
+    $env:PAYMENT_TEST_DATA=Join-Path $simulationRoot '.data/simulation/payment/trades.json'
+    & node --input-type=module -e "import {testConfig,validatePaymentConfig} from './scripts/payment-test-gateway.mjs';import {paymentLedger} from './scripts/simulation-ledger.mjs';import {writeFileSync} from 'node:fs';const c=testConfig(process.env.PAYMENT_TEST_CONFIG);validatePaymentConfig(c);paymentLedger(c,process.env.PAYMENT_TEST_DATA);c.returnUrl='http://127.0.0.1:8080/payment/return';writeFileSync(process.env.PAYMENT_TEST_CONFIG,JSON.stringify(c,null,2));"
     if($LASTEXITCODE -ne 0){throw 'Simulation payment configuration invalid.'}
     $config=Get-Content -LiteralPath $simulationConfig -Raw|ConvertFrom-Json
     $env:SPRING_PROFILES_ACTIVE='dev,payment-test';$env:AUTH_SMS_MODE='development';$env:OSS_ENABLED='false';$env:SMS_ENABLED='false';$env:IMAGE_STORAGE='local'
+    $env:NACOS_CONFIG_ENABLED='false';$env:SPRING_RABBITMQ_VIRTUAL_HOST='/';$env:ORDER_STOCK_URL='';$env:WARE_ORDER_EVENT_URL=''
     $env:ALIPAY_APP_ID=$config.appId;$env:ALIPAY_PRIVATE_KEY=$config.merchantPrivate;$env:ALIPAY_PUBLIC_KEY=$config.providerPublic;$env:ALIPAY_SELLER_ID=$config.sellerId
     $env:ALIPAY_GATEWAY_URL='http://127.0.0.1:18170/gateway.do';$env:ALIPAY_NOTIFY_URL='http://127.0.0.1:88/api/payments/alipay/notify';$env:ALIPAY_RETURN_URL='http://127.0.0.1:8080/payment/return'
     $env:PAYMENT_TEST_PORT='18170';$env:PAYMENT_TEST_DATA=Join-Path $simulationRoot '.data/simulation/payment/trades.json';$env:GULIMALL_ACCEPTANCE='1';$env:GULIMALL_SIMULATION='1'

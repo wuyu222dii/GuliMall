@@ -19,13 +19,20 @@ export function testConfig(path = '.tools/payment-test-config.json') {
   const config = { mode: 'LOCAL_TEST', appId: 'local-test-app', sellerId: 'local-test-seller', merchantPrivate: body64(merchant.privateKey), merchantPublic: body64(merchant.publicKey), providerPrivate: body64(provider.privateKey), providerPublic: body64(provider.publicKey), controlToken: randomBytes(32).toString('hex'), notifyUrl: 'http://127.0.0.1:88/api/payments/alipay/notify', returnUrl: 'http://127.0.0.1:5173/payment/return' }
   mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, JSON.stringify(config, null, 2)); return config
 }
+export function validatePaymentConfig(config) {
+  if(!config||config.mode!=='LOCAL_TEST')throw new Error('Explicit local test configuration required')
+  if(typeof config.controlToken!=='string'||config.controlToken.length<32)throw new Error('A private simulation control token is required')
+  for(const value of [config.notifyUrl,config.returnUrl]){const url=new URL(value);if(url.protocol!=='http:'||url.hostname!=='127.0.0.1'||url.username||url.password||url.hash)throw new Error('Simulation callback and return addresses must stay on loopback')}
+  const provider=privateKey(config.providerPrivate),merchant=publicKey(config.merchantPublic)
+  if(!createPublicKey(provider).export({format:'der',type:'spki'}).equals(Buffer.from(config.providerPublic,'base64'))||!createPublicKey(privateKey(config.merchantPrivate)).export({format:'der',type:'spki'}).equals(Buffer.from(config.merchantPublic,'base64')))throw new Error('Simulation public and private keys do not match')
+  return {provider,merchant}
+}
 export async function createPaymentGateway({ config, port = 0, dataFile } = {}) {
-  if (!config || config.mode !== 'LOCAL_TEST') throw new Error('Explicit local test configuration required')
+  const {provider,merchant}=validatePaymentConfig(config)
   const ledger=paymentLedger(config,dataFile),trades=ledger.trades, options = { down: false, badResponseSignature: false, closeDelay: 0, closeUnknown: false, skipNotify: false }
   let storageFailed=false
   const notifying=new Map()
-  const sockets = new Set(), provider = privateKey(config.providerPrivate), merchant = publicKey(config.merchantPublic)
-  if(!createPublicKey(provider).export({format:'der',type:'spki'}).equals(Buffer.from(config.providerPublic,'base64'))||!createPublicKey(privateKey(config.merchantPrivate)).export({format:'der',type:'spki'}).equals(Buffer.from(config.merchantPublic,'base64')))throw new Error('Simulation public and private keys do not match')
+  const sockets = new Set()
   const signed = data => sign('RSA-SHA256', Buffer.from(data), provider).toString('base64')
   const put = (sn, changes = {}) => {
     const original = trades.get(sn) || { orderSn: sn, tradeNo: 'test_' + randomUUID().replaceAll('-', ''), state: 'WAIT_BUYER_PAY', amount: '0.10', paidAt: null, nonce: randomBytes(24).toString('hex'), notifyUrl: config.notifyUrl, returnUrl: config.returnUrl + '?orderSn=' + sn, notifyId:randomUUID(),notifyAcknowledged:false }
@@ -77,6 +84,7 @@ export async function createPaymentGateway({ config, port = 0, dataFile } = {}) 
         const existing = trades.get(sn)
         if (params.method === 'alipay.trade.page.pay') {
           if (biz.seller_id !== config.sellerId || !/^\d+(\.\d{1,2})?$/.test(biz.total_amount || '') || !biz.time_expire) throw new Error('Invalid signed business fields')
+          if(dataFile&&(params.notify_url!==config.notifyUrl||params.return_url!==config.returnUrl+(config.returnUrl.includes('?')?'&':'?')+'orderSn='+sn))throw new Error('Persistent simulation addresses do not match the local configuration')
           if (existing?.state === 'TRADE_CLOSED') { page(res, '<p>Trade already closed. Return to the original order.</p>', 409); return }
           if (existing&&['TRADE_SUCCESS','TRADE_FINISHED'].includes(existing.state)) {page(res,`<p>此订单已完成模拟付款。</p><a href="${escape(existing.returnUrl)}">返回订单</a>`);return}
           const trade = put(sn, { amount: Number(biz.total_amount).toFixed(2), subject: biz.subject, expiresAt: biz.time_expire, notifyUrl: params.notify_url, returnUrl: params.return_url })
@@ -90,7 +98,8 @@ export async function createPaymentGateway({ config, port = 0, dataFile } = {}) 
         }
         if (params.method === 'alipay.trade.close') {
           if (options.closeDelay) await new Promise(resolve => setTimeout(resolve, options.closeDelay))
-          if (!options.closeUnknown && ['WAIT_BUYER_PAY', 'TRADE_CLOSED'].includes(existing.state)) { put(sn,{state:'TRADE_CLOSED'}); reply(res, params.method, { code: '10000', msg: 'Success', out_trade_no: sn, trade_no: existing.tradeNo }) }
+          const current=trades.get(sn)
+          if (!options.closeUnknown && ['WAIT_BUYER_PAY', 'TRADE_CLOSED'].includes(current.state)) { put(sn,{state:'TRADE_CLOSED'}); reply(res, params.method, { code: '10000', msg: 'Success', out_trade_no: sn, trade_no: current.tradeNo }) }
           else reply(res, params.method, { code: '40004', msg: 'Business Failed', sub_code: 'ACQ.TRADE_STATUS_ERROR', sub_msg: 'Local close result not confirmed' })
           return
         }

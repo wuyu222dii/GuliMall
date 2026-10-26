@@ -32,6 +32,8 @@
 
 `.env` 中同时满足 `SPRING_PROFILES_ACTIVE=dev` 与 `AUTH_SMS_MODE=development` 才启用开发验证码；激活 prod/production 时拒绝启用。验证码 10 分钟有效、60 秒发送间隔、最多 5 次错误校验；注册成功后原子消费。用户名冲突不会消费有效验证码；并发重复注册由数据库唯一约束兜底。登录账号每分钟最多 10 次尝试。
 
+阶段 12 提取 `SmsSender.send(phone,code,validMinutes)`，本轮仅开发实现；验证码规则仍由认证服务管理。失败发送返回 503 并清理本次所属码，Redis 清理失败时未送达码仍不能注册；只有开发模式返回 developmentCode。选择未实现的真实模式拒绝启动。常驻模拟入口自动启用开发码，不修改原 .env，见 [SIMULATION.md](SIMULATION.md)。
+
 管理员账号由 `ADMIN_USER`、`ADMIN_PASSWORD_HASH`（BCrypt 摘要）配置。空摘要拒绝登录，不内置默认管理员密码。摘要含 `$`，在 `.env` 中使用单引号包裹；只把摘要放进服务配置，明文仅保存在个人密码管理器。本机此次生成的随机管理员凭据保存在 Git 忽略的 `.tools/admin-access.json`，文件与 `.env` 已限制为当前用户、SYSTEM 和 Administrators 访问。不要提交或分享该文件。
 
 `setup.ps1` 为全新配置生成随机 `INTERNAL_API_TOKEN`，至少 32 字符。所有 Servlet 服务与 Feign 调用使用同一令牌；网关会移除外部 `X-Internal-Token` 和伪造身份头。`/internal/member/*` 不配置网关路由，直接业务端口也必须提供内部令牌。业务服务本身检查 Session/权限，不能只依赖前端或网关。

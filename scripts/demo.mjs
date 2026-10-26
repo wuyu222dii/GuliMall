@@ -8,6 +8,7 @@ await assertTestEnvironment()
 const mode=process.argv[2]
 assert(['success','failure'].includes(mode),'Use scripts/test.ps1 -Suite Success or Failure')
 const label='demo9_'+randomUUID().replaceAll('-','').slice(0,12), config=testConfig('.tools/test/demo-payment.json'), baseline={...process.env}
+const dataFile='.data/test-simulation/payment/trades.json'
 let gateway, rabbitStopped=false
 function command(program,args,env=process.env,timeout=45000) {
   const childEnv={...env};if(program==='powershell.exe')delete childEnv.PSModulePath
@@ -27,7 +28,7 @@ class Client {
 }
 const admin=new Client(),member=new Client()
 try {
-  gateway=await createPaymentGateway({config});service('Stop','order');service('Start','order')
+  gateway=await createPaymentGateway({config,dataFile});service('Stop','order');service('Start','order')
   await until(async()=>{await assertTestEnvironment();return(await fetch('http://127.0.0.1:88/api/order/mine')).status===401},'Payment test service or gateway not ready')
   await admin.call('/api/auth/csrf');await admin.call('/api/auth/admin/login','POST',JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE,'utf8')))
   const image=new FormData();image.append('file',new Blob([readFileSync('scripts/fixtures/upload.png')],{type:'image/png'}),'demo.png')
@@ -75,7 +76,9 @@ try {
     assert.equal(sql(`SELECT inventory_status FROM gulimall_oms_test.oms_order WHERE order_sn='${order.orderSn}';`),'0')
     writeFileSync('.tools/test/backup-session.json',JSON.stringify({cookie:admin.cookie,csrf:admin.csrf}))
     console.log('4. Taking a cold backup while the release event is durable but the broker is unavailable.')
-    command('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/backup.ps1','-Environment','Test','-Destination','.data/backups/'+label],process.env,180000)
+    const port=Number(new URL(gateway.url).port);await gateway.close()
+    command('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/backup.ps1','-Environment','Test','-Destination','.data/backups/'+label],{...process.env,GULIMALL_SIMULATION_LEDGER:dataFile},180000)
+    gateway=await createPaymentGateway({config,dataFile,port})
     command('docker',['compose','start','rabbitmq']);rabbitStopped=false
     await until(async()=>(await member.call(`/api/order/mine/${order.orderSn}/payment-status`)).payment.order.inventoryStatus===2,'Stock release did not recover')
     assert.equal(sql(`SELECT stock FROM gulimall_wms_test.wms_ware_sku WHERE sku_id=${skus[0]};`),'5')

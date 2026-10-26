@@ -12,6 +12,9 @@ export function paymentLedger(config,file) {
     assert(['WAIT_BUYER_PAY','TRADE_SUCCESS','TRADE_FINISHED','TRADE_CLOSED'].includes(trade.state))
     assert.match(trade.amount||'',/^\d{1,18}\.\d{2}$/)
     assert.equal(typeof trade.nonce,'string');assert(trade.nonce.length>=32)
+    assert.match(trade.notifyId||'',/^[a-f0-9-]{36}$/);assert.equal(typeof trade.notifyAcknowledged,'boolean')
+    if(['TRADE_SUCCESS','TRADE_FINISHED'].includes(trade.state))assert.match(trade.paidAt||'',/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
+    for(const value of [trade.notifyUrl,trade.returnUrl]){const url=new URL(value);assert(url.protocol==='http:'&&url.hostname==='127.0.0.1'&&!url.username&&!url.password&&!url.hash,'Simulation ledger addresses must stay on loopback')}
   }
   let initial=[]
   if(file&&existsSync(file)) {
@@ -23,10 +26,8 @@ export function paymentLedger(config,file) {
     initial=data.trades
   }
   const trades=new Map(initial.map(trade=>[trade.orderSn,trade]))
-  const put=trade=>{
+  const persist=next=>{
     if(file) {
-      validate(trade)
-      const next=new Map(trades);next.set(trade.orderSn,trade)
       mkdirSync(dirname(file),{recursive:true})
       const temporary=file+'.'+randomUUID()+'.tmp';let fd
       try {
@@ -35,6 +36,11 @@ export function paymentLedger(config,file) {
         renameSync(temporary,file)
       } finally {if(fd!==undefined)closeSync(fd);if(existsSync(temporary))unlinkSync(temporary)}
     }
+  }
+  if(file&&!existsSync(file))persist(trades)
+  const put=trade=>{
+    if(file)validate(trade)
+    const next=new Map(trades);next.set(trade.orderSn,trade);persist(next)
     trades.set(trade.orderSn,trade);return trade
   }
   return {trades,put}

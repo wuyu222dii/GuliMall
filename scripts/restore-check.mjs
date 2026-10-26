@@ -14,6 +14,15 @@ assert(Number.isSafeInteger(source.orderId));assert(Number.isSafeInteger(failure
 sql(`UPDATE gulimall_oms_test.oms_order SET note='restore-proof' WHERE id=${source.orderId};`)
 const completed=await call('/api/admin/order/order/info/'+source.orderId)
 assert.equal(completed.order.note,'restore-proof','HTTP service did not connect to the restored instance');assert.equal(completed.order.status,3);assert.equal(Number(completed.order.payAmount),3.75)
+let simulationPayments=false
+if(process.env.PAYMENT_TEST_DATA) {
+  const config=JSON.parse(readFileSync(process.env.PAYMENT_TEST_CONFIG,'utf8'))
+  const health=await(await fetch('http://127.0.0.1:18170/health')).json();assert(health.ready&&health.persistent)
+  const response=await fetch('http://127.0.0.1:18170/control',{method:'POST',headers:{Authorization:'Bearer '+config.controlToken,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});assert.equal(response.status,200)
+  const trades=(await response.json()).trades
+  assert.equal(trades.find(t=>t.orderSn===source.orderSn).state,'TRADE_SUCCESS');assert.equal(trades.find(t=>t.orderSn===failure.orderSn).state,'TRADE_CLOSED')
+  simulationPayments=true
+}
 await until(async()=>{const d=await call('/api/admin/order/order/info/'+failure.orderId);return d.order.status===4&&d.order.inventoryStatus===2},'Restored unconsumed event did not release inventory through a fresh RabbitMQ vhost')
 assert.equal(sql(`SELECT task_status FROM gulimall_wms_test.wms_ware_order_task WHERE order_sn='${failure.orderSn}';`),'2')
 assert.equal(sql(`SELECT stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE sku_id=${failure.skus[0]};`),'0')
@@ -22,5 +31,5 @@ assert.equal((await fetch('http://127.0.0.1:19200/gulimall-products-v1',{method:
 const index=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/search-index.ps1'],{stdio:'ignore',windowsHide:true});assert.equal(index.status,0)
 await call('/api/admin/product/search-sync/rebuild','POST',{})
 await until(async()=>(await call('/api/search?keyword='+source.label)).page.list.length===2,'Search did not rebuild from restored product database')
-writeFileSync('.tools/test/restore-result.json',JSON.stringify({freshInstances:true,savedSession:true,uploadedImages:true,completedOrder:source.orderSn,releaseRecovered:failure.orderSn,searchRebuilt:true,realAlipaySandbox:false},null,2)+'\n')
+writeFileSync('.tools/test/restore-result.json',JSON.stringify({freshInstances:true,savedSession:true,uploadedImages:true,completedOrder:source.orderSn,releaseRecovered:failure.orderSn,searchRebuilt:true,simulationPayments,realAlipaySandbox:false},null,2)+'\n')
 console.log('PASS: restored order snapshots, Redis Session, image hashes, fresh-vhost release recovery and Elasticsearch rebuild.')

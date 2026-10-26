@@ -77,6 +77,9 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       const number = phone()
       const otp = await anonymous.call('/api/auth/sms/code', { method: 'POST', body: { phone: number } })
       assert.equal(otp.status, 200)
+      const delivery=spawnSync('docker',['compose','exec','-T','redis','redis-cli','HSET','sms:code:'+number,'delivered','0'],{encoding:'utf8',windowsHide:true});assert.equal(delivery.status,0)
+      assert.equal((await anonymous.call('/api/auth/register',{method:'POST',body:{username:`undelivered_${runId.slice(0,7)}`,phone:number,password,code:otp.data.developmentCode}})).status,400,'A pending or failed delivery cannot authorize registration')
+      const delivered=spawnSync('docker',['compose','exec','-T','redis','redis-cli','HSET','sms:code:'+number,'delivered','1'],{encoding:'utf8',windowsHide:true});assert.equal(delivered.status,0)
       assert.equal((await anonymous.call('/api/auth/sms/code', { method: 'POST', body: { phone: number } })).status, 429)
       const wrong = otp.data.developmentCode === '000000' ? '111111' : '000000'
       for (let attempt = 0; attempt < 5; attempt++) {

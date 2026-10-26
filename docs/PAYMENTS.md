@@ -107,6 +107,8 @@ npm run build
 
 本地验证使用独立测试密钥和 `payment-test` 配置。仅该配置允许 127.0.0.1 的 HTTP 测试网关；页面和结果接口明确返回 LOCAL_TEST。默认服务仍是 ALIPAY_SANDBOX，缺少真实配置就禁用支付，不自动启用本地替代。
 
+阶段 10–13 增加显式 `scripts/simulation.ps1 Start` 常驻入口，持久台账、浏览器模拟付款、五秒通知重试和备份恢复见 [SIMULATION.md](SIMULATION.md)。入口独立管理本地密钥和子进程配置，不更改原支付接口或根目录 .env；普通自动化支付验收仍默认内存台账。真实支付宝、公网通知尚未执行。
+
 ```powershell
 node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs scripts/cart-ui.test.mjs scripts/payment-ui.test.mjs
 ./scripts/scripts.test.ps1
