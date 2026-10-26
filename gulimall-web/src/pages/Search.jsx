@@ -76,7 +76,7 @@ export default function Search() {
         <label>品牌<select className="input" name="brandId" value={form.brandId || ''} onChange={change}>
           <option value="">全部品牌</option>
           {brands.map((brand) => <option key={brand.brandId} value={brand.brandId}>{brand.name}</option>)}
-          {form.brandId && !brands.some((b) => String(b.brandId) === form.brandId) && <option value={form.brandId}>Brand {form.brandId}</option>}
+          {form.brandId && !brands.some((b) => String(b.brandId) === form.brandId) && <option value={form.brandId}>品牌 {form.brandId}</option>}
         </select></label>
         <label>最低价格<input className="input" type="number" name="min" min="0" step="0.01" value={form.min || ''} onChange={change} /></label>
         <label>最高价格<input className="input" type="number" name="max" min="0" step="0.01" value={form.max || ''} onChange={change} /></label>

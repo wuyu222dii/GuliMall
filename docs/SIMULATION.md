@@ -9,12 +9,18 @@
 ```powershell
 ./scripts/simulation.ps1 Start
 ./scripts/simulation.ps1 Status
+./scripts/simulation.ps1 Diagnose
+./scripts/simulation.ps1 Diagnose -Json
 ./scripts/simulation.ps1 Stop
 ```
 
 浏览器访问 `http://127.0.0.1:8080`，后台为 `/admin`。Start 会复用 gulimall-demo 基础设施、十个业务 jar、静态文件和本机 18170 模拟支付网关，等待服务注册与 API 就绪；重复启动不重启健康服务。Stop 仅操作本工作区进程，保留基础设施、卷、图片和交易文件；基础设施另用 `dev.ps1 Down` 停止且保留卷。
 
 端口被非托管程序占用时拒绝启动，不结束其他进程。缺少 jar/dist 时先停止本项目服务，再按开发文档构建。配置或台账损坏时查看 `.tools/simulation/gateway.err.log`，不要删除文件“重置成功”。业务日志在 `.tools/runtime`。
+
+Diagnose 只读检查 Docker、五项容器、十个服务的注册与端口、静态入口和持久模拟网关；文本或 JSON 返回各项状态、简短原因、日志位置和恢复命令。有不可用项退出码为 1，全部就绪为 0；不会执行输出的恢复命令。独立测试内可诊断 Test 环境，不把故障自动切换到演示库。
+
+管理员在订单详情查看“处理进度”，可区分消息发布确认、消费确认、库存结果、重试计划和到期检查。发布确认不代表库存已处理，发货仍由服务端门禁决定；查询失败明确显示未知。重试使用原有“重试确认与消息”，不直接改订单或库存。
 
 模拟覆盖配置只传入子进程，调用结束恢复原环境变量，不覆盖根目录 `.env`。强制 dev,payment-test、开发验证码、IMAGE_STORAGE=local、OSS/SMS 云组件关闭，支付网关及通知/返回地址均为 127.0.0.1。真实配置保留在原文件中，不会成为此入口的付款目标。
 

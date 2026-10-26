@@ -1,4 +1,4 @@
-param([ValidateSet('All','Auth','Product','Admin','Search','Cart','Order','Payment','Fulfillment','Success','Failure','Recovery')][string]$Suite='All')
+param([ValidateSet('All','Auth','Product','Admin','Search','Cart','Order','Payment','Fulfillment','Success','Failure','Recovery','Diagnostics')][string]$Suite='All')
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path $PSScriptRoot -Parent
 $taskOriginal=@{}
@@ -65,7 +65,10 @@ try {
     & "$PSScriptRoot/services.ps1" Start
     Wait-TestServices
     & "$PSScriptRoot/search-index.ps1"
-    if($Suite -in @('Success','Failure','Recovery')) {
+    if($Suite -eq 'Diagnostics') {
+        & node scripts/diagnostics.acceptance.mjs
+        if($LASTEXITCODE -ne 0){throw 'Diagnostics acceptance failed'}
+    } elseif($Suite -in @('Success','Failure','Recovery')) {
         $taskStories=if($Suite -eq 'Recovery'){@('success','failure')}else{@($Suite.ToLower())}
         foreach($taskStory in $taskStories){Wait-TestServices;& node scripts/demo.mjs $taskStory;if($LASTEXITCODE -ne 0){throw 'Demo failed'}}
         if($Suite -eq 'Recovery'){

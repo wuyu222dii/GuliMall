@@ -49,6 +49,22 @@ public class OrderFulfillmentService {
             if(deliveryCompany.isEmpty() || deliveryCompany.length()>64 || deliveryCompany.chars().anyMatch(Character::isISOControl) || !deliverySn.matches("[A-Za-z0-9][A-Za-z0-9-]{0,63}")) throw new ApiProblem(400,"请填写物流公司（1–64 字符）和运单号（1–64 位字母、数字或连字符）");
         }
     }
+    @Transactional(readOnly=true)
+    public Map<String,Object> processing(long id) {
+        OrderEntity order=required(id);
+        Map<String,Object> result=new LinkedHashMap<>();
+        result.put("orderStatus",order.getStatus()); result.put("inventoryStatus",order.getInventoryStatus()); result.put("fulfillmentReady",order.isFulfillmentReady());
+        List<Map<String,Object>> events=db.queryForList("SELECT event_type,attempts,sent_at,consumed_at,next_attempt,last_error FROM oms_trade_event WHERE order_sn=? ORDER BY id",order.getOrderSn());
+        List<Map<String,Object>> safe=new ArrayList<>();
+        for(Map<String,Object> event:events) {
+            Map<String,Object> row=new LinkedHashMap<>(); row.put("type",event.get("event_type")); row.put("attempts",event.get("attempts"));
+            row.put("sentAt",event.get("sent_at")); row.put("consumedAt",event.get("consumed_at"));
+            boolean scheduled=event.get("consumed_at")==null && "CLOSE_TIMER".equals(event.get("event_type")) && event.get("sent_at")!=null;
+            row.put("nextAttempt",event.get("consumed_at")==null&&!scheduled?event.get("next_attempt"):null); row.put("scheduledFor",scheduled?order.getPaymentDeadline():null);
+            row.put("errorMessage",event.get("last_error")==null?null:"消息未完成确认，等待重试；请核对依赖服务。"); safe.add(row);
+        }
+        result.put("events",safe); return result;
+    }
     private void record(long id,int state,String actor,String note) {
         db.update("INSERT INTO oms_order_operate_history(order_id,operate_man,create_time,order_status,note) VALUES(?,?,NOW(),?,?)",id,actor,state,note);
     }

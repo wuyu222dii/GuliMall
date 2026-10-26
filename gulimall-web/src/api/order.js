@@ -17,4 +17,5 @@ export const retryPaymentEvents = (orderSn) => request.post(`/api/admin/order/pa
 export const cancelOrder = (owner, id) => request.post(`/api/order/mine/${id}/cancel`, {}, ownerConfig(owner))
 export const receiveOrder = (owner, id) => request.post(`/api/order/mine/${id}/receive`, {}, ownerConfig(owner))
 export const getAdminOrder = (id) => request.get(`/api/admin/order/order/info/${id}`)
+export const getOrderProcessing = (id) => request.get(`/api/admin/order/order/${id}/processing`)
 export const shipOrder = (id, shipment) => request.post(`/api/admin/order/order/${id}/ship`, shipment)

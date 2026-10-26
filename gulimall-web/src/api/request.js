@@ -41,7 +41,7 @@ request.interceptors.response.use(
     const failure = new Error(error.response?.data?.msg || (status >= 500
       ? '服务暂不可用，请稍后重试。'
       : error.code === 'ECONNABORTED' ? '请求超时，请查询原操作后再重试。'
-        : error.message || '连接失败，请重试。'))
+        : '连接失败，请查询原操作后重试。'))
     failure.status = status
     return Promise.reject(failure)
   }

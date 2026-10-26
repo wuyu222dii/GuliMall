@@ -51,6 +51,8 @@ public class OrderController {
     public R ship(@PathVariable long id,@RequestBody com.atguigu.gulimall.order.service.OrderFulfillmentService.Shipment shipment) {
         return R.ok().put("order",fulfillment.ship(id,shipment));
     }
+    @GetMapping("/{id}/processing")
+    public R processing(@PathVariable long id) { return R.ok().put("processing",fulfillment.processing(id)); }
 
     /**
      * Save

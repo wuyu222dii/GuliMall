@@ -1,4 +1,4 @@
-param([ValidateSet('Start','Stop','Status')][string]$Action='Start')
+param([ValidateSet('Start','Stop','Status','Diagnose')][string]$Action='Start',[switch]$Json)
 $ErrorActionPreference='Stop'
 $simulationRoot=Split-Path $PSScriptRoot -Parent
 $simulationOriginal=@{};Get-ChildItem Env: | ForEach-Object {$simulationOriginal[$_.Name]=$_.Value}
@@ -24,6 +24,11 @@ function Simulation-Healthy {
 }
 Push-Location $simulationRoot
 try {
+    if($Action -eq 'Diagnose') {
+        . "$PSScriptRoot/env.ps1"
+        if($Json){& node (Join-Path $PSScriptRoot 'simulation-diagnostics.mjs') --json}else{& node (Join-Path $PSScriptRoot 'simulation-diagnostics.mjs')}
+        if($LASTEXITCODE -ne 0){exit $LASTEXITCODE};return
+    }
     if($env:GULIMALL_TEST -eq '1' -or ($env:COMPOSE_PROJECT_NAME -and $env:COMPOSE_PROJECT_NAME -ne 'gulimall-demo')){throw 'Leave the isolated test environment before operating the simulation.'}
     . "$PSScriptRoot/env.ps1"
     $env:COMPOSE_FILE=Join-Path $simulationRoot 'compose.yaml';$env:COMPOSE_PROJECT_NAME='gulimall-demo'

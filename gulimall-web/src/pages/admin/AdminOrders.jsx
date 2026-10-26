@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { listOrders } from '../../api/admin'
-import { getAdminOrder, shipOrder, retryPaymentEvents } from '../../api/order'
+import { getAdminOrder, shipOrder, retryPaymentEvents, getOrderProcessing } from '../../api/order'
+import { orderTime } from '../../utils/order'
 import OrderDetails from '../../components/OrderDetails'
 
 const statuses = ['待付款', '已支付', '已发货', '已完成', '已关闭', '无效', '创建中', '关闭确认中', '支付关单确认中', '异常付款']
@@ -17,6 +18,8 @@ export default function AdminOrders() {
   const [fields, setFields] = useState({ orderSn: '', status: '' })
   const [filter, setFilter] = useState(fields)
   const [detail, setDetail] = useState(null)
+  const [processing, setProcessing] = useState(null)
+  const [processingError, setProcessingError] = useState('')
   const [shipment, setShipment] = useState({ deliveryCompany: '', deliverySn: '' })
   useEffect(() => {
     let active = true
@@ -25,8 +28,11 @@ export default function AdminOrders() {
     return () => { active = false }
   }, [page, refresh, filter])
   const show = async (id) => {
-    setBusy(true); setError(''); setDetail(null); setShipment({ deliveryCompany: '', deliverySn: '' })
-    try { setDetail(await getAdminOrder(id)) }
+    setBusy(true); setError(''); setDetail(null); setProcessing(null); setProcessingError(''); setShipment({ deliveryCompany: '', deliverySn: '' })
+    try {
+      setDetail(await getAdminOrder(id))
+      try { setProcessing((await getOrderProcessing(id)).processing) } catch(e) { setProcessingError(e.message) }
+    }
     catch (e) { setError(e.message) }
     finally { setBusy(false) }
   }
@@ -58,6 +64,7 @@ export default function AdminOrders() {
       {!result?.list?.length && <tr><td colSpan={7}>{loading ? '正在加载…' : error ? '查询失败，请重试。' : '暂无匹配订单。'}</td></tr>}
     </tbody></table></div><div className="pagination"><button disabled={page <= 1 || busy || loading} onClick={() => setPage(page - 1)}>上一页</button><span>第 {page} / {result?.totalPage || 1} 页</span><button disabled={page >= (result?.totalPage || 1) || busy || loading} onClick={() => setPage(page + 1)}>下一页</button></div>
     {detail && <section className="card order-summary"><h2>订单详情：{statuses[detail.order.status]}</h2><p className="order-number">{detail.order.orderSn}</p><OrderDetails detail={detail} />
+      <h3>处理进度</h3>{processingError ? <p className="error-msg" role="alert">处理进度查询失败：{processingError} 请重新打开详情。</p> : processing && <><p>订单：{statuses[processing.orderStatus]}；库存：{({0:'等待确认',1:'扣减已确认',2:'释放已确认'})[processing.inventoryStatus] || '未知'}；{processing.fulfillmentReady?'可发货':'禁止发货或已完成履约'}</p><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>事件</th><th>发布尝试</th><th>发布确认</th><th>消费确认</th><th>下次重试 / 到期检查</th><th>提示</th></tr></thead><tbody>{processing.events.map(event=><tr key={event.type}><td>{({STOCK_DEDUCT:'库存扣减',STOCK_RELEASE:'库存释放',CLOSE_TIMER:'到期检查'})[event.type] || event.type}</td><td>{event.attempts}</td><td>{orderTime(event.sentAt)}</td><td>{orderTime(event.consumedAt)}</td><td>{event.scheduledFor ? `到期检查：${orderTime(event.scheduledFor)}` : orderTime(event.nextAttempt)}</td><td>{event.errorMessage || '—'}</td></tr>)}</tbody></table></div>{!processing.events.length&&<p>暂无持久化事件，请结合订单和库存状态核对。</p>}</>}
       {detail.order.fulfillmentReady && <form className="admin-form" onSubmit={ship}><fieldset disabled={busy}><legend>填写物流并发货</legend><div className="admin-form-grid"><label>物流公司<input className="input" required maxLength={64} value={shipment.deliveryCompany} onChange={(e) => setShipment({ ...shipment, deliveryCompany: e.target.value })} /></label><label>运单号<input className="input" required maxLength={64} pattern="[A-Za-z0-9][A-Za-z0-9-]{0,63}" value={shipment.deliverySn} onChange={(e) => setShipment({ ...shipment, deliverySn: e.target.value })} /></label></div><p className="admin-note">运单号使用字母、数字或连字符。请核对包裹与收件人，确认后物流信息不可更改。</p><button className="btn btn-primary">{busy ? '正在提交…' : '确认发货'}</button></fieldset></form>}
     </section>}
   </section>
