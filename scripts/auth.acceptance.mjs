@@ -195,6 +195,29 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       assert.equal((await admin.call('http://127.0.0.1:9000/testSubmit')).status, 405)
       assert.equal((await admin.call('http://127.0.0.1:12000/internal/search/save/product', { method: 'POST', body: [] })).status, 403)
     })
+    await t.test('address edits, concurrent defaults, legacy repair and stable pagination', async () => {
+      const path='/api/member/addresses'
+      const created=await Promise.all([1,2].map(i=>a.client.call(path,{method:'POST',body:{...address,detailAddress:`Address ${i}`,defaultStatus:1}})))
+      created.forEach(r=>assert.equal(r.status,200))
+      const ids=created.map(r=>r.data.id)
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_ums_test.ums_member_receive_address WHERE member_id=${a.account.id} AND default_status=1;`),'1')
+      const defaults=await Promise.all(ids.map(id=>a.client.call(`${path}/${id}/default`,{method:'PUT',body:{}})))
+      defaults.forEach(r=>assert.equal(r.status,200))
+      let list=(await a.client.call(path+'?limit=1&page=1')).data
+      assert.equal(list.page.list.length,1);assert.equal(list.page.list[0].defaultStatus,1);assert.equal(list.multipleDefaults,false)
+      assert.equal((await a.client.call(`${path}/${ids[0]}`,{method:'PUT',body:{...address,detailAddress:'Edited',defaultStatus:1}})).status,200)
+      assert.equal((await a.client.call(`${path}/${ids[0]}`)).data.memberReceiveAddress.detailAddress,'Edited')
+      assert.equal((await b.client.call(`${path}/${ids[0]}/default`,{method:'PUT',body:{}})).status,403)
+      assert.equal((await a.client.call(`${path}/${ids[0]}/default`,{method:'PUT',body:{},csrf:false})).status,403)
+      // Deliberately seed a legacy inconsistency only after the independent test database guard.
+      sql(`UPDATE gulimall_ums_test.ums_member_receive_address SET default_status=1 WHERE member_id=${a.account.id};`)
+      assert.equal((await a.client.call(path)).data.multipleDefaults,true)
+      assert.equal((await a.client.call(`${path}/${ids[1]}`,{method:'PUT',body:{...address,defaultStatus:0}})).status,200)
+      const oldest=Number(sql(`SELECT MIN(id) FROM gulimall_ums_test.ums_member_receive_address WHERE member_id=${a.account.id};`))
+      assert.equal((await a.client.call(path)).data.page.list[0].id,oldest)
+      assert.equal((await a.client.call(path,{method:'DELETE',body:[oldest]})).status,200)
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_ums_test.ums_member_receive_address WHERE member_id=${a.account.id} AND default_status=1;`),'0')
+    })
     await t.test('logout invalidates a replayed old cookie across services', async () => {
       const old = new Client(); old.cookie = a.client.cookie
       assert.equal((await a.client.call('/api/auth/logout', { method: 'POST' })).status, 200)

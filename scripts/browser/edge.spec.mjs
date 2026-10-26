@@ -20,7 +20,7 @@ async function product(admin,run){
 async function address(page){
  await page.getByRole('link',{name:'收货地址',exact:true}).click();await page.getByRole('button',{name:'新增地址',exact:true}).click()
  for(const[name,value]of Object.entries({'收件人':'Edge 模拟会员','手机号':'13800000001','省份':'浙江省','城市':'杭州市','区县':'西湖区','详细地址':'独立浏览器验收19号'}))await page.getByLabel(name,{exact:true}).fill(value)
- await page.getByRole('button',{name:'保存',exact:true}).click();await expect(page.getByText('独立浏览器验收19号',{exact:false})).toBeVisible()
+ await page.getByRole('checkbox',{name:'设为默认地址',exact:true}).check();await page.getByRole('button',{name:'保存',exact:true}).click();await expect(page.getByText('独立浏览器验收19号',{exact:false})).toBeVisible()
 }
 async function buy(page,sku,count=1){await page.goto('/product/'+sku);await page.getByLabel('数量',{exact:true}).fill(String(count));await page.getByRole('button',{name:'立即购买',exact:true}).click();await page.getByRole('button',{name:'结算已选商品',exact:true}).click()}
 async function submit(page){const sent=page.waitForResponse(r=>r.url().endsWith('/mine/submit')&&r.request().method()==='POST');await page.getByRole('button',{name:'提交订单',exact:true}).click();const r=await sent;expect(r.status()).toBe(200);return(await r.json()).result.order}

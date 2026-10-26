@@ -20,7 +20,7 @@ test('Demo 冷恢复：原交易可读、完整模拟交易及持久释放意图
   const account={username:fixture.run,password:'Restore_'+randomUUID()+'!'};fixture.memberId=await register(member,account.username,account.password);writeFileSync(file('restore-member.json'),JSON.stringify(account)+'\n')
   await member.getByRole('link',{name:'收货地址',exact:true}).click();await member.getByRole('button',{name:'新增地址',exact:true}).click()
   for(const[name,value]of Object.entries({'收件人':'恢复模拟会员','手机号':'13800000001','省份':'浙江省','城市':'杭州市','区县':'西湖区','详细地址':'恢复副本验收20号'}))await member.getByLabel(name,{exact:true}).fill(value)
-  await member.getByRole('button',{name:'保存',exact:true}).click();await expect(member.getByText('恢复副本验收20号',{exact:false})).toBeVisible()
+  await member.getByRole('checkbox',{name:'设为默认地址',exact:true}).check();await member.getByRole('button',{name:'保存',exact:true}).click();await expect(member.getByText('恢复副本验收20号',{exact:false})).toBeVisible()
  }else{
   await member.goto('/login?redirect=%2Fmember%2Forders');await signIn(member,JSON.parse(readFileSync(file('restore-member.json'),'utf8')));await expect(member.getByRole('heading',{name:'已完成',exact:true})).toBeVisible();await expect(member.getByRole('heading',{name:'已关闭',exact:true})).toBeVisible();await expect(member.getByText(/恢复模拟会员/)).toHaveCount(2)
  }

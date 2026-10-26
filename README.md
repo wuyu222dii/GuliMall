@@ -36,6 +36,8 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 - [订单查询、发货、收货与取消](docs/FULFILLMENT.md)
 - [前端现状](gulimall-web/README.md)
 
+阶段 22 已完成地址编辑、默认地址事务、分页及结算地址失效处理；下一轮进度见 [阶段 22–26](docs/STAGES22-26.md)。
+
 ## 快速开始
 
 需要 JDK 8、Maven 3.6+、Node/npm、Docker Desktop Linux 容器引擎及 Compose v2。

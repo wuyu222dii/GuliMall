@@ -43,7 +43,7 @@ for(const round of [1,2])test(`模拟商城完整浏览器交易，第 ${round} 
     await test.step('会员开发码注册、地址、搜索及购物车',async()=>{
       record.memberId=await register(member,run+'a');await member.getByRole('link',{name:'收货地址',exact:true}).click();await member.getByRole('button',{name:'新增地址',exact:true}).click()
       for(const[name,value]of Object.entries({'收件人':'浏览器模拟会员','手机号':'13800000001','省份':'浙江省','城市':'杭州市','区县':'西湖区','详细地址':'独立测试地址16号'}))await member.getByLabel(name,{exact:true}).fill(value)
-      await member.getByRole('button',{name:'保存',exact:true}).click();await expect(member.getByText('独立测试地址16号',{exact:false})).toBeVisible()
+      await member.getByRole('checkbox',{name:'设为默认地址',exact:true}).check();await member.getByRole('button',{name:'保存',exact:true}).click();await expect(member.getByText('独立测试地址16号',{exact:false})).toBeVisible()
       await member.goto('/search?keyword='+encodeURIComponent(run));await expect(member.locator('.product-card')).toHaveCount(2);await member.locator('.product-card').filter({hasText:label+' 红色'}).click();await member.getByLabel('数量',{exact:true}).fill('3');await member.getByRole('button',{name:'加入购物车',exact:true}).click();await expect(member.getByText('已加入购物车。',{exact:false})).toBeVisible()
       await member.goto('/product/'+record.skus[1]);await member.getByRole('button',{name:'立即购买',exact:true}).click();await expect(member).toHaveURL(/\/cart$/);await expect(member.locator('.cart-total')).toContainText('¥3.75');await member.getByRole('button',{name:'结算已选商品',exact:true}).click()
     })
