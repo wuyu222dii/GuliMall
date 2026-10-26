@@ -2,13 +2,15 @@
 
 Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / Vite 前端。
 
-阶段 0–17 的本地验收已通过，当前提供中文常驻模拟商城、运行诊断、完整浏览器回归及演示备份只读审计；真实第三方接入继续后置。
+阶段 0–21 的本地模拟验收已通过，当前提供中文常驻商城、运行诊断、Chromium/Edge 回归和完整隔离冷恢复；真实第三方接入继续后置。
 
 阶段 18 的干净目录构建、环境/配置预检和本机隔离交易及重启已通过；独立机器和第二位操作者验收仍待补，见 [交接准备](docs/HANDOFF-SETUP.md)。
 
 阶段 19 保留 Chromium 两轮完整回归，补齐 Edge 关键交易、会话失效、返回刷新、同一确认多标签防重及窄屏键盘操作，见 [浏览器回归](docs/BROWSER-REGRESSION.md)。
 
 阶段 20 已完成 Demo 冷备份的完整隔离恢复、原交易核对、消息补偿及恢复后继续交易；保留 Test 保护并复验 Recovery，见 [恢复说明](docs/DEMO-RESTORE.md)。常驻环境仍为本地模拟，不接真实第三方。
+
+阶段 21 完成全量回归与交付收口：Java 29 项、Node 36 项、68 个业务场景、四类诊断故障、四项 Chromium/Edge 场景及两类恢复均通过。旧跳过为 9 个类、17 个手工方法，不计通过；详情见 [阶段 21 验收](docs/STAGE21.md)。独立机器与第二位操作者仍待补。
 
 已实现管理员录入多 SKU 商品、采购入库、上下架与搜索、会员注册登录、购物车、幂等下单与原子锁库、支付处理、发货和确认收货。金额与归属由服务端校验；订单、库存通过本地事务、持久化事件、幂等消费与扫描补偿恢复。
 
@@ -20,6 +22,8 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 - [干净目录构建、环境预检与本机隔离交接](docs/HANDOFF-SETUP.md)
 - [Chromium / Edge 回归与确认页多标签行为](docs/BROWSER-REGRESSION.md)
 - [Demo 冷备份完整隔离恢复与继续交易](docs/DEMO-RESTORE.md)
+- [阶段 21 全量回归、实际修复与交付结果](docs/STAGE21.md)
+- [9 个历史忽略类、17 个方法与替代覆盖](docs/LEGACY-TESTS.md)
 - [独立测试、演示部署、交易演示与备份恢复](docs/RUNBOOK.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
 - [认证接口、管理员配置与安全验收](docs/AUTHENTICATION.md)

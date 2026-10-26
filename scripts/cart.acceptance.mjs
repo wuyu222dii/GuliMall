@@ -106,8 +106,9 @@ test('stage 5 server cart and atomic guest merge acceptance',async t=>{
       assert.equal((await a.call('/api/cart/selected')).status,503)
       assert.equal((await a.call('/api/cart/items','POST',{skuId:sku1,count:1})).status,503)
       const body={mergeId:randomUUID(),items:[{skuId:sku1,count:1,checked:true}]};assert.equal((await merge(body)).status,200)
-      service('Start','product');await until(async()=>(await line()).status==='AVAILABLE','Product service did not recover')
-      assert.equal((await line()).count,3);assert.equal((await line()).price,13.5)
+      let recovered
+      service('Start','product');await until(async()=>{recovered=await line();return recovered.status==='AVAILABLE'},'Product service did not recover')
+      assert.equal(recovered.count,3);assert.equal(recovered.price,13.5)
       service('Stop','cart')
       // Cached instances fail to connect with 500 until discovery removal produces 503.
       const offline=await guest.call('/api/cart');assert.ok([500,503].includes(offline.status));assert.equal(offline.data.cart,undefined)

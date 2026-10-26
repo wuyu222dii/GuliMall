@@ -29,8 +29,15 @@ async function ok(path,method='GET',body) { const r=await admin.call(path,method
 const publish=(status)=>admin.call(`/api/admin/product/search-sync/${id}/publish?status=${status}`,'POST')
 const retry=()=>ok(`/api/admin/product/search-sync/${id}/retry`,'POST')
 async function search(params={}) {const r=await guest.call('/api/search?'+new URLSearchParams({keyword:label,...params}));assert.equal(r.status,200,JSON.stringify(r.data));return r.data.page}
-async function until(check,message) {for(let i=0;i<50;i++){try{if(await check())return}catch{} await new Promise(r=>setTimeout(r,1000))}assert.fail(message)}
+async function until(check,message,seconds=50) {for(let i=0;i<seconds;i++){try{if(await check())return}catch{} await new Promise(r=>setTimeout(r,1000))}assert.fail(message)}
 async function job() {return (await ok('/api/admin/product/search-sync?limit=100')).page.list.find(j=>j.spu_id===id)}
+async function synchronized(message) {
+  const total=(await ok('/api/admin/product/search-sync?limit=1')).page.totalCount
+  // The worker handles 20 jobs per 15s tick; each ES refresh may wait 1s, and failed jobs back off 30s.
+  const seconds=Math.max(50,Math.ceil(total/20)*(15+20)+30)
+  console.log(`Background synchronization: ${total} persisted tasks, ${seconds}s verification budget`)
+  await until(async()=>(await job()).state===1,message,seconds)
+}
 async function document(sku) {const r=await fetch(`${es}/${index}/_doc/${sku}`);return {status:r.status,data:await r.json()}}
 
 test('stage 4 Elasticsearch search and durable synchronization acceptance',async t=>{
@@ -87,14 +94,14 @@ test('stage 4 Elasticsearch search and durable synchronization acceptance',async
       await until(async()=>{const j=await job();return j.version>=version},'Durable task lost after restart')
       command('docker',['compose','start','elasticsearch']);esStopped=false
       await until(async()=>(await fetch(es)).ok,'ES did not recover')
-      await until(async()=>(await job()).state===1,'Automatic retry did not recover after ES restart')
+      await synchronized('Automatic retry did not recover after ES restart')
       assert.equal((await search({min:'13.50',max:'13.50'})).totalCount,1)
     })
     await t.test('lost index is rebuilt from product databases with published items restored',{skip:process.env.GULIMALL_FAULTS!=='1'},async()=>{
       assert.equal((await fetch(`${es}/${index}`,{method:'DELETE'})).status,200)
       assert.equal((await guest.call('/api/search?keyword='+label)).status,503)
       await ok('/api/admin/product/search-sync/rebuild','POST')
-      await until(async()=>(await job()).state===1,'Rebuild did not complete')
+      await synchronized('Rebuild did not complete')
       assert.equal((await search()).totalCount,3)
       await until(async()=>{const p=await guest.call('/api/search?keyword=Demo');return p.status===200&&p.data.page.list.some(s=>s.skuId===900001)},'Seed catalog was not rebuilt')
       assert.equal(sql('SELECT GROUP_CONCAT(CONCAT(sku_id,\':\',stock,\':\',stock_locked) ORDER BY sku_id) FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN(900001,900002);'),'900001:10:0,900002:1:0')
