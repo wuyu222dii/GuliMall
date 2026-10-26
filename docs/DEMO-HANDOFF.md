@@ -1,6 +1,6 @@
 # 本地模拟商城交接检查表
 
-本轮交付阶段 14–17，继续使用本机模拟付款、开发验证码与真实本地图片。商品、订单、库存、会话和消息走真实业务处理；不接真实第三方或公网。操作前确认没有测试或备份任务正在执行。
+本机模拟交付已扩展至阶段 19，独立机器/第二位操作者仍待补。继续使用本机模拟付款、开发验证码与真实本地图片；商品、订单、库存、会话和消息走真实处理，不接真实第三方或公网。操作前确认没有测试或备份任务正在执行。
 
 ## 1. 准备、启动与诊断
 
@@ -40,13 +40,13 @@ node --test @checks
 ./scripts/scripts.test.ps1
 ./scripts/test.ps1 -Suite All
 ./scripts/test.ps1 -Suite Diagnostics
-# 安装锁定依赖后，仅需安装 Chromium，无需 npx：
+# 安装锁定依赖、准备本机 Edge 后安装 Chromium，无需 npx：
 node gulimall-web/node_modules/@playwright/test/cli.js install chromium
 ./scripts/test.ps1 -Suite Browser
 ./scripts/test.ps1 -Suite Recovery
 ```
 
-串行执行。运行套件暂停常驻环境，成功和失败后均恢复原模式；缺少浏览器/生产构建会在暂停前拒绝。Browser 每次两轮完整页面交易，各轮数据隔离，并验证 375px、刷新、会员边界及终态停轮询。测试只使用 _test 库，不读取或清理人工会员及交易。
+串行执行。运行套件暂停常驻环境，成功和失败后均恢复原模式；缺少 Chromium/Edge/生产构建会在暂停前拒绝。Browser 每次两轮 Chromium 完整交易和两项 Edge 场景，数据隔离，并验证 375px 键盘、会话失效、同一确认地址的多标签防重、刷新、会员边界及终态停轮询，见 [浏览器回归](BROWSER-REGRESSION.md)。测试只使用 _test 库，不读取或清理人工会员及交易。
 
 截图在 output/playwright；失败截图遮罩输入和状态消息，trace 只保留动作时序。完整 DOM、请求/响应正文和输入值不归档，排障结合截图、步骤与服务日志。证据索引 `.tools/stage17-evidence.json`，具体报告路径在其中；这些文件与备份均私有，不进入 Git。
 

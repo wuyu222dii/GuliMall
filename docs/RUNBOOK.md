@@ -61,7 +61,7 @@ node gulimall-web/node_modules/@playwright/test/cli.js install chromium
 
 68 个既有业务场景串行执行，故障场景不跳过，日志在 `.tools/test/<suite>.log`。包括身份与地址归属、金额、并发锁库、支付验签和重复通知、付款/关单竞争、发货门禁、重复收货、响应丢失、杀进程、Redis/ES/RabbitMQ 停止及恢复。旧的直接 `node ...acceptance.mjs` 演示库入口已关闭，统一使用 test.ps1。
 
-Diagnostics 另行验证 ES、RabbitMQ、仓储与模拟网关停止/恢复定位。Browser 另行串行运行两轮完整页面交易及取消，用不同会员与商品核对库存、金额、隔离、终态停止轮询及 375px 页面。依赖、脱敏 artifact 和失败恢复说明见 [SIMULATION.md](SIMULATION.md)。三类套件均不连接演示库，不并行执行。
+Diagnostics 另行验证 ES、RabbitMQ、仓储与模拟网关停止/恢复定位。Browser 串行运行两轮 Chromium 完整交易及两项 Edge 场景，用独立夹具核对库存、金额、隔离、终态查询、会话失效、同一确认多标签及 375px 键盘操作，见 [BROWSER-REGRESSION.md](BROWSER-REGRESSION.md)。依赖、脱敏 artifact 和恢复说明见 [SIMULATION.md](SIMULATION.md)。三类套件不连接演示库，不并行执行。
 
 测试卷保留，便于排错和重复运行；业务脚本清理各自临时夹具。不要把测试配置复制到 .env。源码基线变化后如确需重建测试库，先保存诊断，仅对确认属于 gulimall-test 的测试卷处理；不要删除演示卷。
 
@@ -166,3 +166,9 @@ Browser 两轮完整页面交易通过（23.0s / 19.2s），含图片、双 SKU�
 执行入口、三个预检模式与独立机器待办见 [HANDOFF-SETUP.md](HANDOFF-SETUP.md)。clean-check.ps1 导出 Git 索引快照，在含空格路径从源码构建；Runtime 在随机独立项目和空卷运行成功交易/取消及整套重启，结束清理本次资源并恢复原常驻模式。预装工具需在源码之外，机器依赖缓存可复用，不承诺离线或全新操作系统安装。
 
 2026-10-26 本机验收通过：十三项目构建、29 项 Java（9 项历史忽略）、30 项默认 Node、PowerShell 自检、前端 build/lint；独立环境检索、注册、下单、模拟付款、发货收货、取消及重启保留正确。失败路径也已实际恢复原模式。私有证据 `.tools/stage18-evidence.json`，最终导出 `.tools/clean 69823a90`；原人工交易、库存、配置与密钥保留，18 项诊断健康。本轮未重新执行整套 All/Browser；独立机器与第二位操作者仍待补。
+
+## 阶段 19 浏览器验收
+
+Browser 当前包含两轮 Chromium 完整交易和两项本机 Edge 场景，先实际检查 Edge 能否启动，缺失不会暂停常驻环境。完整命令、确认页地址、多标签语义、会话失效方式与脱敏策略见 [BROWSER-REGRESSION.md](BROWSER-REGRESSION.md)。
+
+2026-10-26 四项通过，默认 Node 32 项、PowerShell 自检及前端 lint/build 通过；修复同一确认页在新标签中重新创建请求的问题。失败后的原模式恢复也已验证，人工数据与密钥保留，18 项诊断健康。证据 `.tools/stage19-evidence.json`，主日志 `.tools/stage19-browser-final.log`。本轮未重跑 Java/All/Recovery；自然 Session TTL、跨内核浏览器和实体设备仍未验收，真实第三方未接入。

@@ -10,6 +10,10 @@ export function paymentTarget(action, mode) {
 }
 export function memberRedirect(value) {
   if (['/member/orders', '/member/address', '/checkout', '/cart'].includes(value)) return value
+  if (value?.startsWith('/checkout?')) {
+    const parsed = new URL(value, 'http://app.local'), tokens = parsed.searchParams.getAll('confirmation')
+    if (!parsed.hash && tokens.length === 1 && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(tokens[0])) return `/checkout?confirmation=${tokens[0]}`
+  }
   if (value?.startsWith('/payment/return?')) {
     const parsed = new URL(value, 'http://app.local'), numbers = parsed.searchParams.getAll('orderSn')
     if (!parsed.hash && numbers.length === 1 && /^[a-f0-9]{32}$/.test(numbers[0])) return `/payment/return?orderSn=${numbers[0]}`

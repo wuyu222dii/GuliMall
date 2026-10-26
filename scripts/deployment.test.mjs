@@ -16,6 +16,16 @@ test('missing browser prerequisites fail before the standing environment is stop
   assert.notEqual(result.status,0);assert.match(result.stderr,/Browser prerequisites missing/);assert.doesNotMatch(result.stdout,/Stopped gulimall|Simulation stopped/);assert.equal(await readFile(root+'/.env','utf8'),before)
 })
 
+test('an unavailable Edge channel is rejected before any standing service or configuration is changed',{skip:process.platform!=='win32'},async()=>{
+  const root=resolve('.tools/edge-preflight-'+randomUUID()),module=root+'/gulimall-web/node_modules/@playwright/test';await mkdir(module,{recursive:true});await mkdir(root+'/scripts',{recursive:true});await mkdir(root+'/gulimall-web/dist',{recursive:true})
+  for(const file of ['test.ps1','env.ps1'])await copyFile('scripts/'+file,root+'/scripts/'+file)
+  await writeFile(module+'/chromium.exe','fixture');await writeFile(module+'/index.mjs',"import {fileURLToPath} from 'node:url';export const chromium={executablePath:()=>fileURLToPath(new URL('./chromium.exe',import.meta.url)),launch:async()=>{throw Error('unavailable fixture')}}")
+  await writeFile(root+'/gulimall-web/dist/index.html','fixture');const before='DB_HOST=127.0.0.1\n';await writeFile(root+'/.env',before)
+  const env={...process.env};delete env.PSModulePath
+  const result=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',root+'/scripts/test.ps1','-Suite','Browser'],{cwd:root,env,windowsHide:true,encoding:'utf8',timeout:30000})
+  assert.notEqual(result.status,0);assert.match(result.stderr,/Install or enable local Microsoft Edge/);assert.doesNotMatch(result.stdout,/Stopped gulimall|Simulation stopped/);assert.equal(await readFile(root+'/.env','utf8'),before)
+})
+
 test('acceptance refuses demo projects and missing test profiles before any network or SQL writes',async()=>{
   const original={...process.env}
   try {

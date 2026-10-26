@@ -32,7 +32,7 @@ $taskResumeSimulation=(Test-Path .tools/simulation/state.json) -and (Get-Content
 try {
     . "$PSScriptRoot/env.ps1"
     if($Suite -eq 'Browser') {
-        & node --input-type=module -e "import {chromium} from './gulimall-web/node_modules/@playwright/test/index.mjs';import {existsSync} from 'node:fs';if(!existsSync(chromium.executablePath())||!existsSync('gulimall-web/dist/index.html'))throw new Error('Build the frontend and install the locked Chromium browser before Browser acceptance');"
+        & node --input-type=module -e "import {chromium} from './gulimall-web/node_modules/@playwright/test/index.mjs';import {existsSync} from 'node:fs';if(!existsSync(chromium.executablePath())||!existsSync('gulimall-web/dist/index.html'))throw new Error('Build the frontend and install the locked Chromium browser before Browser acceptance');try{const b=await chromium.launch({channel:'msedge',headless:true});await b.close()}catch{throw new Error('Install or enable local Microsoft Edge before Browser acceptance')}"
         if($LASTEXITCODE -ne 0){throw 'Browser prerequisites missing; the standing environment was not stopped'}
     }
     foreach($taskOverride in @('SPRING_APPLICATION_JSON','SPRING_CONFIG_LOCATION','SPRING_CONFIG_ADDITIONAL_LOCATION','SPRING_DATASOURCE_URL')){if([Environment]::GetEnvironmentVariable($taskOverride,'Process')){throw "Clear $taskOverride before isolated tests; externally supplied service configuration is not accepted"}}

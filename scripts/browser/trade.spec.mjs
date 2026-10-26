@@ -1,42 +1,18 @@
 import {test,expect} from '../../gulimall-web/node_modules/@playwright/test/index.mjs'
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs'
 import {resolve} from 'node:path'
-import {randomUUID,randomInt} from 'node:crypto'
-import {spawnSync} from 'node:child_process'
+import {randomUUID} from 'node:crypto'
 import assert from 'node:assert/strict'
 import {assertTestEnvironment} from '../test-environment.mjs'
-import {saveSafeTrace} from '../browser-artifacts.mjs'
-
-const base='http://127.0.0.1:8080'
-async function json(page,path){const r=await page.request.get(base+path);expect(r.status()).toBe(200);return r.json()}
-function sql(query){assert(/^SELECT\s/.test(query));const r=spawnSync('docker',['compose','exec','-T','mysql','sh','-c','MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -ugulimall --batch --skip-column-names'],{input:query,encoding:'utf8',windowsHide:true});assert.equal(r.status,0,'Read-only test assertion failed');return r.stdout.trim()}
-async function login(page,account){try{await page.goto('/admin/login');await page.getByLabel('管理员账号',{exact:true}).fill(account.username);await page.getByLabel('密码',{exact:true}).fill(account.password);await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('heading',{name:'商品列表',exact:true})).toBeVisible()}catch{throw new Error('测试管理员登录失败（敏感输入已隐藏）')}}
-async function register(page,username){
-  try{
-    await page.goto('/register');await page.getByLabel('用户名',{exact:true}).fill(username);await page.getByLabel('手机号',{exact:true}).fill('136'+String(randomInt(100000000)).padStart(8,'0'))
-    await page.getByRole('button',{name:'获取验证码',exact:true}).click()
-    const message=await page.getByRole('status').filter({hasText:'开发验证码：'}).innerText(),code=message.match(/开发验证码：(\d{6})/)[1]
-    await page.getByLabel('验证码',{exact:true}).fill(code);await page.getByLabel('密码',{exact:true}).fill('Browser_'+randomUUID().slice(0,12)+'!')
-    await page.getByRole('button',{name:'注册',exact:true}).click();await expect(page.getByRole('button',{name:'退出登录',exact:true})).toBeVisible()
-    return (await json(page,'/api/auth/me')).user.id
-  }catch{throw new Error('开发验证码注册失败（密码与验证码已隐藏）')}
-}
-async function fits(page){expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)}
-let activeContexts=[],activePages=[]
-test.afterEach(async({},info)=>{
-  const failed=info.status!==info.expectedStatus
-  for(let i=0;i<activeContexts.length;i++){
-    try{if(failed&&!activePages[i].isClosed())await activePages[i].screenshot({path:info.outputPath('failure-'+i+'.png'),fullPage:true,mask:[activePages[i].locator('input'),activePages[i].locator('[role="status"]')]})}catch{/* A closed page cannot be captured. */}
-    try{if(failed){const raw=info.outputPath('raw-'+i+'.zip');await activeContexts[i].tracing.stop({path:raw});saveSafeTrace(raw,info.outputPath('trace-'+i+'.zip'))}else await activeContexts[i].tracing.stop()}finally{await activeContexts[i].close()}
-  }
-})
+import {base,json,sql,login,register,fits,openPage,closeContexts} from './helpers.mjs'
+let activeContexts=[]
+test.afterEach(async({},info)=>closeContexts(activeContexts,info))
 
 for(const round of [1,2])test(`模拟商城完整浏览器交易，第 ${round} 轮`,async({browser},info)=>{
-  activeContexts=[];activePages=[]
+  activeContexts=[]
   await assertTestEnvironment()
-  const run='ui16_'+randomUUID().replaceAll('-','').slice(0,8),label='浏览器回归 '+run,contexts=[],pages=[]
-  activeContexts=contexts;activePages=pages
-  const context=async()=>{const c=await browser.newContext({baseURL:base,viewport:{width:1280,height:800}});contexts.push(c);await c.route('**/*',route=>{const url=new URL(route.request().url());return ['http:','https:'].includes(url.protocol)&&url.hostname!=='127.0.0.1'?route.abort():route.continue()});await c.tracing.start({screenshots:false,snapshots:false,sources:false});const p=await c.newPage();pages.push(p);return p}
+  const run='ui16_'+randomUUID().replaceAll('-','').slice(0,8),label='浏览器回归 '+run
+  const context=()=>openPage(browser,activeContexts)
   const admin=await context(),member=await context()
   let record
     await test.step('管理员上传图片并创建双 SKU',async()=>{

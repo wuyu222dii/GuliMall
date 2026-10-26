@@ -18,3 +18,9 @@ test('payment return login redirects retain the exact order while rejecting exte
   assert.equal(memberRedirect('/payment/return?orderSn=' + sn + '&trade_status=TRADE_SUCCESS&sign=ignored'), '/payment/return?orderSn=' + sn)
   for (const url of ['//evil.test', 'https://evil.test', '/payment/return?orderSn=bad', '/payment/' + sn + '?next=//evil.test']) assert.equal(memberRedirect(url), '/')
 })
+
+test('checkout login redirects preserve one confirmation and never accept arbitrary navigation targets',()=>{
+  const token='12345678-abcd-1234-abcd-123456789abc',path='/checkout?confirmation='+token
+  assert.equal(memberRedirect(path),path);assert.equal(memberRedirect(path+'&next=https://evil.test'),path)
+  for(const target of ['/checkout?confirmation=bad',path+'#ignored',path+'&confirmation='+token,'https://evil.test'+path,'//evil.test'+path])assert.equal(memberRedirect(target),'/')
+})
