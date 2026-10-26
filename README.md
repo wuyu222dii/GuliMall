@@ -8,6 +8,8 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 
 阶段 19 保留 Chromium 两轮完整回归，补齐 Edge 关键交易、会话失效、返回刷新、同一确认多标签防重及窄屏键盘操作，见 [浏览器回归](docs/BROWSER-REGRESSION.md)。
 
+阶段 20 已完成 Demo 冷备份的完整隔离恢复、原交易核对、消息补偿及恢复后继续交易；保留 Test 保护并复验 Recovery，见 [恢复说明](docs/DEMO-RESTORE.md)。常驻环境仍为本地模拟，不接真实第三方。
+
 已实现管理员录入多 SKU 商品、采购入库、上下架与搜索、会员注册登录、购物车、幂等下单与原子锁库、支付处理、发货和确认收货。金额与归属由服务端校验；订单、库存通过本地事务、持久化事件、幂等消费与扫描补偿恢复。
 
 短信使用明确标识的开发验证码，图片保存于本地持久目录，模拟付款走 SDK 表单、RSA2 通知和真实订单/库存流程。常驻 LOCAL_TEST 网关保存交易并重试通知，重启后可恢复；无真实资金。普通启动未配置支付凭据时仍不能付款，请使用下面的模拟入口。物流由管理员填写公司与运单号，不接轨迹服务。
@@ -17,6 +19,7 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 - [中文演示检查表与交接步骤](docs/DEMO-HANDOFF.md)
 - [干净目录构建、环境预检与本机隔离交接](docs/HANDOFF-SETUP.md)
 - [Chromium / Edge 回归与确认页多标签行为](docs/BROWSER-REGRESSION.md)
+- [Demo 冷备份完整隔离恢复与继续交易](docs/DEMO-RESTORE.md)
 - [独立测试、演示部署、交易演示与备份恢复](docs/RUNBOOK.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
 - [认证接口、管理员配置与安全验收](docs/AUTHENTICATION.md)
@@ -87,6 +90,8 @@ node gulimall-web/node_modules/@playwright/test/cli.js install chromium
 # Browser 同时需要本机 Microsoft Edge；启动前先检查，缺失不会暂停常驻环境。
 ./scripts/test.ps1 -Suite Browser
 ./scripts/test.ps1 -Suite Recovery
+# Demo 冷备份的完整恢复采用独立入口及原匹配密钥，见上面的恢复说明：
+# ./scripts/demo-restore.ps1 -Backup .data/backups/实际目录 -PaymentConfig .tools/simulation/payment-config.json
 ```
 
 默认检查不连接业务库：最新 Java 29 项（阶段 18）、Node 32 项及 PowerShell 自检；旧手工集成演示的 9 项忽略不计入通过。原运行回归覆盖 68 个业务场景，另有诊断故障、自然 30 分钟关单、成功/失败补偿和全新实例恢复。阶段 19 重新执行两轮 Chromium 完整链及两项 Edge 场景、默认 Node、PowerShell、前端 lint/build；未重跑 Java、All 或 Recovery。Browser 使用锁定开发依赖及本机 Edge，缺浏览器或构建时在停环境前拒绝，失败保留脱敏截图和动作 trace。测试使用独立 gulimall-test 与五个 `_test` 库，拒绝演示库；结束恢复原模式，不清理人工交易。不可与人工演示或另一轮测试并行。

@@ -102,7 +102,9 @@ Remove-Item Env:GULIMALL_SIMULATION
 
 ## 未来替换接口
 
-演示冷备份额外提供 `./scripts/backup-audit.ps1 -Backup '.data/backups/实际目录'`：在临时 MySQL/Redis 只读核对订单、金额、库存工作单、支付台账、图片和 Redis，不启动业务补偿或切换当前环境。校验失败或 3317/6390 占用时拒绝。待处理与异常状态按原值报告；实际恢复补偿继续用 Test 的 Recovery，详细边界见 [运行手册](RUNBOOK.md)。
+演示冷备份提供 `./scripts/backup-audit.ps1 -Backup '.data/backups/实际目录'`：在临时 MySQL/Redis 只读核对订单、金额、库存工作单、支付台账、图片和 Redis，不启动业务补偿或切换当前环境。校验失败或 3317/6390 占用时拒绝，待处理与异常状态按原值报告。
+
+Demo 完整恢复使用 `./scripts/demo-restore.ps1 -Backup '.data/backups/实际目录' -PaymentConfig '.tools/simulation/payment-config.json'`。入口在原环境完全停止后，将备份恢复到全新独立依赖与副本目录，验证原交易、继续交易和消息补偿，再清理副本并恢复常驻环境；必须有原匹配密钥。不能与其他验收或人工操作并行，详细步骤见 [DEMO-RESTORE.md](DEMO-RESTORE.md)。Test Recovery 的 `_test` 保护保持不变。
 
 - 支付保留现有付款/通知/查单/关单接口及 AlipayTemplate；未来独立验证真实沙箱，不把本地网关改标签冒充真实平台。
 - 短信经 SmsSender.send(phone,code,validMinutes) 交付；验证码及频率/有效期/消费仍由认证服务管理。当前只有开发实现，real 模式拒绝启动，失败发送不会返回验证码或留下可用的未送达验证码。

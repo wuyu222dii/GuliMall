@@ -62,7 +62,7 @@ Runtime 要求当前常驻模拟环境健康，启动前记录其模式。新目
 
 运行日志、导出源码、独立私有配置及 result.json 留在 `.tools/clean <编号>/`，不要公开上传。result 记录 tree、构建/运行/清理/恢复结果和待补的独立机器/第二人标志；失败需结合对应 build/preflight/runtime 日志判断。重复运行不会清理历史导出目录；完成交接且无需追溯后，操作者可按实际绝对路径单独归档。
 
-该入口不是 Demo 备份恢复工具，不读取人工演示凭据，也不放宽 _test 保护。ProjectName 参数仅供有匹配工作区归属文件的 clean-check 项目使用，日常 Start 无需传它。
+该入口不是 Demo 备份恢复工具，不读取人工演示凭据，也不放宽 _test 保护。ProjectName 参数仅供有匹配工作区归属文件的隔离项目使用，日常 Start 无需传它。Demo 恢复入口复用这项工作区归属检查，步骤见 [DEMO-RESTORE.md](DEMO-RESTORE.md)。
 
 ## 待补验清单
 
