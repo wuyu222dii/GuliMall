@@ -3,7 +3,7 @@ import {readFileSync,writeFileSync} from 'node:fs'
 import {randomUUID} from 'node:crypto'
 import {spawnSync} from 'node:child_process'
 import {assertTestEnvironment} from '../test-environment.mjs'
-import {json,sql,login,openPage,closeContexts,fits} from './helpers.mjs'
+import {json,sql,login,openPage,closeContexts,fits,reloadProtected} from './helpers.mjs'
 
 let contexts=[]
 test.beforeEach(async()=>{contexts=[];await assertTestEnvironment()})
@@ -46,7 +46,7 @@ test('采购风险：切换明细失败不能操作旧单，新增响应丢失�
  const created=Number(sql(`SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE ware_id=${ware} AND sku_id=900001 AND sku_num=7;`))
  expect.soft(created,'真实保存响应丢失仍只能生成一条本次需求').toBe(1)
  writeFileSync('.tools/stage27-procurement-observation-'+info.project.name+'.json',JSON.stringify({staleWhileLoading,staleAfterFailure,posted,created,ware,purchases},null,2)+'\n')
- await page.reload();await expect(save).toBeDisabled();await expect(page.getByLabel('采购数量',{exact:true})).toHaveValue('7')
+ await reloadProtected(page);await expect(save).toBeDisabled();await expect(page.getByLabel('采购数量',{exact:true})).toHaveValue('7')
  await page.unroute('**/purchasedetail/save');await page.getByRole('button',{name:'查询候选需求',exact:true}).click()
  const candidate=(await json(page,'/api/admin/ware/purchasedetail/list?wareId='+ware+'&key=900001')).page.list.find(d=>d.skuNum===7)
  await page.getByRole('button',{name:'核对此需求 '+candidate.id,exact:true}).click();await page.getByRole('button',{name:'确认此需求为本次新增',exact:true}).click()
@@ -96,10 +96,10 @@ test('采购恢复：合并领取响应丢失、原完成结果重试及库存�
  let mergeRequests=0,purchase,receiveRequests=0,finishRequests=0,committed=0
  await page.route('**/purchase/merge',async route=>{mergeRequests++;purchase=(await(await route.fetch()).json()).purchaseId;await route.abort('failed')})
  await page.getByRole('button',{name:/合并选中需求/}).click();await expect(page.getByRole('alert')).toContainText('原操作待核对')
- await page.reload();await page.unroute('**/purchase/merge');await page.getByRole('button',{name:'查询原操作结果',exact:true}).click();await expect(page.getByText('原采购操作待核对',{exact:true})).toHaveCount(0)
+ await reloadProtected(page);await page.unroute('**/purchase/merge');await page.getByRole('button',{name:'查询原操作结果',exact:true}).click();await expect(page.getByText('原采购操作待核对',{exact:true})).toHaveCount(0)
  await page.route('**/purchase/received',async route=>{receiveRequests++;await route.fetch();await route.abort('failed')})
  const row=page.getByRole('row').filter({has:page.getByRole('cell',{name:String(purchase),exact:true})})
- await row.getByRole('button',{name:'领取',exact:true}).click();await expect(page.getByRole('alert')).toContainText('原操作待核对');await page.reload();await page.unroute('**/purchase/received');await page.getByRole('button',{name:'查询原操作结果',exact:true}).click()
+ await row.getByRole('button',{name:'领取',exact:true}).click();await expect(page.getByRole('alert')).toContainText('原操作待核对');await reloadProtected(page);await page.unroute('**/purchase/received');await page.getByRole('button',{name:'查询原操作结果',exact:true}).click()
  const finish=page.getByRole('button',{name:'完成并入库',exact:true});await expect(finish).toBeEnabled()
  await page.getByLabel('需求 '+demands[1]+' 完成结果',{exact:true}).selectOption('4');await page.getByLabel('失败原因',{exact:true}).fill('缺货')
  await page.route('**/purchase/done',async route=>{finishRequests++;if(finishRequests>1){await route.fetch();committed++}await route.abort('failed')})
@@ -109,7 +109,7 @@ test('采购恢复：合并领取响应丢失、原完成结果重试及库存�
  expect(original.type).toBe('finish');expect(original.payload.items.find(i=>i.itemId===demands[1]).reason).toBe('缺货')
  try { warehouseService('Stop') } finally { warehouseService('Start') }
  await expect.poll(async()=>{try{return(await page.request.get('/api/admin/ware/purchase/info/'+purchase)).status()}catch{return 0}},{timeout:60000}).toBe(200)
- await page.reload();await expect(page.getByLabel('失败原因',{exact:true})).toHaveValue('缺货');await expect(finish).toBeDisabled();await page.getByRole('button',{name:'查询原操作结果',exact:true}).click()
+ await reloadProtected(page);await expect(page.getByLabel('失败原因',{exact:true})).toHaveValue('缺货');await expect(finish).toBeDisabled();await page.getByRole('button',{name:'查询原操作结果',exact:true}).click()
  const retry=page.getByRole('button',{name:'重试原请求',exact:true});await expect(retry).toBeVisible();await retry.evaluate(button=>{button.click();button.click()});await expect(page.getByRole('alert')).toContainText('原操作待核对')
  expect(await page.evaluate(key=>JSON.parse(sessionStorage.getItem(key)),storageKey)).toEqual(original)
  await page.unroute('**/purchase/done');await page.getByRole('button',{name:'查询原操作结果',exact:true}).click();await expect(page.getByText('原采购操作待核对',{exact:true})).toHaveCount(0)
@@ -131,6 +131,6 @@ test('采购保存已确认但列表失败仍绑定原需求；损坏记录不�
  expect(sql('SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE ware_id='+ware+';')).toBe('1')
  await page.unroute('**/purchasedetail/list**')
  const key='gulimall-procurement:'+(await json(page,'/api/auth/me')).user.username
- await page.evaluate(key=>sessionStorage.setItem(key,'broken'),key);await page.reload();await expect(page.getByRole('button',{name:'保存采购需求',exact:true})).toBeDisabled();expect(await page.evaluate(key=>sessionStorage.getItem(key),key)).toBe('broken')
+ await page.evaluate(key=>sessionStorage.setItem(key,'broken'),key);await reloadProtected(page);await expect(page.getByRole('button',{name:'保存采购需求',exact:true})).toBeDisabled();expect(await page.evaluate(key=>sessionStorage.getItem(key),key)).toBe('broken')
  await expect(page.getByText('标签页记录无法读取或保存，暂停采购写入。',{exact:false})).toBeVisible()
 })

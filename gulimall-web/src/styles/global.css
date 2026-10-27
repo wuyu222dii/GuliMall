@@ -884,3 +884,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 .input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid #8f1723; outline-offset: 3px; }
 .cart-table .qty-control input { width: 72px; min-width: 72px; }
+.unsaved-backdrop { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .4); }
+.unsaved-dialog { width: 460px; max-width: 100%; max-height: 90vh; overflow: auto; padding: 24px; border-radius: 8px; background: white; color: var(--text); }
+.unsaved-dialog h2 { margin-bottom: 12px; }
+.all-categories-link { display: block; padding: 12px 16px; color: white; text-decoration: underline; }
+.all-categories { margin: 24px 0; padding: 16px; background: white; overflow-wrap: anywhere; }
+.all-categories summary { cursor: pointer; padding: 10px 0; font-weight: 600; }
+.all-categories > details { border-top: 1px solid #ddd; margin-top: 8px; }
+.all-categories section { margin: 12px 0; }
+.all-category-links { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 12px 0; }
+.all-category-links a { color: #a91e28; text-decoration: underline; }
