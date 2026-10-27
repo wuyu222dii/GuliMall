@@ -24,3 +24,9 @@ test('checkout login redirects preserve one confirmation and never accept arbitr
   assert.equal(memberRedirect(path),path);assert.equal(memberRedirect(path+'&next=https://evil.test'),path)
   for(const target of ['/checkout?confirmation=bad',path+'#ignored',path+'&confirmation='+token,'https://evil.test'+path,'//evil.test'+path])assert.equal(memberRedirect(target),'/')
 })
+
+test('member order login returns preserve valid detail and filters without accepting outside targets',()=>{
+ const sn='a'.repeat(32)
+ for(const p of ['/member/orders/123','/member/orders/123?status=3&page=2','/member/orders?orderSn='+sn+'&page=1'])assert.equal(memberRedirect(p),p)
+ for(const p of ['/member/orders/0','/member/orders/123/extra','/member/orders?page=0','/member/orders?status=10','/member/orders?orderSn=bad','/member/orders?page=1&page=2','/member/orders?next=//evil.test','//evil.test/member/orders/123'])assert.equal(memberRedirect(p),'/')
+})

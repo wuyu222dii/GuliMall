@@ -69,21 +69,21 @@ export default function Search() {
       <h1 className="page-title">商品搜索</h1>
       <form className="search-filters filter-grid" onSubmit={submit}>
         <label>关键词<input className="input" name="keyword" value={form.keyword || ''} maxLength={100} onChange={change} /></label>
-        <label>分类<select className="input" name="catalogId" value={form.catalogId || ''} onChange={change}>
+        <label>分类<select aria-label="分类" className="input" name="catalogId" value={form.catalogId || ''} onChange={change}>
           <option value="">全部分类</option>
           {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
         </select></label>
-        <label>品牌<select className="input" name="brandId" value={form.brandId || ''} onChange={change}>
+        <label>品牌<select aria-label="品牌" className="input" name="brandId" value={form.brandId || ''} onChange={change}>
           <option value="">全部品牌</option>
           {brands.map((brand) => <option key={brand.brandId} value={brand.brandId}>{brand.name}</option>)}
           {form.brandId && !brands.some((b) => String(b.brandId) === form.brandId) && <option value={form.brandId}>品牌 {form.brandId}</option>}
         </select></label>
         <label>最低价格<input className="input" type="number" name="min" min="0" step="0.01" value={form.min || ''} onChange={change} /></label>
         <label>最高价格<input className="input" type="number" name="max" min="0" step="0.01" value={form.max || ''} onChange={change} /></label>
-        <label>Sort<select className="input" name="sort" value={form.sort || 'default'} onChange={change}>
+        <label>排序<select aria-label="排序" className="input" name="sort" value={form.sort || 'default'} onChange={change}>
           <option value="default">默认</option><option value="price_asc">价格从低到高</option><option value="price_desc">价格从高到低</option>
         </select></label>
-        <label>库存<select className="input" name="hasStock" value={form.hasStock || ''} onChange={change}><option value="">全部库存状态</option><option value="1">有货</option><option value="0">缺货</option></select></label>
+        <label>库存<select aria-label="库存" className="input" name="hasStock" value={form.hasStock || ''} onChange={change}><option value="">全部库存状态</option><option value="1">有货</option><option value="0">缺货</option></select></label>
         <div className="filter-actions"><button className="btn btn-primary" type="submit">应用筛选</button><Link className="btn btn-outline" to="/search">清除筛选</Link></div>
       </form>
       {metadataError && <p className="error-msg" role="alert">{metadataError}</p>}

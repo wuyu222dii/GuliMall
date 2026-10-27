@@ -23,8 +23,10 @@ try {
     for($taskTry=0;$taskTry -lt 90;$taskTry++){& docker exec $taskMysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -h127.0.0.1 -uroot -e "SELECT 1"' *> $null;if($LASTEXITCODE -eq 0){$taskMysqlReady=$true;break};Start-Sleep -Seconds 1}
     if(-not $taskMysqlReady){throw 'Fresh restore MySQL not ready'}
     Docker-Checked -Arguments @('cp',(Join-Path $Backup 'database.sql'),($taskMysql+':/tmp/restore.sql'))
-    Docker-Checked -Arguments @('exec',$taskMysql,'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot < /tmp/restore.sql')
+    Docker-Checked -Arguments @('exec',$taskMysql,'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot --default-character-set=utf8mb4 < /tmp/restore.sql')
     foreach($taskSchema in $taskManifest.schemas){$taskGrant="GRANT ALL PRIVILEGES ON ``$taskSchema``.* TO 'gulimall'@'%';";$taskGrant | & docker exec -i $taskMysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot';if($LASTEXITCODE -ne 0){throw 'Restore user grant failed'}}
+    [IO.File]::ReadAllText((Join-Path $taskRoot 'infra/migrations/006-product-creation.sql')).Replace('gulimall_pms_demo','gulimall_pms_test') | & docker exec -i $taskMysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
+    if($LASTEXITCODE -ne 0){throw 'Restored Test migration failed before service startup'}
     Docker-Checked -Arguments @('create','--name',$taskRedis,'-p','127.0.0.1:6390:6379','-e','REDIS_PASSWORD','-e','REDISCLI_AUTH','-v',($taskRedis+':/data'),'redis:6.2.16-alpine','sh','-c','exec redis-server --appendonly no --requirepass "$REDIS_PASSWORD"')
     Docker-Checked -Arguments @('cp',(Join-Path $Backup 'redis.rdb'),($taskRedis+':/data/dump.rdb'))
     Docker-Checked -Arguments @('start',$taskRedis)

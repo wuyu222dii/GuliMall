@@ -34,7 +34,8 @@ try {
   const image=new FormData();image.append('file',new Blob([readFileSync('scripts/fixtures/upload.png')],{type:'image/png'}),'demo.png')
   const uploaded=(await admin.call('/api/admin/thirdparty/local/images','POST',image)).url
   const imageSha256=createHash('sha256').update(Buffer.from(await(await fetch('http://127.0.0.1:88'+uploaded)).arrayBuffer())).digest('hex')
-  const productId=(await admin.call('/api/admin/product/spuinfo/editor','POST',{spuName:label,spuDescription:'阶段九本地演示',catalogId:900003,brandId:900001,weight:'0.2',images:[uploaded],decript:[uploaded],baseAttrs:[{attrId:900001,attrValues:'8GB',showDesc:1}],skus:['红色','蓝色'].map((color,i)=>({skuName:label+' 手机 '+color,skuTitle:label+' 手机 '+color,price:i?'3.45':'0.10',images:[{imgUrl:uploaded,defaultImg:1}],attr:[{attrId:900002,attrName:'颜色',attrValue:color}]}))})).id
+  const creationSnapshot={creationRequestId:randomUUID(),spuName:label,spuDescription:'阶段九本地演示',catalogId:900003,brandId:900001,weight:'0.2',images:[uploaded],decript:[uploaded],baseAttrs:[{attrId:900001,attrValues:'8GB',showDesc:1}],skus:['红色','蓝色'].map((color,i)=>({skuName:label+' 手机 '+color,skuTitle:label+' 手机 '+color,price:i?'3.45':'0.10',images:[{imgUrl:uploaded,defaultImg:1}],attr:[{attrId:900002,attrName:'颜色',attrValue:color}]}))}
+  const productId=(await admin.call('/api/admin/product/spuinfo/editor','POST',creationSnapshot)).id
   const skus=(await admin.call(`/api/admin/product/spuinfo/editor/${productId}`)).product.skus.map(s=>s.skuId)
   const demands=[]
   for(const [i,skuId] of skus.entries())demands.push((await admin.call('/api/admin/ware/purchasedetail/save','POST',{skuId,wareId:900001,skuNum:i?2:5,skuPrice:'0.10'})).id)
@@ -85,7 +86,7 @@ try {
     console.log('5. After order restart and broker recovery, the durable release event completed once; stock restored to 5.')
   }
   const detail=await member.call(`/api/order/mine/${order.id}`)
-  const report={mode:'LOCAL_TEST',scenario:mode,label,productId,skus,purchaseId,memberId:user.id,orderId:order.id,orderSn:order.orderSn,status:detail.order.status,inventoryStatus:detail.order.inventoryStatus,amount:detail.order.payAmount,image:uploaded,imageSha256,backup:mode==='failure'?'.data/backups/'+label:null,history:detail.history.map(h=>h.orderStatus),realAlipaySandbox:false,publicCallback:false}
+  const report={creationSnapshot,mode:'LOCAL_TEST',scenario:mode,label,productId,skus,purchaseId,memberId:user.id,orderId:order.id,orderSn:order.orderSn,status:detail.order.status,inventoryStatus:detail.order.inventoryStatus,amount:detail.order.payAmount,image:uploaded,imageSha256,backup:mode==='failure'?'.data/backups/'+label:null,history:detail.history.map(h=>h.orderStatus),realAlipaySandbox:false,publicCallback:false}
   writeFileSync(`.tools/test/demo-${mode}.json`,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report))
 } finally {
   if(rabbitStopped)command('docker',['compose','start','rabbitmq'])

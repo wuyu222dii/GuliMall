@@ -2,7 +2,7 @@ import {test,expect} from '../../gulimall-web/node_modules/@playwright/test/inde
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs'
 import {randomUUID} from 'node:crypto'
 import {assertTestEnvironment} from '../test-environment.mjs'
-import {base,json,sql,login,signIn,register,fits,openPage,closeContexts} from './helpers.mjs'
+import {base,json,sql,login,signIn,register,fits,checkOwnOrderNavigation,openPage,closeContexts} from './helpers.mjs'
 let contexts=[]
 test.beforeEach(async()=>{contexts=[];await assertTestEnvironment()})
 test.afterEach(async({},info)=>closeContexts(contexts,info))
@@ -20,7 +20,7 @@ async function product(admin,run){
 async function address(page){
  await page.getByRole('link',{name:'收货地址',exact:true}).click();await page.getByRole('button',{name:'新增地址',exact:true}).click()
  for(const[name,value]of Object.entries({'收件人':'Edge 模拟会员','手机号':'13800000001','省份':'浙江省','城市':'杭州市','区县':'西湖区','详细地址':'独立浏览器验收19号'}))await page.getByLabel(name,{exact:true}).fill(value)
- await page.getByRole('button',{name:'保存',exact:true}).click();await expect(page.getByText('独立浏览器验收19号',{exact:false})).toBeVisible()
+ await page.getByRole('checkbox',{name:'设为默认地址',exact:true}).check();await page.getByRole('button',{name:'保存',exact:true}).click();await expect(page.getByText('独立浏览器验收19号',{exact:false})).toBeVisible()
 }
 async function buy(page,sku,count=1){await page.goto('/product/'+sku);await page.getByLabel('数量',{exact:true}).fill(String(count));await page.getByRole('button',{name:'立即购买',exact:true}).click();await page.getByRole('button',{name:'结算已选商品',exact:true}).click()}
 async function submit(page){const sent=page.waitForResponse(r=>r.url().endsWith('/mine/submit')&&r.request().method()==='POST');await page.getByRole('button',{name:'提交订单',exact:true}).click();const r=await sent;expect(r.status()).toBe(200);return(await r.json()).result.order}
@@ -40,6 +40,7 @@ test('Edge 关键交易：真实登录、付款履约、失败放弃和取消',a
  const order=await submit(member),confirmationUrl=member.url();expect(Number(order.payAmount)).toBe(2.50);await payment(member);await member.getByRole('button',{name:'确认模拟付款',exact:true}).click();await expect.poll(async()=>(await json(member,`/api/order/mine/${order.orderSn}/payment-status`)).payment.order.fulfillmentReady).toBe(true)
  await admin.goto('/admin/orders');await admin.getByLabel('完整订单号',{exact:true}).fill(order.orderSn);await admin.getByRole('button',{name:'查询订单',exact:true}).click();await admin.getByRole('row').filter({hasText:order.orderSn}).getByRole('button',{name:'详情 / 物流',exact:true}).click();await admin.getByLabel('物流公司',{exact:true}).fill('Edge 模拟物流');await admin.getByLabel('运单号',{exact:true}).fill('EDGE-'+run.replaceAll('_','-'));await admin.getByRole('button',{name:'确认发货',exact:true}).click();await expect(admin.getByText(/发货已确认/)).toBeVisible()
  await member.goto('/member/orders');await member.getByRole('button',{name:'确认收货',exact:true}).click();await member.getByRole('button',{name:'确认已收到包裹',exact:true}).click();await expect(member.getByRole('heading',{name:'已完成',exact:true})).toBeVisible();await member.reload();await expect(member.getByRole('heading',{name:'已完成',exact:true})).toBeVisible();await member.screenshot({path:info.outputPath('edge-completed.png'),fullPage:true})
+ await checkOwnOrderNavigation(member,order)
  await buy(member,sku);await member.getByRole('button',{name:'开始下一次确认',exact:true}).click();const cancelled=await submit(member);await payment(member);await member.getByRole('button',{name:'模拟付款失败',exact:true}).click();await member.getByRole('link',{name:'返回订单',exact:true}).click();await expect(member.getByRole('heading',{name:'待付款',exact:true})).toBeVisible();await member.getByRole('button',{name:'打开模拟付款',exact:true}).click();await member.getByRole('link',{name:'返回订单（不付款）',exact:true}).click();await cancel(member,cancelled)
  expect(sql(`SELECT stock,stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE sku_id=${sku}`)).toBe('8\t0')
  const other=await openPage(browser,contexts);await register(other,run+'b');await other.goto('/member/orders');await expect(other.getByText('暂无订单',{exact:true})).toBeVisible();expect((await other.request.get(base+`/api/order/mine/${order.id}`)).status()).toBe(403);await other.goto(confirmationUrl);await expect(other.getByRole('alert')).toContainText('不能使用其他会员的确认单')

@@ -9,6 +9,14 @@ export function paymentTarget(action, mode) {
   return url.href
 }
 export function memberRedirect(value) {
+  if (/^\/member\/orders(?:\/[1-9][0-9]{0,18})?(?:\?|$)/.test(value || '')) {
+    const url = new URL(value, 'http://app.local'), keys = [...url.searchParams.keys()]
+    if (!url.hash && keys.every(key => ['page', 'status', 'orderSn'].includes(key) && url.searchParams.getAll(key).length === 1)
+      && (!url.searchParams.has('page') || /^[1-9][0-9]{0,6}$/.test(url.searchParams.get('page')) && Number(url.searchParams.get('page')) <= 1000000)
+      && (!url.searchParams.has('status') || /^[0-9]$/.test(url.searchParams.get('status')))
+      && (!url.searchParams.has('orderSn') || /^[a-f0-9]{32}$/.test(url.searchParams.get('orderSn')))) return url.pathname + url.search
+  }
+
   if (['/member/orders', '/member/address', '/checkout', '/cart'].includes(value)) return value
   if (value?.startsWith('/checkout?')) {
     const parsed = new URL(value, 'http://app.local'), tokens = parsed.searchParams.getAll('confirmation')

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getCatalog, getProductEditor, saveProduct, uploadImage } from '../../api/admin'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useBlocker, useNavigate, useParams } from 'react-router-dom'
+import { getCatalog, getProductEditor, saveProduct, uploadImage, findProductCreation } from '../../api/admin'
 import { leafCategories, productImage } from '../../utils/product'
 
 const blankSku = () => ({ skuId: null, skuName: '', skuTitle: '', skuSubtitle: '', price: '0.00', images: [], attr: [] })
@@ -18,13 +18,33 @@ export default function AdminProductEditor() {
   const [reloadRequired, setReloadRequired] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [pending, setPending] = useState(null)
+  const [storageError, setStorageError] = useState(false)
+  const baseline = useRef(JSON.stringify(blankProduct())), latest = useRef(form), working = useRef(false)
+  latest.current = form
+  const storageKey = 'gulimall-product-creation'
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => JSON.stringify(latest.current) !== baseline.current && currentLocation.pathname !== nextLocation.pathname)
+  useEffect(() => {
+    const warn = event => { if (JSON.stringify(latest.current) !== baseline.current) { event.preventDefault(); event.returnValue = '' } }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [])
   useEffect(() => {
     let active = true
-    setLoading(true); setMeta(null); setForm(blankProduct()); setError(''); setNotice(''); setReloadRequired(false)
+    baseline.current = JSON.stringify(blankProduct()); latest.current = blankProduct()
+    setLoading(true); setMeta(null); setForm(blankProduct()); setError(''); setNotice(''); setReloadRequired(false); setStorageError(false)
     Promise.all([getCatalog(), id ? getProductEditor(id) : Promise.resolve(null)]).then(([catalog, editor]) => {
       if (!active) return
       setMeta(catalog.data)
-      setForm(editor ? hydrate(editor.product) : blankProduct())
+      const initial = editor ? hydrate(editor.product) : blankProduct()
+      baseline.current = JSON.stringify(initial)
+      if (!id) {
+        try {
+          const stored = JSON.parse(sessionStorage.getItem(storageKey) || 'null')
+          if (stored && (!/^[a-f0-9-]{36}$/.test(stored.requestId) || !stored.snapshot || stored.snapshot.id != null)) throw new Error('Invalid creation record')
+          setPending(stored); setForm(stored ? stored.snapshot : initial)
+        } catch { setStorageError(true); setError('本次创建记录无法读取，请先在商品列表核对原结果，勿清空记录后重复创建。') }
+      } else { setPending(null); setForm(initial) }
     }).catch((e) => { if (active) setError(e.message) }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [id])
@@ -70,36 +90,63 @@ export default function AdminProductEditor() {
     return { ...s, images: remaining.map((i) => ({ ...i, defaultImg: i.imgUrl === selected ? 1 : 0 })) }
   }) })
   const save = async (event) => {
-    event.preventDefault(); setBusy(true); setError(''); setNotice('')
+    event.preventDefault()
+    if (working.current || storageError) return
+    working.current = true; setBusy(true); setError(''); setNotice('')
     let savedId
+    let request = pending
     try {
-      const response = await saveProduct(form); savedId = response.id
-      setForm((current) => ({ ...current, id: savedId }))
+      if (!id && (!request || request.validationFailed)) {
+        request = { requestId: request?.requestId || crypto.randomUUID(), snapshot: structuredClone(form) }
+        sessionStorage.setItem(storageKey, JSON.stringify(request)); setPending(request)
+      }
+      const response = await saveProduct(request ? { ...request.snapshot, creationRequestId: request.requestId } : form); savedId = response.id
+      if (request) sessionStorage.removeItem(storageKey)
       const editor = await getProductEditor(savedId)
-      setForm(hydrate(editor.product)); navigate(`/admin/products/${savedId}/edit`, { replace: true }); setNotice('商品与 SKU 已保存；已上架商品已加入搜索同步队列，请在同步页面查看结果。')
-    } catch (e) { setError(savedId ? '商品已保存，但刷新失败。请重新打开此商品编辑页，避免重复创建。' : e.message); if (savedId) { setReloadRequired(true); navigate(`/admin/products/${savedId}/edit`, { replace: true }) } }
-    finally { setBusy(false) }
+      const saved = hydrate(editor.product); baseline.current = JSON.stringify(saved); latest.current = saved
+      setPending(null); setForm(saved); navigate(`/admin/products/${savedId}/edit`, { replace: true }); setNotice('商品与 SKU 已保存；已上架商品已加入搜索同步队列，请在同步页面查看结果。')
+    } catch (e) {
+      if (!savedId && !id && e.status === 400 && request) {
+        const rejected = { ...request, validationFailed: true }
+        sessionStorage.setItem(storageKey, JSON.stringify(rejected)); setPending(rejected)
+      }
+      setError(savedId ? '商品已保存，但刷新失败。请重新打开此商品编辑页，避免重复创建。' : `${e.message}${!id ? ' 原创建请求已保留，请查询或重试同一提交。' : ''}`)
+      if (savedId) { baseline.current = JSON.stringify(latest.current); setPending(null); setReloadRequired(true); navigate(`/admin/products/${savedId}/edit`, { replace: true }) }
+    } finally { working.current = false; setBusy(false) }
+  }
+  const lookup = async () => {
+    if (!pending || working.current) return
+    working.current = true; setBusy(true); setError('')
+    try {
+      const res = await findProductCreation(pending.requestId)
+      if (!res.found) { setNotice('尚未查询到已提交的商品，可安全重试同一提交。'); return }
+      sessionStorage.removeItem(storageKey); baseline.current = JSON.stringify(latest.current); setPending(null)
+      navigate(`/admin/products/${res.id}/edit`, { replace: true })
+    } catch (e) { setError(e.message) }
+    finally { working.current = false; setBusy(false) }
   }
   if (loading) return <p role="status">正在加载商品编辑资料…</p>
   if (!meta) return <p className="error-msg" role="alert">{error || '基础资料加载失败，请刷新。'}</p>
   return <section>
-    <div className="admin-toolbar"><h2>{id ? `编辑商品 #${id}` : '新建商品'}</h2><Link to="/admin/products">返回列表</Link><Link to="/admin/products/catalog">维护基础资料</Link><Link to="/admin/products/sync">查看搜索同步</Link><button className="btn btn-outline" disabled={!!id || busy} onClick={example}>填入双 SKU 示例</button></div>
+    {blocker.state === 'blocked' && <div className="admin-confirm" role="alertdialog" aria-label="离开商品编辑确认"><p>有未保存内容或待确认的创建请求，确认离开？待确认请求仍保留在本标签页。</p><div className="admin-actions"><button className="btn btn-primary" disabled={busy} onClick={() => blocker.proceed()}>确认离开</button><button className="btn btn-outline" onClick={() => blocker.reset()}>继续编辑</button></div></div>}
+    <div className="admin-toolbar"><h2>{id ? `编辑商品 #${id}` : '新建商品'}</h2><Link to="/admin/products">返回列表</Link><Link to="/admin/products/catalog">维护基础资料</Link><Link to="/admin/products/sync">查看搜索同步</Link><button className="btn btn-outline" disabled={!!id || busy || !!pending && !pending.validationFailed || storageError} onClick={example}>填入双 SKU 示例</button></div>
     {error && <p className="error-msg" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
+    {pending && <div className="admin-confirm"><p>{pending.validationFailed ? '本次校验未通过，可修正内容后复用原请求标识保存；如原商品已存在，请先查询。' : '创建请求已保留，内容已锁定。刷新后仍可查询或重试同一提交，避免重复录入。'}</p><button className="btn btn-outline" type="button" disabled={busy} onClick={lookup}>查询原创建结果</button></div>}
     <form onSubmit={save} className="admin-form">
-      <fieldset disabled={busy || uploading}><legend>基本信息</legend><div className="admin-form-grid">
+      <fieldset disabled={busy || uploading || !!pending && !pending.validationFailed || storageError}><legend>基本信息</legend><div className="admin-form-grid">
         <label>商品名称<input className="input" required maxLength={200} value={form.spuName} onChange={(e) => field('spuName', e.target.value)} /></label>
-        <label>三级分类<select className="input" required value={form.catalogId} onChange={(e) => setForm({ ...form, catalogId: Number(e.target.value), baseAttrs: [], skus: form.skus.map((s) => ({ ...s, attr: [] })) })}><option value="">请选择</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
-        <label>品牌<select className="input" required value={form.brandId} onChange={(e) => field('brandId', Number(e.target.value))}><option value="">请选择</option>{meta.brands.filter((b) => b.showStatus === 1 || b.brandId === form.brandId).map((b) => <option key={b.brandId} value={b.brandId}>{b.name}</option>)}</select></label>
+        <label>三级分类<select aria-label="三级分类" className="input" required value={form.catalogId} onChange={(e) => setForm({ ...form, catalogId: Number(e.target.value), baseAttrs: [], skus: form.skus.map((s) => ({ ...s, attr: [] })) })}><option value="">请选择</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
+        <label>品牌<select aria-label="品牌" className="input" required value={form.brandId} onChange={(e) => field('brandId', Number(e.target.value))}><option value="">请选择</option>{meta.brands.filter((b) => b.showStatus === 1 || b.brandId === form.brandId).map((b) => <option key={b.brandId} value={b.brandId}>{b.name}</option>)}</select></label>
         <label>重量（kg）<input className="input" type="number" required min="0" max="999999" step="0.001" value={form.weight} onChange={(e) => field('weight', e.target.value)} /></label>
       </div><label>商品介绍<textarea className="input" required maxLength={2000} rows={3} value={form.spuDescription} onChange={(e) => field('spuDescription', e.target.value)} /></label></fieldset>
-      <fieldset disabled={busy || uploading}><legend>商品图片</legend><label>上传商品图片<input type="file" accept="image/png,image/jpeg" onChange={upload} /></label><p className="admin-note">支持 PNG / JPEG，最多 2 MB，单边不超过 4096 像素、总像素不超过 800 万。上传目录持久保存。</p>
+      <fieldset disabled={busy || uploading || !!pending && !pending.validationFailed || storageError}><legend>商品图片</legend><label>上传商品图片<input type="file" accept="image/png,image/jpeg" onChange={upload} /></label><p className="admin-note">支持 PNG / JPEG，最多 2 MB，单边不超过 4096 像素、总像素不超过 800 万。上传目录持久保存。</p>
         {uploading && <p role="status">正在上传…</p>}<div className="admin-images">{form.images.map((url, index) => <div key={url}><img src={productImage(url)} alt={`商品图片 ${index + 1}`} /><label><input type="checkbox" checked={form.decript.includes(url)} onChange={(e) => field('decript', e.target.checked ? [...form.decript, url] : form.decript.filter((i) => i !== url))} /> 用作介绍图</label><span>图片 {index + 1}</span><button type="button" className="btn btn-outline" onClick={() => removeImage(url)}>移除此图片</button></div>)}</div>
       </fieldset>
-      <fieldset disabled={busy || uploading}><legend>规格参数</legend>{bases.length ? bases.map((attr) => {
+      <fieldset disabled={busy || uploading || !!pending && !pending.validationFailed || storageError}><legend>规格参数</legend>{bases.length ? bases.map((attr) => {
         const value = form.baseAttrs.find((a) => a.attrId === attr.attrId)
         return <div key={attr.attrId} className="admin-attribute"><label><input type="checkbox" checked={!!value} disabled={Number(attr.enable) !== 1 && !value} onChange={(e) => field('baseAttrs', e.target.checked ? [...form.baseAttrs, { attrId: attr.attrId, attrValues: '', showDesc: 1 }] : form.baseAttrs.filter((a) => a.attrId !== attr.attrId))} /> {attr.attrName}{Number(attr.enable) !== 1 && '（已停用，保存前请移除）'}</label>{value && <label>规格值：{attr.attrName}<input className="input" required maxLength={255} value={value.attrValues} onChange={(e) => field('baseAttrs', form.baseAttrs.map((a) => a.attrId === attr.attrId ? { ...a, attrValues: e.target.value } : a))} /></label>}</div>
       }) : <p>当前分类暂无基础属性，可先到基础资料中维护。</p>}</fieldset>
-      <fieldset disabled={busy || uploading}><legend>销售属性与 SKU</legend><p className="admin-note">为所有 SKU 选择相同的销售属性，再填写不同的属性值；组合不能重复。已有 SKU 编号须保留，以保护库存与订单引用。</p>
+      <fieldset disabled={busy || uploading || !!pending && !pending.validationFailed || storageError}><legend>销售属性与 SKU</legend><p className="admin-note">为所有 SKU 选择相同的销售属性，再填写不同的属性值；组合不能重复。已有 SKU 编号须保留，以保护库存与订单引用。</p>
         <div className="admin-actions">{sales.map((attr) => <label key={attr.attrId}><input type="checkbox" checked={selectedSales.includes(attr.attrId)} disabled={Number(attr.enable) !== 1 && !selectedSales.includes(attr.attrId)} onChange={(e) => selectSales(attr.attrId, e.target.checked)} /> {attr.attrName}{Number(attr.enable) !== 1 && '（已停用，保存前请移除）'}</label>)}</div>
         {form.skus.map((sku, index) => <fieldset key={sku.skuId || `new-${index}`} className="admin-sku"><legend>SKU {index + 1}{sku.skuId ? ` · 编号 ${sku.skuId}` : ' · 新增'}</legend><div className="admin-form-grid">
           <label>SKU {index + 1} 名称<input className="input" required maxLength={200} value={sku.skuName} onChange={(e) => skuField(index, 'skuName', e.target.value)} /></label>
@@ -112,7 +159,7 @@ export default function AdminProductEditor() {
         </div><button type="button" className="btn btn-outline" disabled={!!sku.skuId || form.skus.length === 1} onClick={() => field('skus', form.skus.filter((_, i) => i !== index))}>移除此新增 SKU</button></fieldset>)}
         <button type="button" className="btn btn-outline" disabled={form.skus.length >= 100} onClick={() => field('skus', [...form.skus, { ...blankSku(), attr: selectedSales.map((key) => ({ attrId: key, attrName: sales.find((a) => a.attrId === key)?.attrName || '', attrValue: '' })), images: form.images[0] ? [{ imgUrl: form.images[0], defaultImg: 1 }] : [] }])}>添加 SKU</button>
       </fieldset>
-      <div className="admin-actions"><button className="btn btn-primary" disabled={busy || uploading || reloadRequired}>{busy ? '正在保存…' : '保存商品与 SKU'}</button><Link to="/admin/products">取消并返回</Link></div>
+      <div className="admin-actions"><button className="btn btn-primary" disabled={busy || uploading || reloadRequired || storageError}>{busy ? '正在保存…' : pending && !pending.validationFailed ? '重试原商品创建' : '保存商品与 SKU'}</button><Link to="/admin/products">取消并返回</Link></div>
     </form>
   </section>
 }

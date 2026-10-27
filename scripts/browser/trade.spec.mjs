@@ -4,7 +4,7 @@ import {resolve} from 'node:path'
 import {randomUUID} from 'node:crypto'
 import assert from 'node:assert/strict'
 import {assertTestEnvironment} from '../test-environment.mjs'
-import {base,json,sql,login,register,fits,openPage,closeContexts} from './helpers.mjs'
+import {base,json,sql,login,register,fits,checkOwnOrderNavigation,openPage,closeContexts} from './helpers.mjs'
 let activeContexts=[]
 test.afterEach(async({},info)=>closeContexts(activeContexts,info))
 
@@ -43,7 +43,7 @@ for(const round of [1,2])test(`模拟商城完整浏览器交易，第 ${round} 
     await test.step('会员开发码注册、地址、搜索及购物车',async()=>{
       record.memberId=await register(member,run+'a');await member.getByRole('link',{name:'收货地址',exact:true}).click();await member.getByRole('button',{name:'新增地址',exact:true}).click()
       for(const[name,value]of Object.entries({'收件人':'浏览器模拟会员','手机号':'13800000001','省份':'浙江省','城市':'杭州市','区县':'西湖区','详细地址':'独立测试地址16号'}))await member.getByLabel(name,{exact:true}).fill(value)
-      await member.getByRole('button',{name:'保存',exact:true}).click();await expect(member.getByText('独立测试地址16号',{exact:false})).toBeVisible()
+      await member.getByRole('checkbox',{name:'设为默认地址',exact:true}).check();await member.getByRole('button',{name:'保存',exact:true}).click();await expect(member.getByText('独立测试地址16号',{exact:false})).toBeVisible()
       await member.goto('/search?keyword='+encodeURIComponent(run));await expect(member.locator('.product-card')).toHaveCount(2);await member.locator('.product-card').filter({hasText:label+' 红色'}).click();await member.getByLabel('数量',{exact:true}).fill('3');await member.getByRole('button',{name:'加入购物车',exact:true}).click();await expect(member.getByText('已加入购物车。',{exact:false})).toBeVisible()
       await member.goto('/product/'+record.skus[1]);await member.getByRole('button',{name:'立即购买',exact:true}).click();await expect(member).toHaveURL(/\/cart$/);await expect(member.locator('.cart-total')).toContainText('¥3.75');await member.getByRole('button',{name:'结算已选商品',exact:true}).click()
     })
@@ -53,7 +53,8 @@ for(const round of [1,2])test(`模拟商城完整浏览器交易，第 ${round} 
       await expect.poll(async()=>(await json(member,`/api/order/mine/${record.orderSn}/payment-status`)).payment.order.fulfillmentReady).toBe(true)
       await admin.getByRole('link',{name:'订单',exact:true}).click();await admin.getByLabel('完整订单号',{exact:true}).fill(record.orderSn);await admin.getByRole('button',{name:'查询订单',exact:true}).click();await admin.getByRole('row').filter({hasText:record.orderSn}).getByRole('button',{name:'详情 / 物流',exact:true}).click();await expect(admin.getByRole('heading',{name:'处理进度',exact:true})).toBeVisible();expect((await json(admin,`/api/admin/order/order/${order.id}/processing`)).processing.fulfillmentReady).toBe(true)
       await admin.getByLabel('物流公司',{exact:true}).fill('本地模拟物流');await admin.getByLabel('运单号',{exact:true}).fill('BROWSER-'+run.replaceAll('_','-'));await admin.getByRole('button',{name:'确认发货',exact:true}).click();await expect(admin.getByText(/发货已确认/)).toBeVisible()
-      await member.goto('/member/orders');await member.getByRole('button',{name:'查看订单 '+record.orderSn,exact:true}).click();await expect(member.locator('.order-details > p').filter({hasText:'BROWSER-'+run.replaceAll('_','-')})).toBeVisible();await member.getByRole('button',{name:'确认收货',exact:true}).click();await member.getByRole('button',{name:'确认已收到包裹',exact:true}).click();await expect(member.getByRole('heading',{name:'已完成',exact:true})).toBeVisible();await member.screenshot({path:info.outputPath('completed.png'),fullPage:true})
+      await member.goto('/member/orders');await member.getByRole('link',{name:'查看订单 '+record.orderSn,exact:true}).click();await expect(member.locator('.order-details > p').filter({hasText:'BROWSER-'+run.replaceAll('_','-')})).toBeVisible();await member.getByRole('button',{name:'确认收货',exact:true}).click();await member.getByRole('button',{name:'确认已收到包裹',exact:true}).click();await expect(member.getByRole('heading',{name:'已完成',exact:true})).toBeVisible();await member.screenshot({path:info.outputPath('completed.png'),fullPage:true})
+      await checkOwnOrderNavigation(member,{id:record.orderId,orderSn:record.orderSn})
       await member.goto('/payment/'+record.orderSn);await expect(member.getByRole('heading',{name:'已完成',exact:true})).toBeVisible();let polls=0;const track=r=>{if(r.url().includes('/payment-status'))polls++};member.on('request',track);await new Promise(r=>setTimeout(r,5500));member.off('request',track);expect(polls).toBe(0)
     })
     await test.step('连续购买、模拟失败、放弃付款及取消释放',async()=>{
@@ -65,7 +66,7 @@ for(const round of [1,2])test(`模拟商城完整浏览器交易，第 ${round} 
       for(const id of record.skus)assert(Number.isSafeInteger(id));expect(sql(`SELECT stock,stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN (${record.skus.join(',')}) ORDER BY sku_id;`)).toBe('7\t0\n9\t0')
     })
     await test.step('会员隔离、刷新与窄屏导航和结算',async()=>{
-      const other=await context();await register(other,run+'b');await other.goto('/member/orders');await expect(other.getByText('暂无订单',{exact:true})).toBeVisible();expect((await other.request.get(base+`/api/order/mine/${record.orderId}`)).status()).toBe(403);await other.goto('/payment/'+record.orderSn);await expect(other.getByRole('alert')).toBeVisible()
+      const other=await context();await register(other,run+'b');await other.goto('/member/orders');await expect(other.getByText('暂无订单',{exact:true})).toBeVisible();expect((await other.request.get(base+`/api/order/mine/${record.orderId}`)).status()).toBe(403);await other.goto('/member/orders/'+record.orderId);await expect(other.getByRole('alert')).toBeVisible();await other.goto('/payment/'+record.orderSn);await expect(other.getByRole('alert')).toBeVisible()
       await member.setViewportSize({width:375,height:812});await member.goto('/checkout');await expect(member.getByRole('heading',{name:'已关闭',exact:true})).toBeVisible();await expect(member.getByRole('button',{name:'开始下一次确认',exact:true})).toBeVisible();await fits(member);await member.screenshot({path:info.outputPath('mobile-checkout.png'),fullPage:true});await member.getByRole('link',{name:'我的订单',exact:true}).first().click();await member.reload();await expect(member.getByRole('heading',{name:'已完成',exact:true})).toBeVisible();await fits(member);await member.screenshot({path:info.outputPath('mobile-orders.png'),fullPage:true})
       mkdirSync('.tools/test/browser-runs',{recursive:true});writeFileSync('.tools/test/browser-runs/'+run+'.json',JSON.stringify({...record,complete:true,realServices:false},null,2)+'\n')
     })

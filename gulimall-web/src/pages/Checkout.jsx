@@ -45,7 +45,9 @@ export default function Checkout() {
           current = (await confirmOrder(user.id)).confirmation
         }
         if (!active) return
-        const initialAddress = saved?.addressId || current.addresses.find((a) => a.defaultStatus === 1)?.id || current.addresses[0]?.id || null
+        const defaults = current.addresses.filter(a => a.defaultStatus === 1)
+        const savedAddress = current.addresses.some(a => a.id === saved?.addressId) ? saved.addressId : null
+        const initialAddress = saved?.submitted !== false && saved?.addressId ? saved.addressId : savedAddress || (defaults.length === 1 ? defaults[0].id : null)
         if (!saved || saved.submitted === false) {
           const draft = { token: current.token, addressId: initialAddress, submitted: false }
           sessionStorage.setItem(key, JSON.stringify(draft)); setAttempt(draft)

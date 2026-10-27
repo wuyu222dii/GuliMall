@@ -2,13 +2,15 @@
 
 Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / Vite 前端。
 
-阶段 0–17 的本地验收已通过，当前提供中文常驻模拟商城、运行诊断、完整浏览器回归及演示备份只读审计；真实第三方接入继续后置。
+阶段 0–26 的本地模拟验收已通过，当前提供中文商城、精简管理后台、运行诊断、Chromium/Edge 回归和完整隔离冷恢复；真实第三方接入继续后置。
 
 阶段 18 的干净目录构建、环境/配置预检和本机隔离交易及重启已通过；独立机器和第二位操作者验收仍待补，见 [交接准备](docs/HANDOFF-SETUP.md)。
 
 阶段 19 保留 Chromium 两轮完整回归，补齐 Edge 关键交易、会话失效、返回刷新、同一确认多标签防重及窄屏键盘操作，见 [浏览器回归](docs/BROWSER-REGRESSION.md)。
 
 阶段 20 已完成 Demo 冷备份的完整隔离恢复、原交易核对、消息补偿及恢复后继续交易；保留 Test 保护并复验 Recovery，见 [恢复说明](docs/DEMO-RESTORE.md)。常驻环境仍为本地模拟，不接真实第三方。
+
+阶段 26 最终验收：Java 33 项、Node 37 项、72 个业务场景（原 68 + 新增 4）、四类诊断故障、14 项 Chromium/Edge 检查、Test Recovery 及旧 Demo 备份两代隔离恢复均通过。旧 9 个类、17 个手工方法继续忽略、不计通过；详见 [阶段 26 验收](docs/STAGE26.md)。独立机器与第二位操作者仍待补。
 
 已实现管理员录入多 SKU 商品、采购入库、上下架与搜索、会员注册登录、购物车、幂等下单与原子锁库、支付处理、发货和确认收货。金额与归属由服务端校验；订单、库存通过本地事务、持久化事件、幂等消费与扫描补偿恢复。
 
@@ -20,6 +22,10 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 - [干净目录构建、环境预检与本机隔离交接](docs/HANDOFF-SETUP.md)
 - [Chromium / Edge 回归与确认页多标签行为](docs/BROWSER-REGRESSION.md)
 - [Demo 冷备份完整隔离恢复与继续交易](docs/DEMO-RESTORE.md)
+- [最新页面完善与分阶段结果](docs/STAGES22-26.md)
+- [阶段 26 全量回归与恢复兼容](docs/STAGE26.md)
+- [阶段 21 历史验收](docs/STAGE21.md)
+- [9 个历史忽略类、17 个方法与替代覆盖](docs/LEGACY-TESTS.md)
 - [独立测试、演示部署、交易演示与备份恢复](docs/RUNBOOK.md)
 - [阶段进度与验收检查点](docs/implementation-plan.md)
 - [认证接口、管理员配置与安全验收](docs/AUTHENTICATION.md)
@@ -31,6 +37,8 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 - [支付、消息、关单与本地/沙箱验收边界](docs/PAYMENTS.md)
 - [订单查询、发货、收货与取消](docs/FULFILLMENT.md)
 - [前端现状](gulimall-web/README.md)
+
+阶段 22–26 已完成地址维护、商品创建防重与编辑恢复、会员订单筛选/独立详情、仓库维护及购物车交互，并验证增量迁移与恢复兼容。实现、各阶段提交和证据见 [本轮记录](docs/STAGES22-26.md) 与 [最终验收](docs/STAGE26.md)。
 
 ## 快速开始
 
@@ -94,7 +102,7 @@ node gulimall-web/node_modules/@playwright/test/cli.js install chromium
 # ./scripts/demo-restore.ps1 -Backup .data/backups/实际目录 -PaymentConfig .tools/simulation/payment-config.json
 ```
 
-默认检查不连接业务库：最新 Java 29 项（阶段 18）、Node 32 项及 PowerShell 自检；旧手工集成演示的 9 项忽略不计入通过。原运行回归覆盖 68 个业务场景，另有诊断故障、自然 30 分钟关单、成功/失败补偿和全新实例恢复。阶段 19 重新执行两轮 Chromium 完整链及两项 Edge 场景、默认 Node、PowerShell、前端 lint/build；未重跑 Java、All 或 Recovery。Browser 使用锁定开发依赖及本机 Edge，缺浏览器或构建时在停环境前拒绝，失败保留脱敏截图和动作 trace。测试使用独立 gulimall-test 与五个 `_test` 库，拒绝演示库；结束恢复原模式，不清理人工交易。不可与人工演示或另一轮测试并行。
+默认检查不连接业务库：最新 Java 33 项、Node 37 项、PowerShell 自检及前端 lint/build 通过。旧 9 个类、17 个手工方法忽略不计通过。运行回归覆盖原 68 + 新增 4 = 72 个业务场景、四类诊断故障、14 项 Chromium/Edge 检查及 Test/Demo 隔离恢复；自然 30 分钟沿用阶段 13 的证据，订单状态机与期限未变。Browser 使用锁定开发依赖及本机 Edge，失败保留脱敏截图和动作 trace。测试使用独立 gulimall-test 与五个 _test 库，拒绝演示库；Demo 完整恢复另用受保护入口。成功或失败均恢复原模式，不清理人工交易。不可与人工演示或另一轮测试并行。
 
 成功/失败交易分别运行 `./scripts/test.ps1 -Suite Success` / `Failure`。演示库冷备份运行 `./scripts/backup.ps1 -Environment Demo`，模拟模式同时暂停网关并保存支付台账；匹配签名密钥须单独私有保管。恢复先在全新实例验证，具体步骤见 [运行手册](docs/RUNBOOK.md)。SQL、Redis、图片、台账与校验清单保存于 Git 忽略的私有目录，不覆盖源数据。
 

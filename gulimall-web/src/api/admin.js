@@ -12,8 +12,9 @@ export const uploadImage = (file) => {
   form.append('file', file)
   return request.post('/api/admin/thirdparty/images', form)
 }
-export const warehouses = () => request.get('/api/admin/ware/wareinfo/list', { params: { page: 1, limit: 100 } })
+export const warehouses = (params = { page: 1, limit: 20 }) => request.get('/api/admin/ware/wareinfo/list', { params })
 export const saveWarehouse = (data) => request.post('/api/admin/ware/wareinfo/save', data)
+export const updateWarehouse = (data) => request.post('/api/admin/ware/wareinfo/update', data)
 export const listDemands = (params) => request.get('/api/admin/ware/purchasedetail/list', { params })
 export const saveDemand = (data) => request.post(`/api/admin/ware/purchasedetail/${data.id ? 'update' : 'save'}`, data)
 export const deleteDemand = (id) => request.post('/api/admin/ware/purchasedetail/delete', [id])
@@ -29,3 +30,5 @@ export const publishProduct = (id, status) => request.post(`/api/admin/product/s
 export const listSearchSync = (params) => request.get('/api/admin/product/search-sync', { params })
 export const retrySearchSync = (id) => request.post(`/api/admin/product/search-sync/${id}/retry`, null, { timeout: 25000 })
 export const rebuildSearch = () => request.post('/api/admin/product/search-sync/rebuild')
+
+export const findProductCreation = (requestId) => request.get(`/api/admin/product/spuinfo/creation/${requestId}`)

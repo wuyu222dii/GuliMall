@@ -878,3 +878,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .order-details h3 { font-size: 16px; margin: 24px 0 8px; }
 .order-history { padding-left: 24px; }
 .order-history li { margin: 10px 0; line-height: 1.7; }
+
+.address-item { flex-wrap: wrap; gap: 12px; overflow-wrap: anywhere; }
+.address-form fieldset { border: 0; min-width: 0; }
+
+.input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid #8f1723; outline-offset: 3px; }
+.cart-table .qty-control input { width: 72px; min-width: 72px; }

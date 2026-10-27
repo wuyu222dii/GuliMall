@@ -122,6 +122,20 @@ test('stage 8 shipment, receipt and cancellation (local payment verification)', 
       assert.equal((await admin.call('/api/admin/order/order/info/999999999')).status, 404)
       assert.equal((await cancel(other)).status, 403)
     })
+    await t.test('member order filters remain owned, validate input and paginate stably', async () => {
+      const extra=await newOrder()
+      assert.equal((await cancel(extra)).status,200);await settled(extra,4)
+      const owned=await ok(a,`/api/order/mine?orderSn=${blocked.orderSn}&status=0&limit=1`)
+      assert.equal(owned.page.totalCount,1);assert.equal(owned.page.list[0].id,blocked.id)
+      assert.equal((await ok(b,`/api/order/mine?orderSn=${blocked.orderSn}&memberId=${a.memberId}`)).page.totalCount,0)
+      assert.equal((await ok(a,`/api/order/mine?orderSn=${blocked.orderSn}&status=4`)).page.totalCount,0)
+      const first=(await ok(a,'/api/order/mine?limit=1&page=1')).page,second=(await ok(a,'/api/order/mine?limit=1&page=2')).page
+      assert.equal(first.totalCount,2);assert.equal(first.list[0].id,extra.id);assert.equal(second.list[0].id,blocked.id)
+      for(const query of ['status=10','status=paid','orderSn=bad','limit=101','page=-1']) assert.equal((await a.call('/api/order/mine?'+query)).status,400)
+      const snapshot=await detail(blocked)
+      await ok(a,`/api/member/addresses/${a.addressId}`,'PUT',{name:'修改后的收件人',phone:'13800000001',detailAddress:'修改后的地址',defaultStatus:1})
+      const after=await detail(blocked);assert.equal(after.order.receiverName,snapshot.order.receiverName);assert.equal(after.order.receiverDetailAddress,snapshot.order.receiverDetailAddress)
+    })
     await t.test('pending and paid-but-unsettled orders cannot ship; invalid logistics cannot be saved', async () => {
       assert.equal((await ship(blocked)).status, 409); assert.equal((await receive(blocked)).status, 409)
       for (const invalid of [{}, { deliveryCompany: '', deliverySn: 'SF123' }, { deliveryCompany: '顺丰', deliverySn: '../abc' }, { deliveryCompany: 'A\nB\rC', deliverySn: 'SF123' }, { deliveryCompany: '顺丰', deliverySn: 'S'.repeat(65) }]) assert.equal((await ship(blocked, invalid)).status, 400)

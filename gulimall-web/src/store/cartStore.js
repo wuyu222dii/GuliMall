@@ -104,6 +104,10 @@ export const useCartStore = create((set, get) => ({
   },
   updateCount: async (skuId, count) => { validQuantity(count); return get().mutate((owner) => api.updateCartCount(owner, skuId, count), (items) => { const item = items.find((i) => i.skuId === skuId); if (item) item.count = count }) },
   setChecked: (skuId, checked) => get().mutate((owner) => api.checkCart(owner, skuId, checked), (items) => { const item = items.find((i) => i.skuId === skuId); if (item) item.checked = checked }),
+  setAllChecked: (checked) => {
+    const ids = get().items.map(item => item.skuId)
+    return get().mutate(async owner => { for (const id of ids) await api.checkCart(owner, id, checked) }, items => { for (const item of items) item.checked = checked })
+  },
   removeItem: (skuId) => get().mutate((owner) => api.removeCart(owner, skuId), (items, data) => { data.guestItems = items.filter((i) => i.skuId !== skuId) }),
   clearCart: () => get().mutate(api.clearCart, (_, data) => { data.guestItems = [] }),
   selected: async () => {

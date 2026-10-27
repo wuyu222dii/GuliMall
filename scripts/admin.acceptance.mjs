@@ -48,8 +48,9 @@ async function meta(kind, body) {
 function upload(bytes = readFileSync('scripts/fixtures/upload.png'), mime = 'image/png', name = 'product.png') {
   const form = new FormData(); form.append('file', new Blob([bytes], { type: mime }), name); return form
 }
-function service(action) {
-  const result = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts/services.ps1', action, '-Modules', 'third-party'], { stdio: 'ignore', timeout: 20000, windowsHide: true })
+function service(action, module = 'third-party') {
+  const env={...process.env};delete env.PSModulePath
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts/services.ps1', action, '-Modules', module], { env, stdio: 'ignore', timeout: 20000, windowsHide: true })
   assert.equal(result.status, 0, 'Image service command failed')
 }
 async function demand(sku, ware, qty, price = '0.00') {
@@ -144,6 +145,31 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       assert.equal((await admin.call('/api/admin/product/skuinfo/delete', 'POST', [sku1])).status, 409)
       assert.equal((await admin.call(`/api/admin/product/admin/catalog/brands/${product.brandId}`, 'DELETE')).status, 409)
     })
+    await t.test('durable product creation replays concurrent requests and rejects changed snapshots', async () => {
+      const creation=structuredClone(product);delete creation.id
+      creation.spuName=label+'_idempotent';creation.skus.forEach(s=>{delete s.skuId})
+      creation.creationRequestId=randomUUID()
+      const responses=await Promise.all([1,2,3].map(()=>success('/api/admin/product/spuinfo/editor','POST',creation)))
+      const id=responses[0].id;ids.products.push(id);assert(responses.every(r=>r.id===id))
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_spu_info WHERE spu_name='${creation.spuName}';`),'1')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_spu_info WHERE creation_request_id='${creation.creationRequestId}';`),'1')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_sku_info WHERE spu_id=${id};`),'2')
+      assert.equal((await admin.call('/api/admin/product/spuinfo/editor','POST',{...creation,spuName:'changed'})).status,409)
+      const invalid={...creation,creationRequestId:randomUUID(),weight:-1}
+      assert.equal((await admin.call('/api/admin/product/spuinfo/editor','POST',invalid)).status,400)
+      assert.equal((await success('/api/admin/product/spuinfo/creation/'+invalid.creationRequestId)).found,false)
+      const extreme=await admin.call('/api/admin/product/spuinfo/editor','POST',{...creation,creationRequestId:randomUUID(),weight:'1e1000000'})
+      assert.equal(extreme.status,400);assert.equal(extreme.data.msg,'商品数值超出支持范围')
+      assert.equal((await member.call('/api/admin/product/spuinfo/creation/'+creation.creationRequestId)).status,403)
+      if(process.env.GULIMALL_FAULTS==='1') {
+        service('Stop','product');service('Start','product')
+        let ready=false
+        for(let i=0;i<90;i++){try{if((await admin.call('/api/admin/product/spuinfo/creation/'+creation.creationRequestId)).status===200){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,1000))}
+        assert(ready,'Product service did not recover')
+      }
+      assert.equal((await success('/api/admin/product/spuinfo/creation/'+creation.creationRequestId)).id,id)
+      assert.equal((await success('/api/admin/product/spuinfo/editor','POST',creation)).id,id)
+    })
     await t.test('demand merging, receiving and terminal states reject invalid transitions', async () => {
       warehouse = (await success('/api/admin/ware/wareinfo/save', 'POST', { name: `${label}_ware`, address: 'Acceptance address', areacode: '000' })).id; ids.warehouses.push(warehouse)
       otherWarehouse = (await success('/api/admin/ware/wareinfo/save', 'POST', { name: `${label}_other`, address: 'Other address' })).id; ids.warehouses.push(otherWarehouse)
@@ -189,6 +215,23 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       product.skus[0].price = '13.50'; await success('/api/admin/product/spuinfo/editor', 'POST', product)
       assert.equal(stock(sku1, warehouse), 7, 'Editing SKU must preserve stock')
     })
+    await t.test('warehouse editing preserves references and paged lookup reaches beyond one hundred', async () => {
+      const before=sql(`SELECT id,sku_id,ware_id,stock,stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE ware_id=${warehouse} ORDER BY id;`)
+      const demands=sql(`SELECT id,ware_id,purchase_id FROM gulimall_wms_test.wms_purchase_detail WHERE ware_id=${warehouse} ORDER BY id;`)
+      await success('/api/admin/ware/wareinfo/update','POST',{id:warehouse,name:label+'_edited',address:'Updated warehouse',areacode:'001',stock:0})
+      assert.equal((await success('/api/admin/ware/wareinfo/info/'+warehouse)).wareInfo.name,label+'_edited')
+      assert.equal(sql(`SELECT id,sku_id,ware_id,stock,stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE ware_id=${warehouse} ORDER BY id;`),before)
+      assert.equal(sql(`SELECT id,ware_id,purchase_id FROM gulimall_wms_test.wms_purchase_detail WHERE ware_id=${warehouse} ORDER BY id;`),demands)
+      assert.equal((await admin.call('/api/admin/ware/wareinfo/update','POST',{id:warehouse,name:'',address:'x'})).status,400)
+      assert.equal((await admin.call('/api/admin/ware/wareinfo/update','POST',{id:999999999,name:'x',address:'x'})).status,404)
+      assert.equal((await member.call('/api/admin/ware/wareinfo/update','POST',{id:warehouse,name:'x',address:'x'})).status,403)
+      for(const query of ['page=0','limit=101','page=x']) assert.equal((await admin.call('/api/admin/ware/wareinfo/list?'+query)).status,400)
+      for(const query of ['skuId=abc','skuId=-1','wareId=invalid']) assert.equal((await admin.call('/api/admin/ware/waresku/list?'+query)).status,400)
+      for(let i=0;i<101;i++) ids.warehouses.push((await success('/api/admin/ware/wareinfo/save','POST',{name:label+'_paged_'+i,address:'Paged lookup'})).id)
+      const last=(await success('/api/admin/ware/wareinfo/list?key='+label+'_paged_&page=11&limit=10')).page
+      assert.equal(last.totalCount,101);assert.equal(last.list.length,1)
+      assert.equal((await success('/api/admin/ware/wareinfo/list?key='+last.list[0].id)).page.list[0].id,last.list[0].id)
+    })
     await t.test('uploaded image survives an image-service restart', { skip: process.env.GULIMALL_FAULTS !== '1' }, async () => {
       const before = Buffer.from(await (await fetch(base + uploaded)).arrayBuffer())
       thirdStopped = true; service('Stop'); service('Start'); thirdStopped = false
@@ -209,7 +252,7 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       if (skus.length) {
         sql(`DELETE FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_test.pms_sku_images WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_test.pms_sku_sale_attr_value WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_test.pms_sku_info WHERE sku_id IN (${skus.join(',')});`)
       }
-      sql(`DELETE FROM gulimall_pms_test.pms_product_attr_value WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_images WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info_desc WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info WHERE id=${id} AND spu_name='${label}_phone';`)
+      sql(`DELETE FROM gulimall_pms_test.pms_product_attr_value WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_images WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info_desc WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info WHERE id=${id} AND spu_name IN ('${label}_phone','${label}_idempotent');`)
     }
     for (const kind of ['attrs', 'groups', 'brands', 'categories']) for (const id of [...ids[kind]].reverse()) {
       await success(`/api/admin/product/admin/catalog/${kind}/${id}`, 'DELETE')

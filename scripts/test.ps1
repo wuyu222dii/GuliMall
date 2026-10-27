@@ -66,6 +66,9 @@ try {
     $env:GULIMALL_TEST='1';$env:GULIMALL_ACCEPTANCE='1';$env:GULIMALL_FAULTS='1'
     New-Item -ItemType Directory -Force $env:UPLOAD_DIR | Out-Null
     Docker-Checked -Arguments @('compose','up','-d','--wait','--wait-timeout','300')
+    $taskMigration=[IO.File]::ReadAllText((Join-Path $taskRoot 'infra/migrations/006-product-creation.sql')).Replace('gulimall_pms_demo','gulimall_pms_test')
+    $taskMigration | & docker compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
+    if($LASTEXITCODE -ne 0){throw 'Test product creation migration failed before service startup'}
     & "$PSScriptRoot/services.ps1" Start
     Wait-TestServices
     & "$PSScriptRoot/search-index.ps1"

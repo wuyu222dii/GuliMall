@@ -59,9 +59,8 @@ public class MemberReceiveAddressController {
     @RequestMapping("/save")
     //@RequiresPermissions("member:memberreceiveaddress:save")
     public R save(@RequestBody MemberReceiveAddressEntity memberReceiveAddress){
-		memberReceiveAddressService.save(memberReceiveAddress);
+        throw new com.atguigu.common.security.ApiProblem(409,"请使用会员地址接口维护地址，避免绕过默认地址事务");
 
-        return R.ok();
     }
 
     /**
@@ -70,9 +69,8 @@ public class MemberReceiveAddressController {
     @RequestMapping("/update")
     //@RequiresPermissions("member:memberreceiveaddress:update")
     public R update(@RequestBody MemberReceiveAddressEntity memberReceiveAddress){
-		memberReceiveAddressService.updateById(memberReceiveAddress);
+        throw new com.atguigu.common.security.ApiProblem(409,"请使用会员地址接口维护地址，避免绕过默认地址事务");
 
-        return R.ok();
     }
 
     /**
@@ -81,9 +79,8 @@ public class MemberReceiveAddressController {
     @RequestMapping("/delete")
     //@RequiresPermissions("member:memberreceiveaddress:delete")
     public R delete(@RequestBody Long[] ids){
-		memberReceiveAddressService.removeByIds(Arrays.asList(ids));
+        throw new com.atguigu.common.security.ApiProblem(409,"请使用会员地址接口维护地址，避免绕过默认地址事务");
 
-        return R.ok();
     }
 
 }

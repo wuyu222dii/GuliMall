@@ -34,7 +34,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
     public PageUtils queryPage(Map<String, Object> params) {
         int pageNumber = Integer.parseInt((String) params.getOrDefault("page", "1"));
         int pageSize = Integer.parseInt((String) params.getOrDefault("limit", "20"));
-        if (pageNumber < 1 || pageSize < 1 || pageSize > 100) throw new com.atguigu.common.security.ApiProblem(400, "分页参数不正确");
+        if (pageNumber < 1 || pageNumber > 1000000 || pageSize < 1 || pageSize > 100) throw new com.atguigu.common.security.ApiProblem(400, "分页参数不正确");
         /**
          * skuId
          * wareId
@@ -42,11 +42,13 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
         QueryWrapper<WareSkuEntity> queryWrapper = new QueryWrapper<>();
         String skuId = (String) params.get("skuId");
         if (!StringUtils.isEmpty(skuId)) {
+            if(!skuId.matches("[0-9]{1,18}") || Long.parseLong(skuId)<1) throw new com.atguigu.common.security.ApiProblem(400,"SKU 编号不正确");
             queryWrapper.eq("sku_id", skuId);
         }
 
         String wareId = (String) params.get("wareId");
         if (!StringUtils.isEmpty(wareId)) {
+            if(!wareId.matches("[0-9]{1,18}") || Long.parseLong(wareId)<1) throw new com.atguigu.common.security.ApiProblem(400,"仓库编号不正确");
             queryWrapper.eq("ware_id", wareId);
         }
 

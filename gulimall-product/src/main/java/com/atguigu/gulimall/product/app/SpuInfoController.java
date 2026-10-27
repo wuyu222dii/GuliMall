@@ -24,13 +24,19 @@ public class SpuInfoController {
     @Autowired
     private SpuInfoService spuInfoService;
     @Autowired private com.atguigu.gulimall.product.service.SearchSyncService searchSync;
+    @Autowired private com.atguigu.gulimall.product.service.ProductCreationService creation;
 
     @GetMapping("/editor/{id}")
     public R editor(@PathVariable Long id) { return R.ok().put("product", spuInfoService.getEditor(id)); }
 
     @PostMapping("/editor")
     public R saveEditor(@RequestBody com.atguigu.gulimall.product.vo.SpuSaveVo product) {
-        return R.ok().put("id", spuInfoService.saveSpuInfo(product));
+        return R.ok().put("id", creation.save(product));
+    }
+    @GetMapping("/creation/{requestId}")
+    public R creation(@PathVariable String requestId) {
+        Map<String,Object> saved=creation.find(requestId);
+        return R.ok().put("found",saved!=null).put("id",saved==null?null:saved.get("id"));
     }
 
     // /product/spuinfo/{spuId}/up

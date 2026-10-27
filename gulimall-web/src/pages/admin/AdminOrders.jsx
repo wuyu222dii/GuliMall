@@ -3,8 +3,9 @@ import { listOrders } from '../../api/admin'
 import { getAdminOrder, shipOrder, retryPaymentEvents, getOrderProcessing } from '../../api/order'
 import { orderTime } from '../../utils/order'
 import OrderDetails from '../../components/OrderDetails'
+import { orderStatuses } from '../../utils/payment'
 
-const statuses = ['待付款', '已支付', '已发货', '已完成', '已关闭', '无效', '创建中', '关闭确认中', '支付关单确认中', '异常付款']
+const statuses = Object.values(orderStatuses)
 
 export default function AdminOrders() {
   const [page, setPage] = useState(1)

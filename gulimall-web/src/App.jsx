@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
@@ -21,15 +21,7 @@ import AdminOrders from './pages/admin/AdminOrders'
 import AdminSearchSync from './pages/admin/AdminSearchSync'
 import PageErrorBoundary from './components/PageErrorBoundary'
 
-export default function App() {
-  const { ready, error, initialize } = useAuthStore()
-  useEffect(() => { initialize() }, [initialize])
-  return (
-    <BrowserRouter>
-      <PageErrorBoundary>
-      {!ready ? <div className="loading container">正在核对登录状态…</div> : <>
-      {error && <div className="error-msg" role="alert">{error} <button className="btn btn-outline" onClick={initialize}>重试</button></div>}
-      <Routes>
+const router = createBrowserRouter(createRoutesFromElements(<Route element={<Application />}>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="search" element={<Search />} />
@@ -56,14 +48,19 @@ export default function App() {
             <Route path="payment/return" element={<Payment />} />
             <Route path="payment/:orderSn" element={<Payment />} />
             <Route path="member/orders" element={<MemberOrders />} />
+            <Route path="member/orders/:id" element={<MemberOrders />} />
             <Route path="member/address" element={<MemberAddress />} />
           </Route>
         </Route>
-      </Routes>
-      </>}
-      </PageErrorBoundary>
-    </BrowserRouter>
-  )
+</Route>))
+export default function App() { return <RouterProvider router={router} /> }
+function Application() {
+  const { ready, error, initialize } = useAuthStore()
+  useEffect(() => { initialize() }, [initialize])
+  return <PageErrorBoundary>{!ready ? <div className="loading container">正在核对登录状态…</div> : <>
+    {error && <div className="error-msg" role="alert">{error} <button className="btn btn-outline" onClick={initialize}>重试</button></div>}
+    <Outlet />
+  </>}</PageErrorBoundary>
 }
 
 function MemberRoute() {

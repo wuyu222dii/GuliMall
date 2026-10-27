@@ -21,8 +21,11 @@ public class WareInfoServiceImpl extends ServiceImpl<WareInfoDao, WareInfoEntity
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
+        int pageNumber=Integer.parseInt(String.valueOf(params.getOrDefault("page","1"))),pageSize=Integer.parseInt(String.valueOf(params.getOrDefault("limit","20")));
+        if(pageNumber<1 || pageNumber>1000000 || pageSize<1 || pageSize>100) throw new com.atguigu.common.security.ApiProblem(400,"分页参数不正确");
         QueryWrapper<WareInfoEntity> wareInfoEntityQueryWrapper = new QueryWrapper<>();
         String key = (String) params.get("key");
+        if(key!=null && key.length()>100) throw new com.atguigu.common.security.ApiProblem(400,"仓库查询条件过长");
         if (!StringUtils.isEmpty(key)) {
             wareInfoEntityQueryWrapper.eq("id", key)
                     .or()
@@ -35,7 +38,7 @@ public class WareInfoServiceImpl extends ServiceImpl<WareInfoDao, WareInfoEntity
 
         IPage<WareInfoEntity> page = this.page(
                 new Query<WareInfoEntity>().getPage(params),
-                wareInfoEntityQueryWrapper
+                wareInfoEntityQueryWrapper.orderByAsc("id")
         );
 
         return new PageUtils(page);

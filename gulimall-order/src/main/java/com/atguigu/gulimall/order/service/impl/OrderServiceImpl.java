@@ -32,6 +32,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
+        return new PageUtils(this.page(pagination(params),orderFilters(params).orderByDesc("id")));
+    }
+    private QueryWrapper<OrderEntity> orderFilters(Map<String,Object> params) {
         QueryWrapper<OrderEntity> filter=new QueryWrapper<>();
         String sn=String.valueOf(params.getOrDefault("orderSn", "")).trim();
         if(!sn.isEmpty()) {
@@ -43,7 +46,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             if(!status.matches("[0-9]")) throw new ApiProblem(400,"订单状态不正确");
             filter.eq("status",Integer.parseInt(status));
         }
-        return new PageUtils(this.page(pagination(params),filter.orderByDesc("id")));
+        return filter;
     }
     private IPage<OrderEntity> pagination(Map<String,Object> params) {
         try {
@@ -90,7 +93,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     @Override
     public PageUtils getMemberOrderPage(Map<String, Object> params, Long memberId) {
         return new PageUtils(this.page(pagination(params),
-                new QueryWrapper<OrderEntity>().eq("member_id", memberId).orderByDesc("id")));
+                orderFilters(params).eq("member_id", memberId).orderByDesc("id")));
     }
 
 }
