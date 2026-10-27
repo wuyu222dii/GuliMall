@@ -37,7 +37,7 @@ export default function MemberOrders() {
     setBusy(true); setError(''); setNotice('')
     try {
       const res = await (action.type === 'cancel' ? cancelOrder(user.id, action.id) : receiveOrder(user.id, action.id))
-      if (useAuthStore.getState().user?.id === user.id) { setNotice(`订单状态： ${orderStatuses[res.order.status]}. ${res.order.status === 8 ? '付款关闭结果尚未确认，库存仍被锁定，请稍后刷新。' : ''}`); setRetry((value) => value + 1) }
+      if (useAuthStore.getState().user?.id === user.id) { setNotice(`订单状态： ${orderStatuses[res.order.status]}。 ${res.order.status === 8 ? '付款关闭结果尚未确认，库存仍被锁定，请稍后刷新。' : ''}`); setRetry((value) => value + 1) }
     } catch (e) { setError(`${e.message} 请先刷新原订单再重试。`) }
     finally { setBusy(false); setAction(null) }
   }
@@ -60,6 +60,6 @@ export default function MemberOrders() {
       {[0, 1, 4, 8, 9].includes(order.status) && <p><Link className="btn btn-outline" to={`/payment/${order.orderSn}`}>付款 / 库存状态</Link></p>}
       {detail?.order.id === order.id && <OrderDetails detail={detail} />}
     </section>) : !error && <div className="empty-state card"><p>暂无订单</p><Link className="btn btn-primary" to="/search">去选购</Link></div>}
-    {totalPage > 1 && <div className="pagination"><button disabled={page <= 1 || loading || busy} onClick={() => setPage(page - 1)}>上一页</button><span>{page} / {totalPage}</span><button disabled={page >= totalPage || loading || busy} onClick={() => setPage(page + 1)}>下一页</button></div>}
+    {totalPage > 1 && !error && !id && <div className="pagination"><button disabled={page <= 1 || loading || busy} onClick={() => setPage(page - 1)}>上一页</button><span>{page} / {totalPage}</span><button disabled={page >= totalPage || loading || busy} onClick={() => setPage(page + 1)}>下一页</button></div>}
   </div>
 }

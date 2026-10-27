@@ -33,8 +33,9 @@ export default function AdminProducts() {
     </form>
     {notice && <p className="admin-notice" role="status">{notice}</p>}{actionError && <p className="error-msg" role="alert">{actionError} <Link to="/admin/products/sync">查看同步任务</Link></p>}
     {error && <p className="error-msg" role="alert">{error} <button className="btn btn-outline" onClick={() => setRetry(retry + 1)}>重试</button></p>}
+    {error && result && <p role="status">以下是上次成功查询的商品，当前结果尚未刷新，暂停上下架操作。</p>}
     {loading ? <p role="status">正在加载商品…</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>SPU 编号</th><th>商品名称</th><th>分类 / 品牌编号</th><th>状态</th><th>操作</th></tr></thead><tbody>
-      {(result?.list || []).map((product) => <tr key={product.id}><td>{product.id}</td><td>{product.spuName}</td><td>{product.catalogId} / {product.brandId}</td><td>{product.publishStatus === 1 ? '已上架' : '草稿 / 已下架'}</td><td><Link to={`/admin/products/${product.id}/edit`}>编辑 SPU / SKU</Link> <button className="btn btn-outline" disabled={busy} onClick={() => publish(product)}>{product.publishStatus === 1 ? '下架' : '上架'}</button></td></tr>)}
+      {(result?.list || []).map((product) => <tr key={product.id}><td>{product.id}</td><td>{product.spuName}</td><td>{product.catalogId} / {product.brandId}</td><td>{product.publishStatus === 1 ? '已上架' : '草稿 / 已下架'}</td><td><Link to={`/admin/products/${product.id}/edit`}>编辑 SPU / SKU</Link> <button className="btn btn-outline" disabled={busy || !!error} onClick={() => publish(product)}>{product.publishStatus === 1 ? '下架' : '上架'}</button></td></tr>)}
       {!result?.list?.length && <tr><td colSpan={5}>没有符合条件的商品。</td></tr>}
     </tbody></table></div>}
     <div className="pagination"><button disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>上一页</button><span>第 {page} / {Math.max(result?.totalPage || 1, 1)} 页</span><button disabled={page >= (result?.totalPage || 1) || loading} onClick={() => setPage(page + 1)}>下一页</button></div>

@@ -74,7 +74,7 @@ export default function Home() {
           )}
         </div>
 
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1 }}><p className="admin-note">演示横幅，仅用于本地展示。</p>
           {banners.length > 0 ? (
             <div className="home-banner" style={{ background: '#e4393c' }}>
               {banners[0].name || '谷粒商城 · 品质商品'}
@@ -85,7 +85,7 @@ export default function Home() {
         </div>
       </div>
 
-      <h2 className="section-title">商品精选</h2>
+      <h2 className="section-title">在售商品</h2>
       {loading ? (
         <div className="loading">正在加载…</div>
       ) : error ? <div className="empty-state" role="alert"><p>{error}</p><button className="btn btn-outline" onClick={() => setRetry(retry + 1)}>重试</button></div> : products.length > 0 ? (
