@@ -55,7 +55,7 @@ test('基础资料：新增响应丢失、已保存后刷新失败和旧数据�
  await login(page,JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE,'utf8')));await page.goto('/admin/products/catalog');await page.getByLabel('分类名称',{exact:true}).fill(name)
  await page.route('**/api/admin/product/admin/catalog/categories',async route=>{await route.fetch();await route.abort('failed')})
  await page.getByRole('button',{name:'保存基础资料',exact:true}).click();await expect(page.getByText('本次新增结果未知，原输入已保留。',{exact:false})).toBeVisible();await expect(page.getByLabel('分类名称',{exact:true})).toHaveValue(name);await expect(page.getByLabel('分类名称',{exact:true})).toBeDisabled()
- await page.unroute('**/api/admin/product/admin/catalog/categories');await page.getByRole('button',{name:'重新加载资料',exact:true}).click();await expect(page.getByRole('cell',{name,exact:true})).toBeVisible();await page.getByRole('button',{name:'已核对，放弃本次资料表单',exact:true}).click()
+ await page.unroute('**/api/admin/product/admin/catalog/categories');await page.getByRole('button',{name:'重新加载资料',exact:true}).click();await page.getByLabel('查询名称或编号',{exact:true}).fill(name);await page.getByRole('button',{name:'查询资料',exact:true}).click();await expect(page.locator('.admin-table tbody')).toContainText(name);await page.getByRole('button',{name:'已核对，放弃本次资料表单',exact:true}).click()
  await page.getByLabel('分类名称',{exact:true}).fill(name+' 第二条')
  await page.route('**/api/admin/product/admin/catalog',route=>route.abort('failed'))
  await page.getByRole('button',{name:'保存基础资料',exact:true}).click();await expect(page.getByRole('alert')).toContainText('资料已保存，但列表刷新失败');await expect(page.getByText('当前显示上次成功加载的基础资料，重新加载成功前暂停修改。',{exact:true})).toBeVisible()

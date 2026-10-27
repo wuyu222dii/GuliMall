@@ -369,3 +369,12 @@ Demo 旧备份 `.data/backups/round6-before` 在 `.tools/demo restore baaaade5` 
 13 项目构建、Java 33、Node 44、PowerShell 和前端 build/lint 通过，旧 9 类/17 方法继续忽略。Product 6、Admin 10、Fulfillment 10 个业务场景通过，Browser 28 项通过，保留 Chromium 两轮完整交易及 Edge；新增两浏览器后台筛选、独立详情/重登/返回、ES 故障恢复和 375px 实际操作。首次同步定位测试提前读取翻页按钮，失败已归档，修正后完整重跑通过。
 
 最终常驻 LOCAL_TEST、18 项健康及 Simulation 预检，原三笔订单/地址快照、六条库存、71 表、全部图片和私有配置/密钥/支付台账指纹一致。实际结果及边界见 [STAGE28](STAGE28.md)，私有 .tools/stage28-final/manifest.json 冻结证据及哈希。独立提交，不自动推送/合并；全量 All/Diagnostics/Test 与 Demo Recovery 沿用阶段 26，期限沿用自然 30 分钟证据。阶段 29–31、真实第三方/公网、独立机器/第二人和实体设备等继续后置。
+
+
+## 阶段 29：基础资料查询、分页与操作定位（2026-10-27）
+
+基线 74163ea，在 codex/stage29 实施。复用完整 metadata，分类保留层级路径并按名称/编号定位，品牌/分组/属性按已有分类、状态、类型组合筛选，每页 20 条稳定分页。表单使用全集；保存后按编号定位，不匹配筛选时清除并明确说明；删除保留筛选及合理页码，确认成功与刷新失败分别显示，结果未知保留旧数据、即时防重并重新加载核对。后端 API、事务、引用删除保护、表及状态机不变。
+
+完整构建 Java 33、Node 46、PowerShell、最终前端 lint/build，Admin 10 业务场景与 Browser 32 项通过；旧 9 类/17 方法继续忽略。浏览器保留 Chromium 两轮完整交易及 Edge，新增每浏览器 2 项四类资料多页/组合查询、保存定位、四类引用 409、会员 403、末页删除/刷新失败/响应未知/双击单请求和 375px。首次定位页码覆盖为实际问题，合并回退逻辑修复；第二次测试会员名不合规则，修正夹具后完整 32 项通过，失败不计通过并保留。
+
+最终常驻 LOCAL_TEST、18 项诊断及 Simulation 预检通过，原三笔订单及地址快照、六条库存、71 表、全部图片及私有配置/密钥/支付台账指纹一致。见 [STAGE29](STAGE29.md)，私有 .tools/stage29-final/manifest.json 冻结日志、截图/trace 和哈希。独立提交，不推送或合并；Product/Fulfillment 沿用阶段 28，全量 All/Diagnostics/Test 与 Demo Recovery 沿用阶段 26，期限沿用自然 30 分钟。阶段 30–31、真实第三方及其他未验证边界继续后置。
