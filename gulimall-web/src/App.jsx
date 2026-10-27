@@ -48,6 +48,7 @@ const router = createBrowserRouter(createRoutesFromElements(<Route element={<App
             <Route path="payment/return" element={<Payment />} />
             <Route path="payment/:orderSn" element={<Payment />} />
             <Route path="member/orders" element={<MemberOrders />} />
+            <Route path="member/orders/:id" element={<MemberOrders />} />
             <Route path="member/address" element={<MemberAddress />} />
           </Route>
         </Route>

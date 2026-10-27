@@ -59,9 +59,8 @@ public class WareInfoController {
     @RequestMapping("/save")
     //@RequiresPermissions("ware:wareinfo:save")
     public R save(@RequestBody WareInfoEntity wareInfo){
-        if (wareInfo.getName() == null || wareInfo.getName().trim().isEmpty() || wareInfo.getName().length() > 100 || wareInfo.getAddress() == null || wareInfo.getAddress().trim().isEmpty() || wareInfo.getAddress().length() > 255) throw new com.atguigu.common.security.ApiProblem(400, "仓库名称或地址不正确");
-        wareInfo.setId(null); wareInfoService.save(wareInfo);
-        return R.ok().put("id", wareInfo.getId());
+        WareInfoEntity value=validated(wareInfo);wareInfoService.save(value);
+        return R.ok().put("id",value.getId());
     }
 
     /**
@@ -70,9 +69,15 @@ public class WareInfoController {
     @RequestMapping("/update")
     //@RequiresPermissions("ware:wareinfo:update")
     public R update(@RequestBody WareInfoEntity wareInfo){
-		wareInfoService.updateById(wareInfo);
+        if(wareInfo==null || wareInfo.getId()==null || wareInfo.getId()<1) throw new com.atguigu.common.security.ApiProblem(400,"请选择仓库");
+        if(wareInfoService.getById(wareInfo.getId())==null) throw new com.atguigu.common.security.ApiProblem(404,"仓库不存在");
+        WareInfoEntity value=validated(wareInfo);value.setId(wareInfo.getId());wareInfoService.updateById(value);
 
         return R.ok();
+    }
+    private WareInfoEntity validated(WareInfoEntity input) {
+        if(input==null || input.getName()==null || input.getName().trim().isEmpty() || input.getName().length()>100 || input.getAddress()==null || input.getAddress().trim().isEmpty() || input.getAddress().length()>255 || input.getAreacode()!=null && input.getAreacode().length()>20) throw new com.atguigu.common.security.ApiProblem(400,"仓库名称、地址或区域编码不正确");
+        WareInfoEntity value=new WareInfoEntity();value.setName(input.getName().trim());value.setAddress(input.getAddress().trim());value.setAreacode(input.getAreacode()==null?"":input.getAreacode().trim());return value;
     }
 
     /**

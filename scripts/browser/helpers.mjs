@@ -16,6 +16,14 @@ export async function register(page,username,password='Browser_'+randomUUID().sl
  }catch{throw new Error('开发验证码注册失败（密码与验证码已隐藏）')}
 }
 export async function fits(page){expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)}
+export async function checkOwnOrderNavigation(page,order){
+ await page.goto('/member/orders');await page.getByLabel('查询订单号',{exact:true}).fill(order.orderSn);await page.getByLabel('筛选订单状态',{exact:true}).selectOption('3');await page.getByRole('button',{name:'查询我的订单',exact:true}).click()
+ await expect(page.locator('.order-summary')).toHaveCount(1);const listUrl=page.url();expect(listUrl).toContain('orderSn='+order.orderSn)
+ await page.getByRole('link',{name:'查看订单 '+order.orderSn,exact:true}).click();await expect(page).toHaveURL(new RegExp('/member/orders/'+order.id+'\\?'))
+ await page.reload();await expect(page.getByRole('heading',{name:'订单详情',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'已完成',exact:true})).toBeVisible()
+ await page.getByRole('link',{name:'返回订单列表',exact:true}).click();await expect(page).toHaveURL(listUrl)
+ await page.getByRole('button',{name:'清除订单筛选',exact:true}).click();await expect(page).toHaveURL(/\/member\/orders$/)
+}
 export async function openPage(browser,contexts){
  const c=await browser.newContext({baseURL:base,viewport:{width:1280,height:800}});contexts.push(c)
  await c.route('**/*',route=>{const url=new URL(route.request().url());return ['http:','https:'].includes(url.protocol)&&url.hostname!=='127.0.0.1'?route.abort():route.continue()})

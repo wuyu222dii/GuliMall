@@ -32,6 +32,18 @@ test('地址维护：编辑、默认、删除、分页及窄屏',async({browser}
  await page.getByRole('button',{name:'刷新地址',exact:true}).click();await expect(page.getByRole('button',{name:'下一页',exact:true})).toBeEnabled();await page.getByRole('button',{name:'下一页',exact:true}).click();await expect(page.locator('.address-item')).toHaveCount(1);await fits(page)
  await page.screenshot({path:info.outputPath('address-mobile.png'),fullPage:true})
 })
+test('仓库维护：创建编辑、分页、选仓查找和库存 SKU 筛选',async({browser},info)=>{
+ const page=await openPage(browser,contexts),name='仓库回归 '+randomUUID()
+ await login(page,JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE,'utf8')))
+ await page.getByRole('link',{name:'采购与库存',exact:true}).click();await page.getByRole('button',{name:'仓库维护',exact:true}).click()
+ await page.getByLabel('仓库名称',{exact:true}).fill(name);await page.getByLabel('仓库地址',{exact:true}).fill('本地仓库地址');await page.getByLabel('区域编码',{exact:true}).fill('001')
+ const created=page.waitForResponse(r=>r.url().endsWith('/wareinfo/save')&&r.request().method()==='POST');await page.getByRole('button',{name:'保存仓库',exact:true}).click();const response=await created;expect(response.status()).toBe(200);const id=(await response.json()).id
+ await page.getByLabel('查询仓库名称或编号',{exact:true}).fill(String(id));await page.getByRole('button',{name:'查询仓库',exact:true}).click();await page.getByRole('button',{name:'编辑仓库 '+id,exact:true}).click();await page.getByLabel('仓库地址',{exact:true}).fill('已编辑的本地仓库');await page.getByRole('button',{name:'保存仓库',exact:true}).click();await expect(page.getByRole('cell',{name:'已编辑的本地仓库',exact:true})).toBeVisible()
+ const csrf=(await json(page,'/api/auth/csrf')).csrfToken
+ for(let i=0;i<11;i++)expect((await page.request.post('/api/admin/ware/wareinfo/save',{headers:{'X-CSRF-Token':csrf},data:{name:name+' '+i,address:'分页仓库'}})).status()).toBe(200)
+ await page.getByLabel('查询仓库名称或编号',{exact:true}).fill(name);await page.getByRole('button',{name:'查询仓库',exact:true}).click();await page.getByRole('button',{name:'下一页',exact:true}).click();await expect(page.locator('.admin-table tbody tr')).toHaveCount(2);await page.setViewportSize({width:375,height:812});await fits(page);await page.screenshot({path:info.outputPath('warehouse-mobile.png'),fullPage:true})
+ await page.getByRole('button',{name:'库存',exact:true}).click();await page.getByLabel('查找仓库选项',{exact:true}).fill('900001');await page.getByRole('button',{name:'查询仓库选项',exact:true}).click();await page.getByLabel('按仓库筛选',{exact:true}).selectOption('900001');await page.getByLabel('精确 SKU 编号',{exact:true}).fill('900001');await expect(page.locator('.admin-table tbody tr')).toHaveCount(1);await expect(page.locator('.admin-table tbody')).toContainText('900001');await fits(page)
+})
 test('商品创建：响应丢失、刷新恢复、原请求查询及离开确认',async({browser})=>{
  const page=await openPage(browser,contexts),name='创建防重 '+randomUUID()
  await login(page,JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE,'utf8')))

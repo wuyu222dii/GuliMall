@@ -213,6 +213,23 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       product.skus[0].price = '13.50'; await success('/api/admin/product/spuinfo/editor', 'POST', product)
       assert.equal(stock(sku1, warehouse), 7, 'Editing SKU must preserve stock')
     })
+    await t.test('warehouse editing preserves references and paged lookup reaches beyond one hundred', async () => {
+      const before=sql(`SELECT id,sku_id,ware_id,stock,stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE ware_id=${warehouse} ORDER BY id;`)
+      const demands=sql(`SELECT id,ware_id,purchase_id FROM gulimall_wms_test.wms_purchase_detail WHERE ware_id=${warehouse} ORDER BY id;`)
+      await success('/api/admin/ware/wareinfo/update','POST',{id:warehouse,name:label+'_edited',address:'Updated warehouse',areacode:'001',stock:0})
+      assert.equal((await success('/api/admin/ware/wareinfo/info/'+warehouse)).wareInfo.name,label+'_edited')
+      assert.equal(sql(`SELECT id,sku_id,ware_id,stock,stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE ware_id=${warehouse} ORDER BY id;`),before)
+      assert.equal(sql(`SELECT id,ware_id,purchase_id FROM gulimall_wms_test.wms_purchase_detail WHERE ware_id=${warehouse} ORDER BY id;`),demands)
+      assert.equal((await admin.call('/api/admin/ware/wareinfo/update','POST',{id:warehouse,name:'',address:'x'})).status,400)
+      assert.equal((await admin.call('/api/admin/ware/wareinfo/update','POST',{id:999999999,name:'x',address:'x'})).status,404)
+      assert.equal((await member.call('/api/admin/ware/wareinfo/update','POST',{id:warehouse,name:'x',address:'x'})).status,403)
+      for(const query of ['page=0','limit=101','page=x']) assert.equal((await admin.call('/api/admin/ware/wareinfo/list?'+query)).status,400)
+      for(const query of ['skuId=abc','skuId=-1','wareId=invalid']) assert.equal((await admin.call('/api/admin/ware/waresku/list?'+query)).status,400)
+      for(let i=0;i<101;i++) ids.warehouses.push((await success('/api/admin/ware/wareinfo/save','POST',{name:label+'_paged_'+i,address:'Paged lookup'})).id)
+      const last=(await success('/api/admin/ware/wareinfo/list?key='+label+'_paged_&page=11&limit=10')).page
+      assert.equal(last.totalCount,101);assert.equal(last.list.length,1)
+      assert.equal((await success('/api/admin/ware/wareinfo/list?key='+last.list[0].id)).page.list[0].id,last.list[0].id)
+    })
     await t.test('uploaded image survives an image-service restart', { skip: process.env.GULIMALL_FAULTS !== '1' }, async () => {
       const before = Buffer.from(await (await fetch(base + uploaded)).arrayBuffer())
       thirdStopped = true; service('Stop'); service('Start'); thirdStopped = false
