@@ -55,6 +55,8 @@ public class ProductCreationService {
         }
     }
     static String digest(SpuSaveVo product) {
+        boundedDecimal(product.getWeight());
+        if(product.getSkus()!=null) product.getSkus().forEach(sku->{if(sku!=null) boundedDecimal(sku.getPrice());});
         ObjectMapper mapper=new ObjectMapper();
         ObjectNode root=mapper.valueToTree(product);
         root.retain("spuName","spuDescription","catalogId","brandId","weight","images","decript","baseAttrs","skus");
@@ -66,6 +68,10 @@ public class ProductCreationService {
         }
         try { return String.format("%064x",new BigInteger(1,MessageDigest.getInstance("SHA-256").digest(mapper.writeValueAsBytes(canonical(root))))); }
         catch(Exception e) { throw new IllegalStateException("Cannot digest product creation",e); }
+    }
+    private static void boundedDecimal(BigDecimal value) {
+        // Reject extreme exponents before expanding their plain representation for the digest.
+        if(value!=null && (value.precision()>64 || value.scale()>64 || value.scale()<-64)) throw new ApiProblem(400,"商品数值超出支持范围");
     }
     private static Object canonical(JsonNode value) {
         if(value.isObject()) { Map<String,Object> result=new TreeMap<>();value.fields().forEachRemaining(e->result.put(e.getKey(),canonical(e.getValue())));return result; }

@@ -112,3 +112,7 @@ Demo 完整恢复使用 `./scripts/demo-restore.ps1 -Backup '.data/backups/实�
 - 短信经 SmsSender.send(phone,code,validMinutes) 交付；验证码及频率/有效期/消费仍由认证服务管理。当前只有开发实现，real 模式拒绝启动，失败发送不会返回验证码或留下可用的未送达验证码。
 - 图片统一校验、重新编码后经 ImageStorage.save(normalizedImage,generatedName) 保存并返回 URL。前端使用 `/api/admin/thirdparty/images`，旧 local/images 地址兼容，原 `/api/media/...` 图片继续可读。OSS 未实现，选择非 local 存储明确失败。
 - 本轮没有新增业务表、真实供应商依赖、公网隧道或支付成功捷径；Java 8、Boot 2.1.8 与既有本地事务/幂等/补偿保持原方案。
+
+## 阶段 22–26 页面完善
+
+常驻入口、模拟网关、密钥和台账目录保持原约定。新增地址编辑/默认、创建请求恢复、订单筛选/详情、仓库维护和购物车操作见 [实施记录](STAGES22-26.md)。既有库先冷备份并执行 006 迁移再使用新建商品页面；旧备份仅在隔离副本中升级，命令和验收见 [阶段 26](STAGE26.md)。仍不接真实支付、短信、OSS 或公网。

@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import static org.junit.Assert.*;
 public class ProductCreationTest {
+    @Test(expected=com.atguigu.common.security.ApiProblem.class)
+    public void rejectsExtremeExponentBeforeExpandingDigestInput()throws Exception {
+        ProductCreationService.digest(read("{\"weight\":1e1000000}"));
+    }
     private SpuSaveVo read(String json)throws Exception{return new ObjectMapper().readValue(json,SpuSaveVo.class);}
     @Test public void digestNormalizesObjectOrderAndNumericScale()throws Exception {
         assertEquals(ProductCreationService.digest(read("{\"spuName\":\"A\",\"weight\":1.00,\"images\":[\"a\",\"b\"]}")),ProductCreationService.digest(read("{\"images\":[\"a\",\"b\"],\"weight\":1,\"spuName\":\"A\"}")));

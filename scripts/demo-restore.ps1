@@ -51,6 +51,15 @@ function Restore-Import([string]$InputBackup,[int]$Phase){
         if((Get-FileHash -LiteralPath (Join-Path $InputBackup 'database.sql')).Hash -ne (Get-FileHash -LiteralPath $roundtrip).Hash){throw 'Restored SQL differs from its cold checkpoint, including text or timestamps'}
         Write-Output 'PASS: complete 71-table SQL cold checkpoint round-trip is byte-identical, including UTF-8 text'
     }
+    # Import comparison precedes this additive migration; only the guarded, new restore MySQL is changed.
+    $oldFields='SELECT id,spu_name,spu_description,catalog_id,brand_id,weight,publish_status,create_time,update_time FROM gulimall_pms_demo.pms_spu_info ORDER BY id;'
+    $beforeFields=$oldFields|& docker exec -i $mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4 --batch --skip-column-names'
+    if($LASTEXITCODE -ne 0){throw 'Old product projection failed before migration'}
+    [IO.File]::ReadAllText((Join-Path $restoreSource 'infra/migrations/006-product-creation.sql'))|& docker exec -i $mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
+    if($LASTEXITCODE -ne 0){throw 'Restored product migration failed before business startup'}
+    $afterFields=$oldFields|& docker exec -i $mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4 --batch --skip-column-names'
+    if($LASTEXITCODE -ne 0 -or ($beforeFields -join "`n") -cne ($afterFields -join "`n")){throw 'Restore migration changed original product fields'}
+    [IO.File]::WriteAllText((Join-Path $restoreSource ('.tools/migration-'+$Phase+'.json')),(@{phase=$Phase;additive=$true;originalProductFieldsIdentical=$true;beforeBusinessStartup=$true;newColumns=@('creation_request_id','creation_request_hash');newUniqueIndex='uk_spu_creation_request'}|ConvertTo-Json -Depth 3),(New-Object Text.UTF8Encoding($false)))
     Restore-Docker -Arguments @('compose','create','redis')
     & node "$restoreSource/scripts/demo-restore-guard.mjs" guard $env:GULIMALL_DEMO_RESTORE_CONTEXT redis;if($LASTEXITCODE -ne 0){throw 'Redis destination ownership failed before import'}
     $redisConfig=Join-Path $restoreSource '.data/restore.conf';[IO.File]::WriteAllText($redisConfig,("appendonly no`nsave `"`"`nrequirepass `""+$env:REDIS_PASSWORD+"`"`n"),(New-Object Text.UTF8Encoding($false)))

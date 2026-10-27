@@ -81,3 +81,9 @@ node --test scripts/baseline.test.mjs scripts/product-ui.test.mjs
 当前管理验收由 test.ps1 自动提供 `.tools/test/admin-access.json`，只允许独立 `_test` 配置，不需要演示管理员的明文密码。脚本通过业务 API 创建独立资料、双 SKU、图片、仓库和采购单，检查非法输入、会员拒绝、编辑保留编号、并发入库、部分失败和重试；最后清理自己创建的记录。运行器自动启用故障场景，重启 third-party 验证图片哈希不变；商品验收会重启 ware。不要并行运行这些故障验收。
 
 2026-10-25 的构建、运行验收及浏览器操作结果见实施检查点。本机 `.tools/stage3-*` 保存私有日志与截图，不进入 Git。
+
+## 阶段 23–25 页面补齐
+
+新建商品携带稳定 creationRequestId，GET `/api/admin/product/spuinfo/creation/{requestId}` 查询原结果；正常重试返回同一商品，已保存请求内容冲突 409。未知时保留 Session Storage 快照并锁定输入；明确校验失败可修正，但复用标识。既有库升级必须先冷备份并执行 `infra/migrations/006-product-creation.sql`，不要重跑初始化。
+
+采购页从“仓库维护”页签新增/查询/编辑仓库，资料更新不改编号、库存或采购引用；选仓支持分页和名称/编号查找。库存页使用精确 SKU 和仓库组合筛选。原“新增仓库”折叠入口由该页签替代。基础资料新增结果未知须先核对，已保存但刷新失败绑定原编号并标记旧数据。详见 [本轮记录](STAGES22-26.md) 和 [迁移/恢复](STAGE26.md)。

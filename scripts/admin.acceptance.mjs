@@ -158,6 +158,8 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       const invalid={...creation,creationRequestId:randomUUID(),weight:-1}
       assert.equal((await admin.call('/api/admin/product/spuinfo/editor','POST',invalid)).status,400)
       assert.equal((await success('/api/admin/product/spuinfo/creation/'+invalid.creationRequestId)).found,false)
+      const extreme=await admin.call('/api/admin/product/spuinfo/editor','POST',{...creation,creationRequestId:randomUUID(),weight:'1e1000000'})
+      assert.equal(extreme.status,400);assert.equal(extreme.data.msg,'商品数值超出支持范围')
       assert.equal((await member.call('/api/admin/product/spuinfo/creation/'+creation.creationRequestId)).status,403)
       if(process.env.GULIMALL_FAULTS==='1') {
         service('Stop','product');service('Start','product')
