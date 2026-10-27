@@ -48,8 +48,9 @@ async function meta(kind, body) {
 function upload(bytes = readFileSync('scripts/fixtures/upload.png'), mime = 'image/png', name = 'product.png') {
   const form = new FormData(); form.append('file', new Blob([bytes], { type: mime }), name); return form
 }
-function service(action) {
-  const result = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts/services.ps1', action, '-Modules', 'third-party'], { stdio: 'ignore', timeout: 20000, windowsHide: true })
+function service(action, module = 'third-party') {
+  const env={...process.env};delete env.PSModulePath
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts/services.ps1', action, '-Modules', module], { env, stdio: 'ignore', timeout: 20000, windowsHide: true })
   assert.equal(result.status, 0, 'Image service command failed')
 }
 async function demand(sku, ware, qty, price = '0.00') {
@@ -144,6 +145,29 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       assert.equal((await admin.call('/api/admin/product/skuinfo/delete', 'POST', [sku1])).status, 409)
       assert.equal((await admin.call(`/api/admin/product/admin/catalog/brands/${product.brandId}`, 'DELETE')).status, 409)
     })
+    await t.test('durable product creation replays concurrent requests and rejects changed snapshots', async () => {
+      const creation=structuredClone(product);delete creation.id
+      creation.spuName=label+'_idempotent';creation.skus.forEach(s=>{delete s.skuId})
+      creation.creationRequestId=randomUUID()
+      const responses=await Promise.all([1,2,3].map(()=>success('/api/admin/product/spuinfo/editor','POST',creation)))
+      const id=responses[0].id;ids.products.push(id);assert(responses.every(r=>r.id===id))
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_spu_info WHERE spu_name='${creation.spuName}';`),'1')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_spu_info WHERE creation_request_id='${creation.creationRequestId}';`),'1')
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_sku_info WHERE spu_id=${id};`),'2')
+      assert.equal((await admin.call('/api/admin/product/spuinfo/editor','POST',{...creation,spuName:'changed'})).status,409)
+      const invalid={...creation,creationRequestId:randomUUID(),weight:-1}
+      assert.equal((await admin.call('/api/admin/product/spuinfo/editor','POST',invalid)).status,400)
+      assert.equal((await success('/api/admin/product/spuinfo/creation/'+invalid.creationRequestId)).found,false)
+      assert.equal((await member.call('/api/admin/product/spuinfo/creation/'+creation.creationRequestId)).status,403)
+      if(process.env.GULIMALL_FAULTS==='1') {
+        service('Stop','product');service('Start','product')
+        let ready=false
+        for(let i=0;i<90;i++){try{if((await admin.call('/api/admin/product/spuinfo/creation/'+creation.creationRequestId)).status===200){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,1000))}
+        assert(ready,'Product service did not recover')
+      }
+      assert.equal((await success('/api/admin/product/spuinfo/creation/'+creation.creationRequestId)).id,id)
+      assert.equal((await success('/api/admin/product/spuinfo/editor','POST',creation)).id,id)
+    })
     await t.test('demand merging, receiving and terminal states reject invalid transitions', async () => {
       warehouse = (await success('/api/admin/ware/wareinfo/save', 'POST', { name: `${label}_ware`, address: 'Acceptance address', areacode: '000' })).id; ids.warehouses.push(warehouse)
       otherWarehouse = (await success('/api/admin/ware/wareinfo/save', 'POST', { name: `${label}_other`, address: 'Other address' })).id; ids.warehouses.push(otherWarehouse)
@@ -209,7 +233,7 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       if (skus.length) {
         sql(`DELETE FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_test.pms_sku_images WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_test.pms_sku_sale_attr_value WHERE sku_id IN (${skus.join(',')}); DELETE FROM gulimall_pms_test.pms_sku_info WHERE sku_id IN (${skus.join(',')});`)
       }
-      sql(`DELETE FROM gulimall_pms_test.pms_product_attr_value WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_images WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info_desc WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info WHERE id=${id} AND spu_name='${label}_phone';`)
+      sql(`DELETE FROM gulimall_pms_test.pms_product_attr_value WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_images WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info_desc WHERE spu_id=${id}; DELETE FROM gulimall_pms_test.pms_spu_info WHERE id=${id} AND spu_name IN ('${label}_phone','${label}_idempotent');`)
     }
     for (const kind of ['attrs', 'groups', 'brands', 'categories']) for (const id of [...ids[kind]].reverse()) {
       await success(`/api/admin/product/admin/catalog/${kind}/${id}`, 'DELETE')

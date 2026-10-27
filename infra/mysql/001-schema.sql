@@ -167,7 +167,10 @@ CREATE TABLE `pms_spu_info` (
   `publish_status` INT,
   `create_time` DATETIME,
   `update_time` DATETIME,
-  PRIMARY KEY (`id`)
+  `creation_request_id` CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
+  `creation_request_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_spu_creation_request` (`creation_request_id`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `pms_search_sync` (

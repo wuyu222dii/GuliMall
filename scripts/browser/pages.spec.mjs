@@ -1,7 +1,8 @@
 import {test,expect} from '../../gulimall-web/node_modules/@playwright/test/index.mjs'
 import {randomUUID} from 'node:crypto'
 import {assertTestEnvironment} from '../test-environment.mjs'
-import {register,json,openPage,closeContexts,fits} from './helpers.mjs'
+import {register,json,login,sql,openPage,closeContexts,fits} from './helpers.mjs'
+import {readFileSync} from 'node:fs'
 let contexts=[]
 test.beforeEach(async()=>{contexts=[];await assertTestEnvironment()})
 test.afterEach(async({},info)=>closeContexts(contexts,info))
@@ -30,4 +31,21 @@ test('地址维护：编辑、默认、删除、分页及窄屏',async({browser}
  for(let i=0;i<11;i++)expect((await page.request.post('/api/member/addresses',{headers:{'X-CSRF-Token':csrf},data:{name:'分页地址'+i,phone:'13800000001',detailAddress:'测试地址',defaultStatus:0}})).status()).toBe(200)
  await page.getByRole('button',{name:'刷新地址',exact:true}).click();await expect(page.getByRole('button',{name:'下一页',exact:true})).toBeEnabled();await page.getByRole('button',{name:'下一页',exact:true}).click();await expect(page.locator('.address-item')).toHaveCount(1);await fits(page)
  await page.screenshot({path:info.outputPath('address-mobile.png'),fullPage:true})
+})
+test('商品创建：响应丢失、刷新恢复、原请求查询及离开确认',async({browser})=>{
+ const page=await openPage(browser,contexts),name='创建防重 '+randomUUID()
+ await login(page,JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE,'utf8')))
+ await page.getByRole('link',{name:'新建商品',exact:true}).click();await page.getByRole('button',{name:'填入双 SKU 示例',exact:true}).click();await page.getByLabel('商品名称',{exact:true}).fill(name)
+ await page.route('**/api/admin/product/spuinfo/editor',async route=>{await route.fetch();await route.abort('failed')})
+ await page.getByRole('button',{name:'保存商品与 SKU',exact:true}).click();await expect(page.getByRole('button',{name:'查询原创建结果',exact:true})).toBeEnabled();await expect(page.getByLabel('商品名称',{exact:true})).toBeDisabled()
+ const pending=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('gulimall-product-creation')))
+ expect(pending.requestId).toMatch(/^[a-f0-9-]{36}$/);expect(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_spu_info WHERE creation_request_id='${pending.requestId}'`)).toBe('1')
+ await page.unroute('**/api/admin/product/spuinfo/editor')
+ page.once('dialog',d=>d.accept());await page.reload();await expect(page.getByRole('button',{name:'查询原创建结果',exact:true})).toBeEnabled()
+ await page.getByRole('button',{name:'重试原商品创建',exact:true}).click();await expect(page).toHaveURL(/\/admin\/products\/\d+\/edit$/)
+ expect(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_spu_info WHERE creation_request_id='${pending.requestId}'`)).toBe('1')
+ const found=await json(page,'/api/admin/product/spuinfo/creation/'+pending.requestId);expect(found.found).toBe(true);expect((await json(page,'/api/admin/product/spuinfo/editor/'+found.id)).product.skus).toHaveLength(2)
+ await page.getByLabel('商品名称',{exact:true}).fill(name+' 未保存')
+ await page.getByRole('link',{name:'返回列表',exact:true}).click();await expect(page.getByRole('alertdialog',{name:'离开商品编辑确认',exact:true})).toBeVisible();await page.getByRole('button',{name:'继续编辑',exact:true}).click();await expect(page.getByLabel('商品名称',{exact:true})).toHaveValue(name+' 未保存')
+ await page.getByRole('link',{name:'返回列表',exact:true}).click();await page.getByRole('button',{name:'确认离开',exact:true}).click();await expect(page).toHaveURL(/\/admin\/products$/)
 })

@@ -29,3 +29,5 @@ export const publishProduct = (id, status) => request.post(`/api/admin/product/s
 export const listSearchSync = (params) => request.get('/api/admin/product/search-sync', { params })
 export const retrySearchSync = (id) => request.post(`/api/admin/product/search-sync/${id}/retry`, null, { timeout: 25000 })
 export const rebuildSearch = () => request.post('/api/admin/product/search-sync/rebuild')
+
+export const findProductCreation = (requestId) => request.get(`/api/admin/product/spuinfo/creation/${requestId}`)

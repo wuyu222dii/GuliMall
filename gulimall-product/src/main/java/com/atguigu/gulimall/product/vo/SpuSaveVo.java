@@ -16,6 +16,7 @@ import java.util.List;
 @Data
 public class SpuSaveVo {
     private Long id;
+    private String creationRequestId;
 
     private String spuName;
     private String spuDescription;
