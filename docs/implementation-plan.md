@@ -360,3 +360,12 @@ Demo 旧备份 `.data/backups/round6-before` 在 `.tools/demo restore baaaade5` 
 13 项目构建、Java 33、Node 40、PowerShell 和前端 build/lint 通过；旧 9 类/17 方法仍忽略。Admin 原 9 + 新增 1 = 10 个业务场景、Browser 原 14 + 新增 8 = 22 项通过；含两轮 Chromium 完整交易及 Edge，Edge 在 375px 实际执行分页选择和合并。仓储服务真实重启后，原完成快照保留，实际只入库一次、失败项不入库，重复同结果成功、改结果 409。首轮动态 select 隐式标签定位失败，补 aria-label 后完整重跑通过，失败不计通过。
 
 最终 18 项健康及 Simulation 预检通过，原三笔订单及快照、六条库存、71 表、全部图片和私有配置/密钥/台账指纹一致。私有 .tools/stage27-final/manifest.json 冻结日志、报告、脱敏截图/trace 和哈希；步骤及限制见 [STAGE27](STAGE27.md)。未重跑全量 All 72、Diagnostics 故障和 Test/Demo Recovery，沿用阶段 26 证据；期限未变沿用自然 30 分钟。独立提交，不推送/合并；阶段 28–31 与真实第三方继续后置。
+
+
+## 阶段 28：后台筛选、订单导航和同步可见性（2026-10-27）
+
+基线 43b8530，在 codex/stage28 实施。商品组合筛选、名称/编号和 URL 页码，编辑返回恢复；管理订单独立详情、URL 查询及重登回跳，复用既有履约门禁与安全重试；同步显示下次重试、更新时间和编辑链接，查询/操作错误分开，重建提交不等于完成。服务端受限参数和稳定分页；同步总数与实际 JOIN 相同。不新增表/迁移，不改订单/库存/支付状态机或期限。
+
+13 项目构建、Java 33、Node 44、PowerShell 和前端 build/lint 通过，旧 9 类/17 方法继续忽略。Product 6、Admin 10、Fulfillment 10 个业务场景通过，Browser 28 项通过，保留 Chromium 两轮完整交易及 Edge；新增两浏览器后台筛选、独立详情/重登/返回、ES 故障恢复和 375px 实际操作。首次同步定位测试提前读取翻页按钮，失败已归档，修正后完整重跑通过。
+
+最终常驻 LOCAL_TEST、18 项健康及 Simulation 预检，原三笔订单/地址快照、六条库存、71 表、全部图片和私有配置/密钥/支付台账指纹一致。实际结果及边界见 [STAGE28](STAGE28.md)，私有 .tools/stage28-final/manifest.json 冻结证据及哈希。独立提交，不自动推送/合并；全量 All/Diagnostics/Test 与 Demo Recovery 沿用阶段 26，期限沿用自然 30 分钟证据。阶段 29–31、真实第三方/公网、独立机器/第二人和实体设备等继续后置。

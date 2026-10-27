@@ -162,34 +162,40 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Override
     public PageUtils queryPageByCondition(Map<String, Object> params) {
 
+        long pageNumber = Long.parseLong(String.valueOf(params.getOrDefault("page", "1")));
+        long pageSize = Long.parseLong(String.valueOf(params.getOrDefault("limit", "20")));
+        if (pageNumber < 1 || pageNumber > 1000000 || pageSize < 1 || pageSize > 100) throw new ApiProblem(400, "分页参数不正确");
         QueryWrapper<SpuInfoEntity> wrapper = new QueryWrapper<>();
-        String key = (String) params.get("key");
+        String key = String.valueOf(params.getOrDefault("key", "")).trim();
+        if (key.length() > 100) throw new ApiProblem(400, "关键词过长");
         if (!StringUtils.isEmpty(key)) {
             wrapper.and((w) -> {
-                w.eq("id", key)
-                        .or()
-                        .like("spu_name", key);
+                if (key.matches("[0-9]{1,18}")) w.eq("id", Long.valueOf(key)).or();
+                w.like("spu_name", key);
             });
         }
 
         String status = (String) params.get("status");
         if (!StringUtils.isEmpty(status)) {
+            if (!status.matches("[0-2]")) throw new ApiProblem(400, "商品状态不正确");
             wrapper.eq("publish_status", status);
         }
 
         String brandId = (String) params.get("brandId");
         if (!StringUtils.isEmpty(brandId) && !"0".equalsIgnoreCase(brandId)) {
-            wrapper.eq("brand_id", brandId);
+            if (!brandId.matches("[1-9][0-9]{0,17}")) throw new ApiProblem(400, "品牌编号不正确");
+            wrapper.eq("brand_id", Long.valueOf(brandId));
         }
 
         String catelogId = (String) params.getOrDefault("catalogId", params.get("catelogId"));
         if (!StringUtils.isEmpty(catelogId) && !"0".equalsIgnoreCase(catelogId)) {
-            wrapper.eq("catalog_id", catelogId);
+            if (!catelogId.matches("[1-9][0-9]{0,17}")) throw new ApiProblem(400, "分类编号不正确");
+            wrapper.eq("catalog_id", Long.valueOf(catelogId));
         }
 
         IPage<SpuInfoEntity> page = this.page(
-                new Query<SpuInfoEntity>().getPage(params),
-                wrapper
+                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<SpuInfoEntity>(pageNumber, pageSize),
+                wrapper.orderByDesc("id")
         );
         return new PageUtils(page);
     }

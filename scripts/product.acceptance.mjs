@@ -122,6 +122,20 @@ test('stage 2 product browsing and saleability acceptance', async (t) => {
         assert.equal((await guest.call('/api/product/items?' + new URLSearchParams(params))).status, 400)
       }
     })
+    await t.test('admin SPU filters combine category brand state and stable validated pagination', async () => {
+      const query=async params=>admin.call('/api/admin/product/spuinfo/list?'+new URLSearchParams({key:label,...params}))
+      const combined=await query({catalogId:ids.catalog,brandId:ids.brand,status:1})
+      assert.equal(combined.status,200);assert.deepEqual(combined.data.page.list.map(p=>p.id),[ids.spu])
+      assert.equal((await query({catalogId:ids.otherCatalog,brandId:ids.brand})).data.page.totalCount,0)
+      assert.deepEqual((await query({status:0})).data.page.list.map(p=>p.id),[ids.downSpu])
+      const paged=await query({page:2,limit:1});assert.equal(paged.data.page.totalCount,3);assert.equal(paged.data.page.list[0].id,ids.otherSpu)
+      assert.equal((await query({key:ids.spu})).data.page.list[0].id,ids.spu)
+      assert.equal((await query({status:2})).status,200)
+      for(const params of [{page:0},{page:1000001},{limit:101},{page:'x'},{status:3},{brandId:-1},{catalogId:'bad'},{key:'a'.repeat(101)}])assert.equal((await query(params)).status,400)
+      assert.equal((await guest.call('/api/admin/product/spuinfo/list')).status,401)
+      const sync=await admin.call('/api/admin/product/search-sync?limit=1')
+      assert.equal(sync.data.page.totalCount,Number(sql('SELECT COUNT(*) FROM gulimall_pms_test.pms_search_sync s JOIN gulimall_pms_test.pms_spu_info p ON p.id=s.spu_id;')))
+    })
     await t.test('detail includes ordered images, SKU combinations, separate groups and introduction', async () => {
       const detail = await guest.call(`/api/product/items/${ids.red}`)
       assert.equal(detail.status, 200, detail.data.msg)

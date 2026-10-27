@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useBlocker, useNavigate, useParams } from 'react-router-dom'
+import { Link, useBlocker, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { getCatalog, getProductEditor, saveProduct, uploadImage, findProductCreation } from '../../api/admin'
 import { leafCategories, productImage } from '../../utils/product'
+import { adminListUrl } from '../../utils/admin'
 
 const blankSku = () => ({ skuId: null, skuName: '', skuTitle: '', skuSubtitle: '', price: '0.00', images: [], attr: [] })
 const blankProduct = () => ({ id: null, spuName: '', spuDescription: '', catalogId: '', brandId: '', weight: '0.2', images: [], decript: [], baseAttrs: [], skus: [blankSku()] })
@@ -10,6 +11,7 @@ const hydrate = (product) => ({ ...blankProduct(), ...product, weight: product.w
 export default function AdminProductEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { search } = useLocation(), listUrl = adminListUrl('products', search), listSuffix = listUrl.slice('/admin/products'.length)
   const [meta, setMeta] = useState(null)
   const [form, setForm] = useState(blankProduct)
   const [loading, setLoading] = useState(true)
@@ -104,14 +106,14 @@ export default function AdminProductEditor() {
       if (request) sessionStorage.removeItem(storageKey)
       const editor = await getProductEditor(savedId)
       const saved = hydrate(editor.product); baseline.current = JSON.stringify(saved); latest.current = saved
-      setPending(null); setForm(saved); navigate(`/admin/products/${savedId}/edit`, { replace: true }); setNotice('商品与 SKU 已保存；已上架商品已加入搜索同步队列，请在同步页面查看结果。')
+      setPending(null); setForm(saved); navigate(`/admin/products/${savedId}/edit${listSuffix}`, { replace: true }); setNotice('商品与 SKU 已保存；已上架商品已加入搜索同步队列，请在同步页面查看结果。')
     } catch (e) {
       if (!savedId && !id && e.status === 400 && request) {
         const rejected = { ...request, validationFailed: true }
         sessionStorage.setItem(storageKey, JSON.stringify(rejected)); setPending(rejected)
       }
       setError(savedId ? '商品已保存，但刷新失败。请重新打开此商品编辑页，避免重复创建。' : `${e.message}${!id ? ' 原创建请求已保留，请查询或重试同一提交。' : ''}`)
-      if (savedId) { baseline.current = JSON.stringify(latest.current); setPending(null); setReloadRequired(true); navigate(`/admin/products/${savedId}/edit`, { replace: true }) }
+      if (savedId) { baseline.current = JSON.stringify(latest.current); setPending(null); setReloadRequired(true); navigate(`/admin/products/${savedId}/edit${listSuffix}`, { replace: true }) }
     } finally { working.current = false; setBusy(false) }
   }
   const lookup = async () => {
@@ -121,7 +123,7 @@ export default function AdminProductEditor() {
       const res = await findProductCreation(pending.requestId)
       if (!res.found) { setNotice('尚未查询到已提交的商品，可安全重试同一提交。'); return }
       sessionStorage.removeItem(storageKey); baseline.current = JSON.stringify(latest.current); setPending(null)
-      navigate(`/admin/products/${res.id}/edit`, { replace: true })
+      navigate(`/admin/products/${res.id}/edit${listSuffix}`, { replace: true })
     } catch (e) { setError(e.message) }
     finally { working.current = false; setBusy(false) }
   }
@@ -129,7 +131,7 @@ export default function AdminProductEditor() {
   if (!meta) return <p className="error-msg" role="alert">{error || '基础资料加载失败，请刷新。'}</p>
   return <section>
     {blocker.state === 'blocked' && <div className="admin-confirm" role="alertdialog" aria-label="离开商品编辑确认"><p>有未保存内容或待确认的创建请求，确认离开？待确认请求仍保留在本标签页。</p><div className="admin-actions"><button className="btn btn-primary" disabled={busy} onClick={() => blocker.proceed()}>确认离开</button><button className="btn btn-outline" onClick={() => blocker.reset()}>继续编辑</button></div></div>}
-    <div className="admin-toolbar"><h2>{id ? `编辑商品 #${id}` : '新建商品'}</h2><Link to="/admin/products">返回列表</Link><Link to="/admin/products/catalog">维护基础资料</Link><Link to="/admin/products/sync">查看搜索同步</Link><button className="btn btn-outline" disabled={!!id || busy || !!pending && !pending.validationFailed || storageError} onClick={example}>填入双 SKU 示例</button></div>
+    <div className="admin-toolbar"><h2>{id ? `编辑商品 #${id}` : '新建商品'}</h2><Link to={listUrl}>返回列表</Link><Link to="/admin/products/catalog">维护基础资料</Link><Link to={'/admin/products/sync' + listSuffix}>查看搜索同步</Link><button className="btn btn-outline" disabled={!!id || busy || !!pending && !pending.validationFailed || storageError} onClick={example}>填入双 SKU 示例</button></div>
     {error && <p className="error-msg" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
     {pending && <div className="admin-confirm"><p>{pending.validationFailed ? '本次校验未通过，可修正内容后复用原请求标识保存；如原商品已存在，请先查询。' : '创建请求已保留，内容已锁定。刷新后仍可查询或重试同一提交，避免重复录入。'}</p><button className="btn btn-outline" type="button" disabled={busy} onClick={lookup}>查询原创建结果</button></div>}
     <form onSubmit={save} className="admin-form">
@@ -159,7 +161,7 @@ export default function AdminProductEditor() {
         </div><button type="button" className="btn btn-outline" disabled={!!sku.skuId || form.skus.length === 1} onClick={() => field('skus', form.skus.filter((_, i) => i !== index))}>移除此新增 SKU</button></fieldset>)}
         <button type="button" className="btn btn-outline" disabled={form.skus.length >= 100} onClick={() => field('skus', [...form.skus, { ...blankSku(), attr: selectedSales.map((key) => ({ attrId: key, attrName: sales.find((a) => a.attrId === key)?.attrName || '', attrValue: '' })), images: form.images[0] ? [{ imgUrl: form.images[0], defaultImg: 1 }] : [] }])}>添加 SKU</button>
       </fieldset>
-      <div className="admin-actions"><button className="btn btn-primary" disabled={busy || uploading || reloadRequired || storageError}>{busy ? '正在保存…' : pending && !pending.validationFailed ? '重试原商品创建' : '保存商品与 SKU'}</button><Link to="/admin/products">取消并返回</Link></div>
+      <div className="admin-actions"><button className="btn btn-primary" disabled={busy || uploading || reloadRequired || storageError}>{busy ? '正在保存…' : pending && !pending.validationFailed ? '重试原商品创建' : '保存商品与 SKU'}</button><Link to={listUrl}>取消并返回</Link></div>
     </form>
   </section>
 }

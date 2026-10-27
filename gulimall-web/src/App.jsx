@@ -41,6 +41,7 @@ const router = createBrowserRouter(createRoutesFromElements(<Route element={<App
               <Route path="products/sync" element={<AdminSearchSync />} />
               <Route path="procurement" element={<AdminProcurement />} />
               <Route path="orders" element={<AdminOrders />} />
+              <Route path="orders/:id" element={<AdminOrders />} />
             </Route>
           </Route>
           <Route element={<MemberRoute />}>
@@ -73,6 +74,6 @@ function MemberRoute() {
 
 function AdminRoute() {
   const user = useAuthStore((s) => s.user)
-  const { pathname } = useLocation()
-  return user?.admin ? <Outlet /> : <Navigate to={`/admin/login?redirect=${encodeURIComponent(pathname)}`} replace />
+  const { pathname, search } = useLocation()
+  return user?.admin ? <Outlet /> : <Navigate to={`/admin/login?redirect=${encodeURIComponent(pathname + search)}`} replace />
 }

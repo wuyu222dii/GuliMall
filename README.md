@@ -2,7 +2,9 @@
 
 Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / Vite 前端。
 
-阶段 0–27 的本地模拟验收已通过，当前提供中文商城、精简管理后台、运行诊断、Chromium/Edge 回归和完整隔离冷恢复；真实第三方接入继续后置。
+阶段 0–28 的本地模拟验收已通过，当前提供中文商城、精简管理后台、运行诊断、Chromium/Edge 回归和完整隔离冷恢复；真实第三方接入继续后置。
+
+阶段 28 后台专项已完成：商品分类/品牌/状态组合筛选和 URL 页码、订单独立详情与重登/返回恢复、同步重试时间和编辑入口。Java 33、Node 44、Product/Admin/Fulfillment 共 26 个业务场景、Browser 28 项通过；常驻 18 项健康，原数据及私有文件指纹保持一致。全量 All/Recovery 沿用阶段 26，详见 [阶段 28 验收](docs/STAGE28.md)。
 
 阶段 27 采购专项已完成：先复现旧明细可操作及重复新增，再补齐请求核对、即时防重、SKU/采购单分页。Java 33、Node 40、Admin 10 个业务场景和 Browser 22 项通过，常驻 18 项健康；全量 All/Recovery 仍以阶段 26 为准，详见 [阶段 27 验收](docs/STAGE27.md)。
 
@@ -24,6 +26,7 @@ Spring Boot 2.1.8 / Spring Cloud Greenwich 微服务商城，配套 React 18 / V
 - [干净目录构建、环境预检与本机隔离交接](docs/HANDOFF-SETUP.md)
 - [Chromium / Edge 回归与确认页多标签行为](docs/BROWSER-REGRESSION.md)
 - [Demo 冷备份完整隔离恢复与继续交易](docs/DEMO-RESTORE.md)
+- [阶段 28 后台筛选、订单导航与同步可见性](docs/STAGE28.md)
 - [阶段 27 采购结果核对、分页与实际验收](docs/STAGE27.md)
 - [最新页面完善与分阶段结果](docs/STAGES22-26.md)
 - [阶段 26 全量回归与恢复兼容](docs/STAGE26.md)
