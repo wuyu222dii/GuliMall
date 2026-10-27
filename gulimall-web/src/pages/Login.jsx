@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { adminRedirect } from '../utils/admin'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -19,7 +20,7 @@ export default function Login() {
     try {
       await login(form, admin)
       const redirect = params.get('redirect')
-      navigate(admin ? redirect?.startsWith('/admin/') && !redirect.startsWith('/admin/login') ? redirect : '/admin/products' : memberRedirect(redirect))
+      navigate(admin ? adminRedirect(redirect) : memberRedirect(redirect))
     } catch (e) { setError(e.message) }
     finally { setBusy(false) }
   }

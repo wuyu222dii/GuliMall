@@ -48,7 +48,7 @@ public class SearchSyncService {
     public PageUtils list(int page, int limit) {
         if (page < 1 || page > 100000 || limit < 1 || limit > 100) throw new ApiProblem(400, "分页参数不正确");
         return new PageUtils(db.queryForList("SELECT s.*,p.spu_name,p.publish_status FROM pms_search_sync s JOIN pms_spu_info p ON p.id=s.spu_id ORDER BY s.state DESC,s.updated_at DESC,s.spu_id LIMIT ? OFFSET ?", limit, (page-1)*limit),
-                db.queryForObject("SELECT COUNT(*) FROM pms_search_sync", Integer.class), limit, page);
+                db.queryForObject("SELECT COUNT(*) FROM pms_search_sync s JOIN pms_spu_info p ON p.id=s.spu_id", Integer.class), limit, page);
     }
     public List<Long> due() { return db.queryForList("SELECT spu_id FROM pms_search_sync WHERE state<>1 AND next_attempt<=NOW() ORDER BY next_attempt,spu_id LIMIT 20", Long.class); }
     @Transactional public boolean synchronize(Long id) {
