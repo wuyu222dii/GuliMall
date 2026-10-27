@@ -232,6 +232,23 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       assert.equal(last.totalCount,101);assert.equal(last.list.length,1)
       assert.equal((await success('/api/admin/ware/wareinfo/list?key='+last.list[0].id)).page.list[0].id,last.list[0].id)
     })
+    await t.test('procurement lookup validates filters and independently pages unreceived targets', async () => {
+      const created=[]
+      for(let i=0;i<23;i++) created.push(await merge([await demand(sku1,warehouse,1)]))
+      const query='/api/admin/ware/purchase/unreceive/list?wareId='+warehouse+'&limit=20'
+      const first=(await success(query+'&page=1')).page,last=(await success(query+'&page=2')).page
+      assert(first.totalCount>=23);assert(first.list.every(p=>[0,1].includes(p.status)&&p.wareId===warehouse))
+      assert(last.list.some(p=>p.id===created[0]));assert(!first.list.some(p=>p.id===created[0]))
+      assert.equal((await success(query+'&key='+created[0])).page.list[0].id,created[0])
+      await receive(created[0]);assert.equal((await success(query+'&key='+created[0])).page.totalCount,0)
+      const info=await success('/api/admin/ware/purchasedetail/info/'+ids.demands.at(-1));assert.equal(info.purchaseDetail.wareId,warehouse)
+      assert.equal((await admin.call('/api/admin/ware/purchasedetail/info/999999999')).status,404)
+      for(const path of ['/api/admin/ware/purchase/list','/api/admin/ware/purchase/unreceive/list','/api/admin/ware/purchasedetail/list']) {
+        for(const invalid of ['page=1000001','page=0','limit=101','wareId=-1','key=wrong','status=5']) assert.equal((await admin.call(path+'?'+invalid)).status,400,path+' '+invalid)
+        assert.equal((await guest.call(path)).status,401);assert.equal((await member.call(path)).status,403)
+      }
+      assert.equal((await member.call('/api/admin/ware/purchasedetail/info/'+ids.demands.at(-1))).status,403)
+    })
     await t.test('uploaded image survives an image-service restart', { skip: process.env.GULIMALL_FAULTS !== '1' }, async () => {
       const before = Buffer.from(await (await fetch(base + uploaded)).arrayBuffer())
       thirdStopped = true; service('Stop'); service('Start'); thirdStopped = false
