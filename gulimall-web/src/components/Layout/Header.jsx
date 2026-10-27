@@ -14,8 +14,8 @@ export default function Header() {
   const [error, setError] = useState('')
   const signOut = async (e) => {
     e.preventDefault()
-    setError('')
-    try { await logout(); navigate('/') } catch (e) { setError(e.message) }
+    const proceed = async () => { setError(''); try { await logout(); navigate('/') } catch (e) { setError(e.message) } }
+    if (window.dispatchEvent(new CustomEvent('gulimall-before-logout', { cancelable: true, detail: { proceed } }))) await proceed()
   }
 
   const handleSearch = (e) => {
@@ -73,7 +73,7 @@ export default function Header() {
 
       <nav className="category-nav">
         <div className="container">
-          <div className="nav-all">全部分类</div>
+          <Link className="nav-all" to="/#all-categories">全部分类</Link>
           <div className="nav-links">
             <Link to="/">首页</Link>
             <Link to="/search">商品搜索</Link>

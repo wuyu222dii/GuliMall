@@ -36,3 +36,5 @@ export async function closeContexts(contexts,info){
   try{if(failed){const raw=info.outputPath('raw-'+i+'.zip');await contexts[i].tracing.stop({path:raw});saveSafeTrace(raw,info.outputPath('trace-'+i+'.zip'))}else await contexts[i].tracing.stop()}finally{await contexts[i].close()}
  }
 }
+
+export async function reloadProtected(page){const accept=dialog=>dialog.type()==='beforeunload'?dialog.accept():dialog.dismiss();page.on('dialog',accept);try{await page.reload()}finally{page.off('dialog',accept)}}

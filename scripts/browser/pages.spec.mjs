@@ -22,7 +22,7 @@ test('地址维护：编辑、默认、删除、分页及窄屏',async({browser}
  await page.getByRole('button',{name:'删除地址 '+other,exact:true}).click();await page.getByRole('button',{name:'取消删除',exact:true}).click();await expect(page.getByRole('button',{name:'删除地址 '+other,exact:true})).toBeVisible()
  await page.getByRole('button',{name:'删除地址 '+other,exact:true}).click();await page.getByRole('button',{name:'确认删除地址',exact:true}).click();await expect(page.getByText('地址已删除。',{exact:true})).toBeVisible()
  expect((await json(page,'/api/member/addresses')).page.list.every(a=>a.defaultStatus===0)).toBe(true)
- await page.goto('/product/900001');await page.getByRole('button',{name:'立即购买',exact:true}).click();await page.getByRole('button',{name:'结算已选商品',exact:true}).click()
+ await page.goto('/product/900001');await page.getByRole('button',{name:'加购并前往购物车',exact:true}).click();await page.getByRole('button',{name:'结算已选商品',exact:true}).click()
  await expect(page.getByRole('button',{name:'提交订单',exact:true})).toBeDisabled();await page.getByRole('radio').first().check();await expect(page.getByRole('button',{name:'提交订单',exact:true})).toBeEnabled()
  const confirmation=page.url();await page.goto('/member/address');await page.getByRole('button',{name:'删除地址 '+id,exact:true}).click();await page.getByRole('button',{name:'确认删除地址',exact:true}).click();await expect(page.getByText('地址已删除。',{exact:true})).toBeVisible()
  await page.goto(confirmation);await expect(page.getByRole('button',{name:'提交订单',exact:true})).toBeDisabled();await page.goto('/member/address')
@@ -34,7 +34,7 @@ test('地址维护：编辑、默认、删除、分页及窄屏',async({browser}
 })
 test('购物车：访客与会员全选、数量校验、登录合并及清空确认',async({browser},info)=>{
  const page=await openPage(browser,contexts),run='cart_'+randomUUID().replaceAll('-','').slice(0,8)
- await page.goto('/product/900001');await page.getByRole('button',{name:'加入购物车',exact:true}).click();await expect(page.getByText('已加入购物车。',{exact:false})).toBeVisible();await page.goto('/product/900002');await page.getByRole('button',{name:'立即购买',exact:true}).click()
+ await page.goto('/product/900001');await page.getByRole('button',{name:'加入购物车',exact:true}).click();await expect(page.getByText('已加入购物车。',{exact:false})).toBeVisible();await page.goto('/product/900002');await page.getByRole('button',{name:'加购并前往购物车',exact:true}).click()
  await expect(page.locator('.cart-table tbody tr')).toHaveCount(2)
  await page.getByRole('checkbox',{name:'全选购物车商品',exact:true}).click();await expect(page.getByRole('checkbox',{name:'全选购物车商品',exact:true})).not.toBeChecked();await expect(page.getByRole('button',{name:'登录后结算',exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'刷新购物车 / 重试合并',exact:true})).toBeEnabled()
  await page.getByRole('checkbox',{name:'全选购物车商品',exact:true}).click();await expect(page.getByRole('checkbox',{name:'全选购物车商品',exact:true})).toBeChecked();await expect(page.getByRole('button',{name:'刷新购物车 / 重试合并',exact:true})).toBeEnabled()

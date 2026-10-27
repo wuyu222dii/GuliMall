@@ -28,13 +28,13 @@ export default function ProductDetail() {
     return () => { active = false }
   }, [skuId, retry])
 
-  const purchase = async (buyNow) => {
+  const purchase = async (openCart) => {
     if (!item || unavailableReason(item) || busy) return
     setBusy(true); setNotice(''); setPurchaseError('')
     try {
       const fresh = await checkPurchase(skuId)
       await addItem(fresh.skuInfo, qty)
-      if (buyNow) navigate('/cart')
+      if (openCart) navigate('/cart')
       else setNotice('已加入购物车。')
     } catch (e) { setPurchaseError(e.message) }
     finally { setBusy(false) }
@@ -74,7 +74,7 @@ export default function ProductDetail() {
             <input id="purchase-quantity" type="number" min="1" max="999" step="1" value={qty} disabled={busy} onChange={(e) => setQty(Math.min(999, Math.max(1, Math.trunc(Number(e.target.value)) || 1)))} />
             <button aria-label="增加数量" disabled={qty >= 999 || busy} onClick={() => setQty(qty + 1)}>+</button>
           </div>
-          <div className="detail-actions"><button className="btn btn-primary btn-lg" onClick={() => purchase(false)} disabled={!!unavailable || !!purchaseError || busy}>{busy ? '正在校验…' : '加入购物车'}</button><button className="btn btn-outline btn-lg" onClick={() => purchase(true)} disabled={!!unavailable || !!purchaseError || busy}>立即购买</button></div>
+          <p className="admin-note">按当前规格和数量加入购物车，再选择商品结算。</p><div className="detail-actions"><button className="btn btn-primary btn-lg" onClick={() => purchase(false)} disabled={!!unavailable || !!purchaseError || busy}>{busy ? '正在校验…' : '加入购物车'}</button><button className="btn btn-outline btn-lg" onClick={() => purchase(true)} disabled={!!unavailable || !!purchaseError || busy}>加购并前往购物车</button></div>
           {notice && <p className="purchase-notice" role="status">{notice} <Link to="/cart">查看购物车</Link></p>}
           {purchaseError && <p className="error-msg" role="alert">{purchaseError}</p>}
         </div>

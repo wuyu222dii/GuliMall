@@ -378,3 +378,12 @@ Demo 旧备份 `.data/backups/round6-before` 在 `.tools/demo restore baaaade5` 
 完整构建 Java 33、Node 46、PowerShell、最终前端 lint/build，Admin 10 业务场景与 Browser 32 项通过；旧 9 类/17 方法继续忽略。浏览器保留 Chromium 两轮完整交易及 Edge，新增每浏览器 2 项四类资料多页/组合查询、保存定位、四类引用 409、会员 403、末页删除/刷新失败/响应未知/双击单请求和 375px。首次定位页码覆盖为实际问题，合并回退逻辑修复；第二次测试会员名不合规则，修正夹具后完整 32 项通过，失败不计通过并保留。
 
 最终常驻 LOCAL_TEST、18 项诊断及 Simulation 预检通过，原三笔订单及地址快照、六条库存、71 表、全部图片及私有配置/密钥/支付台账指纹一致。见 [STAGE29](STAGE29.md)，私有 .tools/stage29-final/manifest.json 冻结日志、截图/trace 和哈希。独立提交，不推送或合并；Product/Fulfillment 沿用阶段 28，全量 All/Diagnostics/Test 与 Demo Recovery 沿用阶段 26，期限沿用自然 30 分钟。阶段 30–31、真实第三方及其他未验证边界继续后置。
+
+
+## 阶段 30：未保存输入保护与消费者入口（2026-10-27）
+
+基线 e32a48b，在 codex/stage30 实施。五类表单按可编辑字段基线保护取消/切换/导航，统一键盘确认框与 beforeunload，退出前确认；仓库与需求共用页面 blocker。保存后清除基线，已保存后的只读查询不误拦；发货响应未知时查询同一物流确认后解除。原商品创建/采购快照与结算令牌不被提醒清理，不做自动草稿或持久化地址。全部分类入口展开完整层级，详情准确提示加购后到购物车，原接口/门禁/状态机/期限不变。
+
+13 项目构建、Java 33、Node 47、PowerShell、最终前端 lint/build，Admin 10 个业务场景及 Browser 44 项通过；旧 9 类/17 方法仍忽略。保留 Chromium 两轮完整交易及 Edge，新增每浏览器 6 项五类表单/原生提醒/未知记录/真实模拟支付发货/重复分类入口及 1280px/375px；发货响应实际丢失再查确认、最终收货且库存只扣一次。四轮测试路径、路由收尾、选项查找及请求等待失败单独归档，不计通过；修正后完整重跑通过。
+
+最终常驻 LOCAL_TEST、18 项诊断及 Simulation 预检，原三笔订单及地址快照、六条库存、71 表、全部图片及私有配置/密钥/支付台账指纹一致。见 [STAGE30](STAGE30.md)，私有 .tools/stage30-final/manifest.json 冻结证据及哈希；独立提交，不推送/合并。全量 All/Diagnostics/Test 与 Demo Recovery 沿用阶段 26，Product/Fulfillment 专项沿用阶段 28，期限沿用自然 30 分钟；阶段 31 与其他待补验边界继续后置。
