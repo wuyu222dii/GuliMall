@@ -48,7 +48,9 @@ public class PurchaseDetailController {
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("ware:purchasedetail:info")
     public R info(@PathVariable("id") Long id){
+        if (id == null || id < 1) throw new com.atguigu.common.security.ApiProblem(400, "需求编号不正确");
 		PurchaseDetailEntity purchaseDetail = purchaseDetailService.getById(id);
+        if (purchaseDetail == null) throw new com.atguigu.common.security.ApiProblem(404, "需求不存在");
 
         return R.ok().put("purchaseDetail", purchaseDetail);
     }

@@ -26,7 +26,7 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
     private PageUtils page(Map<String,Object> params, boolean unreceived) {
         int page = Integer.parseInt((String) params.getOrDefault("page", "1"));
         int limit = Integer.parseInt((String) params.getOrDefault("limit", "20"));
-        if (page < 1 || limit < 1 || limit > 100) throw new ApiProblem(400, "分页参数不正确");
+        if (page < 1 || page > 1000000 || limit < 1 || limit > 100) throw new ApiProblem(400, "分页参数不正确");
         QueryWrapper<PurchaseEntity> query = new QueryWrapper<>();
         if (unreceived) query.in("status", 0, 1);
         if (params.get("status") != null && !params.get("status").toString().isEmpty()) {
@@ -34,8 +34,11 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
             if (status < 0 || status > 4) throw new ApiProblem(400, "状态不正确");
             query.eq("status", status);
         }
-        if (params.get("wareId") != null && !params.get("wareId").toString().isEmpty()) query.eq("ware_id", Long.valueOf(params.get("wareId").toString()));
-        if (params.get("key") != null && !params.get("key").toString().isEmpty()) query.eq("id", Long.valueOf(params.get("key").toString()));
+        for (String field : Arrays.asList("wareId", "key")) if (params.get(field) != null && !params.get(field).toString().isEmpty()) {
+            long id = Long.parseLong(params.get(field).toString());
+            if (id < 1) throw new ApiProblem(400, "查询编号不正确");
+            query.eq("wareId".equals(field) ? "ware_id" : "id", id);
+        }
         return new PageUtils(page(new Page<PurchaseEntity>(page, limit), query.orderByDesc("id")));
     }
     private PurchaseEntity lock(Long id) {

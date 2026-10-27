@@ -19,6 +19,8 @@ export const listDemands = (params) => request.get('/api/admin/ware/purchasedeta
 export const saveDemand = (data) => request.post(`/api/admin/ware/purchasedetail/${data.id ? 'update' : 'save'}`, data)
 export const deleteDemand = (id) => request.post('/api/admin/ware/purchasedetail/delete', [id])
 export const listPurchases = (params) => request.get('/api/admin/ware/purchase/list', { params })
+export const listUnreceivedPurchases = (params) => request.get('/api/admin/ware/purchase/unreceive/list', { params })
+export const getDemand = (id) => request.get('/api/admin/ware/purchasedetail/info/'+id)
 export const getPurchase = (id) => request.get(`/api/admin/ware/purchase/info/${id}`)
 export const mergeDemands = (data) => request.post('/api/admin/ware/purchase/merge', data)
 export const receivePurchase = (id) => request.post('/api/admin/ware/purchase/received', [id])

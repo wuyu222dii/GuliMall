@@ -58,7 +58,7 @@ public class PurchaseDetailServiceImpl extends ServiceImpl<PurchaseDetailDao, Pu
     public PageUtils queryPage(Map<String, Object> params) {
         int pageNumber = Integer.parseInt((String) params.getOrDefault("page", "1"));
         int limit = Integer.parseInt((String) params.getOrDefault("limit", "20"));
-        if (pageNumber < 1 || limit < 1 || limit > 100) throw new com.atguigu.common.security.ApiProblem(400, "分页参数不正确");
+        if (pageNumber < 1 || pageNumber > 1000000 || limit < 1 || limit > 100) throw new com.atguigu.common.security.ApiProblem(400, "分页参数不正确");
 
         /**
          * status
@@ -68,25 +68,33 @@ public class PurchaseDetailServiceImpl extends ServiceImpl<PurchaseDetailDao, Pu
 
         String key = (String) params.get("key");
         if (!StringUtils.isEmpty(key)) {
+            long keyId = Long.parseLong(key);
+            if (keyId < 1) throw new com.atguigu.common.security.ApiProblem(400, "查询编号不正确");
             // purchase_id sku_id
             queryWrapper.and(w -> {
-                w.eq("purchase_id", key)
+                w.eq("purchase_id", keyId)
                         .or()
-                        .eq("sku_id", key);
+                        .eq("sku_id", keyId);
             });
         }
 
         String status = (String) params.get("status");
         if (!StringUtils.isEmpty(status)) {
-            // purchase_id sku_id
-            queryWrapper.eq("status", status);
+            int statusId = Integer.parseInt(status);
+            if (statusId < 0 || statusId > 4) throw new com.atguigu.common.security.ApiProblem(400, "状态不正确");
+            queryWrapper.eq("status", statusId);
         }
         String wareId = (String) params.getOrDefault("wareId", params.get("ware_id"));
         if (!StringUtils.isEmpty(wareId)) {
-            // purchase_id sku_id
-            queryWrapper.eq("ware_id", wareId);
+            long warehouse = Long.parseLong(wareId);
+            if (warehouse < 1) throw new com.atguigu.common.security.ApiProblem(400, "查询编号不正确");
+            queryWrapper.eq("ware_id", warehouse);
         }
-        if (params.get("purchaseId") != null && !params.get("purchaseId").toString().isEmpty()) queryWrapper.eq("purchase_id", Long.valueOf(params.get("purchaseId").toString()));
+        if (params.get("purchaseId") != null && !params.get("purchaseId").toString().isEmpty()) {
+            long purchaseId = Long.parseLong(params.get("purchaseId").toString());
+            if (purchaseId < 1) throw new com.atguigu.common.security.ApiProblem(400, "查询编号不正确");
+            queryWrapper.eq("purchase_id", purchaseId);
+        }
         queryWrapper.orderByDesc("id");
 
 
