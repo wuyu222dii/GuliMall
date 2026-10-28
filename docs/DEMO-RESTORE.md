@@ -1,5 +1,7 @@
 # Demo 冷备份完整隔离恢复
 
+阶段 31 再次完成旧 Demo 快照两代完整隔离恢复，兼容当前分类/购买文案与管理订单独立详情；原商品字段、创建请求幂等、全 SQL 冷检查点、消息补偿和继续交易均通过。运行目录由私有 `.tools/stage31-demo-location.json` 定位，冻结结果见 `.tools/stage31-final/manifest.json`，详见 [阶段 31](STAGE31.md)。下文阶段 20/26 为历史验收，不与本轮混算。
+
 此入口恢复一份本地模拟 Demo 冷备份，并在恢复副本中继续真实订单、库存与消息处理。付款仍为 LOCAL_TEST，无真实资金；不接第三方或公网。只读核对继续使用 `backup-audit.ps1`，独立 `_test` 演练继续使用 `test.ps1 -Suite Recovery`，两者保护不变。
 
 ## 执行前
