@@ -98,6 +98,6 @@ test('商品创建：响应丢失、刷新恢复、原请求查询及离开确�
  expect(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_spu_info WHERE creation_request_id='${pending.requestId}'`)).toBe('1')
  const found=await json(page,'/api/admin/product/spuinfo/creation/'+pending.requestId);expect(found.found).toBe(true);expect((await json(page,'/api/admin/product/spuinfo/editor/'+found.id)).product.skus).toHaveLength(2)
  await page.getByLabel('商品名称',{exact:true}).fill(name+' 未保存')
- await page.getByRole('link',{name:'返回列表',exact:true}).click();await expect(page.getByRole('alertdialog',{name:'离开商品编辑确认',exact:true})).toBeVisible();await page.getByRole('button',{name:'继续编辑',exact:true}).click();await expect(page.getByLabel('商品名称',{exact:true})).toHaveValue(name+' 未保存')
- await page.getByRole('link',{name:'返回列表',exact:true}).click();await page.getByRole('button',{name:'确认离开',exact:true}).click();await expect(page).toHaveURL(/\/admin\/products$/)
+ await page.getByRole('link',{name:'返回列表',exact:true}).click();await expect(page.getByRole('alertdialog',{name:'未保存内容确认',exact:true})).toBeVisible();await page.getByRole('button',{name:'继续编辑',exact:true}).click();await expect(page.getByLabel('商品名称',{exact:true})).toHaveValue(name+' 未保存')
+ await page.getByRole('link',{name:'返回列表',exact:true}).click();await page.getByRole('button',{name:'确认放弃并继续',exact:true}).click();await expect(page).toHaveURL(/\/admin\/products$/)
 })

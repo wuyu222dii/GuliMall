@@ -18,3 +18,6 @@ export function demandMatches(actual, submitted) {
 export function purchaseMatches(result, submitted) {
   return result?.purchase.id === submitted.id && [3, 4].includes(result.purchase.status) && result.items.length === submitted.items.length && submitted.items.every(item => result.items.some(actual => actual.id === item.itemId && actual.status === item.status && (actual.failureReason || '') === (item.status === 3 ? '' : item.reason.trim())))
 }
+export function receiptSignature(items) {
+  return JSON.stringify(items.map(item => ({ itemId: item.itemId, status: item.status, reason: item.status === 4 ? item.reason : '' })).sort((a, b) => a.itemId - b.itemId))
+}

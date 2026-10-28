@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {parseProcurementRequest,demandMatches,purchaseMatches} from '../gulimall-web/src/utils/procurement.js'
+import {parseProcurementRequest,demandMatches,purchaseMatches,receiptSignature} from '../gulimall-web/src/utils/procurement.js'
 test('procurement snapshots reject damaged, invalid and ambiguous requests without replacing them',()=>{
  const request={type:'save',payload:{id:null,skuId:1,wareId:2,skuNum:3,skuPrice:'1.20'}}
  assert.deepEqual(parseProcurementRequest(JSON.stringify(request)),request);assert.equal(parseProcurementRequest(null),null)
@@ -22,4 +22,11 @@ test('receipt confirmation requires the same complete purchase, results and fail
  assert(purchaseMatches(result,request));assert(!purchaseMatches({...result,purchase:{id:9,status:4}},request))
  assert(!purchaseMatches({...result,items:result.items.slice(0,1)},request));assert(!purchaseMatches({...result,purchase:{id:1,status:2}},request))
  assert(!purchaseMatches({...result,items:[result.items[0],{...result.items[1],failureReason:'其他原因'}]},request))
+})
+
+test('receipt dirtiness binds IDs and meaningful failure reasons without depending on row order',()=>{
+ const original=[{itemId:1,status:3,reason:''},{itemId:2,status:4,reason:'缺货'}]
+ assert.equal(receiptSignature(original),receiptSignature([{...original[1]},{...original[0],reason:'unused'}]))
+ assert.notEqual(receiptSignature(original),receiptSignature([{...original[0]}, {...original[1],reason:'其他原因'}]))
+ assert.notEqual(receiptSignature(original),receiptSignature([{...original[0],itemId:9},original[1]]))
 })

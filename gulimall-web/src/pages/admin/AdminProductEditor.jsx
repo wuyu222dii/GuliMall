@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useBlocker, useNavigate, useParams, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
+import useUnsavedForm from '../../hooks/useUnsavedForm'
 import { getCatalog, getProductEditor, saveProduct, uploadImage, findProductCreation } from '../../api/admin'
 import { leafCategories, productImage } from '../../utils/product'
 import { adminListUrl } from '../../utils/admin'
@@ -22,15 +23,15 @@ export default function AdminProductEditor() {
   const [notice, setNotice] = useState('')
   const [pending, setPending] = useState(null)
   const [storageError, setStorageError] = useState(false)
+  const [destination, setDestination] = useState(null)
   const baseline = useRef(JSON.stringify(blankProduct())), latest = useRef(form), working = useRef(false)
   latest.current = form
   const storageKey = 'gulimall-product-creation'
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => JSON.stringify(latest.current) !== baseline.current && currentLocation.pathname !== nextLocation.pathname)
+  const guard = useUnsavedForm(JSON.stringify(form) !== baseline.current || !!pending || busy || uploading, busy || uploading)
   useEffect(() => {
-    const warn = event => { if (JSON.stringify(latest.current) !== baseline.current) { event.preventDefault(); event.returnValue = '' } }
-    window.addEventListener('beforeunload', warn)
-    return () => window.removeEventListener('beforeunload', warn)
-  }, [])
+    // Navigate only after the saved form and pending flag have rendered clean.
+    if (destination && !busy && !uploading) { setDestination(null); navigate(destination, { replace: true }) }
+  }, [destination, busy, uploading, navigate])
   useEffect(() => {
     let active = true
     baseline.current = JSON.stringify(blankProduct()); latest.current = blankProduct()
@@ -106,14 +107,14 @@ export default function AdminProductEditor() {
       if (request) sessionStorage.removeItem(storageKey)
       const editor = await getProductEditor(savedId)
       const saved = hydrate(editor.product); baseline.current = JSON.stringify(saved); latest.current = saved
-      setPending(null); setForm(saved); navigate(`/admin/products/${savedId}/edit${listSuffix}`, { replace: true }); setNotice('商品与 SKU 已保存；已上架商品已加入搜索同步队列，请在同步页面查看结果。')
+      setPending(null); setForm(saved); setDestination(`/admin/products/${savedId}/edit${listSuffix}`); setNotice('商品与 SKU 已保存；已上架商品已加入搜索同步队列，请在同步页面查看结果。')
     } catch (e) {
       if (!savedId && !id && e.status === 400 && request) {
         const rejected = { ...request, validationFailed: true }
         sessionStorage.setItem(storageKey, JSON.stringify(rejected)); setPending(rejected)
       }
       setError(savedId ? '商品已保存，但刷新失败。请重新打开此商品编辑页，避免重复创建。' : `${e.message}${!id ? ' 原创建请求已保留，请查询或重试同一提交。' : ''}`)
-      if (savedId) { baseline.current = JSON.stringify(latest.current); setPending(null); setReloadRequired(true); navigate(`/admin/products/${savedId}/edit${listSuffix}`, { replace: true }) }
+      if (savedId) { baseline.current = JSON.stringify(latest.current); setPending(null); setReloadRequired(true); setDestination(`/admin/products/${savedId}/edit${listSuffix}`) }
     } finally { working.current = false; setBusy(false) }
   }
   const lookup = async () => {
@@ -123,14 +124,14 @@ export default function AdminProductEditor() {
       const res = await findProductCreation(pending.requestId)
       if (!res.found) { setNotice('尚未查询到已提交的商品，可安全重试同一提交。'); return }
       sessionStorage.removeItem(storageKey); baseline.current = JSON.stringify(latest.current); setPending(null)
-      navigate(`/admin/products/${res.id}/edit${listSuffix}`, { replace: true })
+      setDestination(`/admin/products/${res.id}/edit${listSuffix}`)
     } catch (e) { setError(e.message) }
     finally { working.current = false; setBusy(false) }
   }
   if (loading) return <p role="status">正在加载商品编辑资料…</p>
   if (!meta) return <p className="error-msg" role="alert">{error || '基础资料加载失败，请刷新。'}</p>
   return <section>
-    {blocker.state === 'blocked' && <div className="admin-confirm" role="alertdialog" aria-label="离开商品编辑确认"><p>有未保存内容或待确认的创建请求，确认离开？待确认请求仍保留在本标签页。</p><div className="admin-actions"><button className="btn btn-primary" disabled={busy} onClick={() => blocker.proceed()}>确认离开</button><button className="btn btn-outline" onClick={() => blocker.reset()}>继续编辑</button></div></div>}
+    {guard.dialog}
     <div className="admin-toolbar"><h2>{id ? `编辑商品 #${id}` : '新建商品'}</h2><Link to={listUrl}>返回列表</Link><Link to="/admin/products/catalog">维护基础资料</Link><Link to={'/admin/products/sync' + listSuffix}>查看搜索同步</Link><button className="btn btn-outline" disabled={!!id || busy || !!pending && !pending.validationFailed || storageError} onClick={example}>填入双 SKU 示例</button></div>
     {error && <p className="error-msg" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
     {pending && <div className="admin-confirm"><p>{pending.validationFailed ? '本次校验未通过，可修正内容后复用原请求标识保存；如原商品已存在，请先查询。' : '创建请求已保留，内容已锁定。刷新后仍可查询或重试同一提交，避免重复录入。'}</p><button className="btn btn-outline" type="button" disabled={busy} onClick={lookup}>查询原创建结果</button></div>}
