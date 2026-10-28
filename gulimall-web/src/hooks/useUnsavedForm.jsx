@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useBlocker } from 'react-router-dom'
 
 export default function useUnsavedForm(dirty, busy = false) {
   const [action, setAction] = useState(null), keep = useRef(null), previousFocus = useRef(null)
   const confirmed = useRef(false)
   const blocker = useBlocker(({ currentLocation, nextLocation }) => !confirmed.current && dirty && currentLocation.pathname + currentLocation.search !== nextLocation.pathname + nextLocation.search)
-  const commit = next => { const previous = confirmed.current; confirmed.current = true; try { return next() } finally { confirmed.current = previous } }
+  const commit = useCallback(next => { const previous = confirmed.current; confirmed.current = true; try { return next() } finally { confirmed.current = previous } }, [])
   const open = !!action || blocker.state === 'blocked'
   useEffect(() => {
     if (!dirty) return

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { listSearchSync, retrySearchSync, rebuildSearch } from '../../api/admin'
 import { orderTime } from '../../utils/order'
@@ -11,15 +11,15 @@ export default function AdminSearchSync() {
   const [fields, setFields] = useState({ spuId: '', state: '' })
   const [result, setResult] = useState(null), [error, setError] = useState(''), [actionError, setActionError] = useState('')
   const [notice, setNotice] = useState(''), [busy, setBusy] = useState(false), working = useRef(false), [loading, setLoading] = useState(true), [reload, setReload] = useState(0)
-  const changeQuery = (patch, replace = false) => { const next = new URLSearchParams(query); for (const [key, value] of Object.entries(patch)) { if (value === '') next.delete(key); else next.set(key, String(value)) } setParams(next, { replace }) }
-  useEffect(() => { setFields({ spuId: parsed.values.syncSpuId, state: parsed.values.syncState }) }, [query])
+  const changeQuery = useCallback((patch, replace = false) => { const next = new URLSearchParams(query); for (const [key, value] of Object.entries(patch)) { if (value === '') next.delete(key); else next.set(key, String(value)) } setParams(next, { replace }) }, [query, setParams])
+  useEffect(() => { setFields({ spuId: parsed.values.syncSpuId, state: parsed.values.syncState }) }, [parsed])
   useEffect(() => {
     let active = true
     setLoading(true); setError(''); setResult(null)
     if (parsed.error) { setError(parsed.error); setLoading(false); return }
     listSearchSync({ page, limit: 20, spuId: parsed.values.syncSpuId, state: parsed.values.syncState }).then(res => { if (active) { if (page > Math.max(1, res.page.totalPage)) changeQuery({ syncPage: Math.max(1, res.page.totalPage) }, true); else setResult(res.page) } }).catch(e => { if (active) setError(e.message) }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [query, reload])
+  }, [parsed, page, changeQuery, reload])
   const run = async (action, message) => {
     if (working.current) return
     working.current = true; setBusy(true); setActionError(''); setNotice('')

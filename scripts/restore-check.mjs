@@ -7,7 +7,7 @@ const source=JSON.parse(readFileSync('.tools/test/demo-success.json','utf8')),fa
 const container=process.env.GULIMALL_RESTORE_MYSQL
 assert.match(container||'',/^gulimall-restore-[a-f0-9]{32}-mysql$/)
 async function until(check,message,seconds=90){for(let i=0;i<seconds;i++){try{if(await check())return}catch{}await new Promise(r=>setTimeout(r,1000))}assert.fail(message)}
-async function call(path,method='GET',body){const r=await fetch('http://127.0.0.1:88'+path,{method,headers:{Cookie:session.cookie,'X-CSRF-Token':session.csrf,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(10000)});assert.equal(r.status,200);return r.json()}
+async function call(path,method='GET',body,expected=200){const r=await fetch('http://127.0.0.1:88'+path,{method,headers:{Cookie:session.cookie,'X-CSRF-Token':session.csrf,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(10000)});assert.equal(r.status,expected);return r.json()}
 function sql(input){const r=spawnSync('docker',['exec','-i',container,'sh','-c','MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -ugulimall --batch --skip-column-names'],{input,encoding:'utf8',windowsHide:true});assert.equal(r.status,0,r.stderr);return r.stdout.trim()}
 await until(async()=>{await assertTestEnvironment();return(await call('/api/auth/me')).user.admin},'Restored test services or saved Redis Session not ready')
 assert(Number.isSafeInteger(source.orderId));assert(Number.isSafeInteger(failure.orderId))
@@ -20,6 +20,23 @@ for(const story of [source,failure]) {
  assert.equal((await call('/api/admin/product/spuinfo/editor','POST',story.creationSnapshot)).id,story.productId)
  assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_spu_info WHERE creation_request_id='${story.creationSnapshot.creationRequestId}';`),'1')
  assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_test.pms_sku_info WHERE spu_id=${story.productId};`),'2')
+ assert.equal(story.demandCreations.length,2);assert(story.deletedDemand)
+ const stock=sql(`SELECT sku_id,stock FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN (${story.skus.join(',')}) ORDER BY sku_id;`)
+ for(const original of story.demandCreations){
+  const found=await call('/api/admin/ware/purchasedetail/creation/'+original.request.creationRequestId)
+  assert.equal(found.id,original.id);assert.equal(found.deleted,false);assert.equal(found.status,3);assert.equal(found.purchaseId,story.purchaseId)
+  assert.equal((await call('/api/admin/ware/purchasedetail/save','POST',original.request)).id,original.id)
+ }
+ const deleted=story.deletedDemand,found=await call('/api/admin/ware/purchasedetail/creation/'+deleted.request.creationRequestId)
+ assert.equal(found.id,deleted.id);assert.equal(found.deleted,true)
+ await call('/api/admin/ware/purchasedetail/save','POST',deleted.request,409)
+ await call('/api/admin/ware/purchasedetail/info/'+deleted.id,'GET',undefined,404)
+ for(const original of [...story.demandCreations,deleted]){
+  const r=original.request,hash=createHash('sha256').update([r.skuId,r.wareId,r.skuNum,Number(r.skuPrice).toFixed(2)].join('\n')).digest('hex')
+  assert.equal(sql(`SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE creation_request_id='${r.creationRequestId}';`),'1')
+  assert.equal(sql(`SELECT creation_request_hash FROM gulimall_wms_test.wms_purchase_detail WHERE id=${original.id};`),hash)
+ }
+ assert.equal(sql(`SELECT sku_id,stock FROM gulimall_wms_test.wms_ware_sku WHERE sku_id IN (${story.skus.join(',')}) ORDER BY sku_id;`),stock,'Demand replay changed restored stock')
 }
 let simulationPayments=false
 if(process.env.PAYMENT_TEST_DATA) {
@@ -42,5 +59,5 @@ const total=(await call('/api/admin/product/search-sync?limit=1')).page.totalCou
 const seconds=Math.max(90,Math.ceil(total/20)*(15+20)+30)
 console.log(`Restored search: ${total} persisted tasks, ${seconds}s verification budget`)
 await until(async()=>(await call('/api/search?keyword='+source.label)).page.list.length===2,'Search did not rebuild from restored product database',seconds)
-writeFileSync('.tools/test/restore-result.json',JSON.stringify({freshInstances:true,savedSession:true,uploadedImages:true,completedOrder:source.orderSn,releaseRecovered:failure.orderSn,searchRebuilt:true,simulationPayments,productCreationRecovered:true,realAlipaySandbox:false},null,2)+'\n')
+writeFileSync('.tools/test/restore-result.json',JSON.stringify({freshInstances:true,savedSession:true,uploadedImages:true,completedOrder:source.orderSn,releaseRecovered:failure.orderSn,searchRebuilt:true,simulationPayments,productCreationRecovered:true,demandCreationRecovered:true,deletedDemandNotRevived:true,realAlipaySandbox:false},null,2)+'\n')
 console.log('PASS: restored order snapshots, Redis Session, image hashes, fresh-vhost release recovery and Elasticsearch rebuild.')

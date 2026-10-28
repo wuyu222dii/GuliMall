@@ -28,7 +28,7 @@ function originalIntact(){
 }
 class Client{
  cookie='';csrf=''
- async call(path,method='GET',body){const response=await fetch('http://127.0.0.1:8080'+path,{method,headers:{Cookie:this.cookie,'X-CSRF-Token':this.csrf,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const cookie=response.headers.get('set-cookie');if(cookie)this.cookie=cookie.split(';')[0];assert.equal(response.status,200,'Restored API failed: '+path);const result=await response.json();assert.equal(result.code,0,'Restored business API failed: '+path);if(result.csrfToken)this.csrf=result.csrfToken;return result}
+ async call(path,method='GET',body,expected=200){const response=await fetch('http://127.0.0.1:8080'+path,{method,headers:{Cookie:this.cookie,'X-CSRF-Token':this.csrf,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const cookie=response.headers.get('set-cookie');if(cookie)this.cookie=cookie.split(';')[0];assert.equal(response.status,expected,'Restored API failed: '+path);const result=await response.json();if(expected===200)assert.equal(result.code,0,'Restored business API failed: '+path);if(result.csrfToken)this.csrf=result.csrfToken;return result}
 }
 const action=process.argv[2]
 if(action==='snapshot'){
@@ -47,12 +47,16 @@ if(action==='snapshot'){
  const creationSnapshot={creationRequestId:randomUUID(),spuName:'恢复验收 '+run,spuDescription:'恢复副本真实交易',catalogId:900003,brandId:900001,weight:'0.2',images:['/demo-product.svg'],decript:['/demo-product.svg'],baseAttrs:[{attrId:900001,attrValues:'8GB',showDesc:1}],skus:[{skuName:run,skuTitle:run,price:'0.10',images:[{imgUrl:'/demo-product.svg',defaultImg:1}],attr:[{attrId:900002,attrName:'颜色',attrValue:'红色'}]}]}
  const productId=(await admin.call('/api/admin/product/spuinfo/editor','POST',creationSnapshot)).id
  const sku=(await admin.call('/api/admin/product/spuinfo/editor/'+productId)).product.skus[0].skuId
- const demand=(await admin.call('/api/admin/ware/purchasedetail/save','POST',{skuId:sku,wareId:900001,skuNum:5,skuPrice:'1.00'})).id,purchase=(await admin.call('/api/admin/ware/purchase/merge','POST',{items:[demand]})).purchaseId
+ const demandRequest={creationRequestId:randomUUID(),skuId:sku,wareId:900001,skuNum:5,skuPrice:'1.00'}
+ const demand=(await admin.call('/api/admin/ware/purchasedetail/save','POST',demandRequest)).id,purchase=(await admin.call('/api/admin/ware/purchase/merge','POST',{items:[demand]})).purchaseId
+ const deletedRequest={...demandRequest,creationRequestId:randomUUID(),skuNum:1}
+ const deletedDemand=(await admin.call('/api/admin/ware/purchasedetail/save','POST',deletedRequest)).id
+ await admin.call('/api/admin/ware/purchasedetail/delete','POST',[deletedDemand])
  await admin.call('/api/admin/ware/purchase/received','POST',[purchase]);await admin.call('/api/admin/ware/purchase/done','POST',{id:purchase,items:[{itemId:demand,status:3}]});await admin.call(`/api/admin/product/search-sync/${productId}/publish?status=1`,'POST',{})
  await until(async()=>(await admin.call('/api/search?keyword='+run)).page.list.some(s=>s.skuId===sku))
  const urls=sql("SELECT sku_default_img FROM gulimall_pms_demo.pms_sku_info WHERE sku_default_img LIKE '/api/media/%' UNION SELECT img_url FROM gulimall_pms_demo.pms_sku_images WHERE img_url LIKE '/api/media/%' UNION SELECT img_url FROM gulimall_pms_demo.pms_spu_images WHERE img_url LIKE '/api/media/%';").split('\n').filter(Boolean)
  for(const url of urls){assert.match(url,/^\/api\/media\/[a-f0-9]{32}\.(jpg|png)$/);const response=await fetch('http://127.0.0.1:8080'+url);assert.equal(response.status,200);assert.equal(createHash('sha256').update(Buffer.from(await response.arrayBuffer())).digest('hex'),createHash('sha256').update(readFileSync(join(ctx.source,'.data/uploads',url.split('/').at(-1)))).digest('hex'))}
- save('restore-fixture.json',{run,productId,sku,creationSnapshot,original:originalIntact(),imagesVerified:urls.length});console.log('PASS: original transactions and images readable; independent product procured and searchable')
+ save('restore-fixture.json',{run,productId,sku,creationSnapshot,demandRequest,demand,purchase,deletedRequest,deletedDemand,original:originalIntact(),imagesVerified:urls.length});console.log('PASS: original transactions and images readable; independent product procured and searchable')
 }else if(action==='checkpoint'){
  const checkpoint=process.argv[3];assert(resolve(checkpoint).startsWith(resolve(ctx.source,'.data')+sep))
  const fixture=read(file('restore-fixture.json'));assert.match(fixture.pending,/^[a-f0-9]{32}$/)
@@ -71,17 +75,37 @@ if(action==='snapshot'){
  assert.equal((await admin.call('/api/admin/product/spuinfo/creation/'+fixture.creationSnapshot.creationRequestId)).id,fixture.productId)
  assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_demo.pms_spu_info WHERE creation_request_id='${fixture.creationSnapshot.creationRequestId}';`),'1')
  assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_demo.pms_sku_info WHERE spu_id=${fixture.productId};`),'1')
- save('creation-result.json',{survivedColdRestore:true,replayId:replay,originalId:fixture.productId,singleProductAndSku:true})
+ const demandFound=await admin.call('/api/admin/ware/purchasedetail/creation/'+fixture.demandRequest.creationRequestId)
+ assert.equal(demandFound.id,fixture.demand);assert.equal(demandFound.status,3);assert.equal(demandFound.purchaseId,fixture.purchase);assert.equal(demandFound.deleted,false)
+ assert.equal((await admin.call('/api/admin/ware/purchasedetail/save','POST',fixture.demandRequest)).id,fixture.demand)
+ const deletedFound=await admin.call('/api/admin/ware/purchasedetail/creation/'+fixture.deletedRequest.creationRequestId)
+ assert.equal(deletedFound.id,fixture.deletedDemand);assert.equal(deletedFound.deleted,true)
+ await admin.call('/api/admin/ware/purchasedetail/save','POST',fixture.deletedRequest,409)
+ await admin.call('/api/admin/ware/purchasedetail/info/'+fixture.deletedDemand,'GET',undefined,404)
+ for(const request of [fixture.demandRequest,fixture.deletedRequest]){
+  const hash=createHash('sha256').update([request.skuId,request.wareId,request.skuNum,Number(request.skuPrice).toFixed(2)].join('\n')).digest('hex')
+  assert.equal(sql(`SELECT COUNT(*) FROM gulimall_wms_demo.wms_purchase_detail WHERE creation_request_id='${request.creationRequestId}';`),'1')
+  assert.equal(sql(`SELECT creation_request_hash FROM gulimall_wms_demo.wms_purchase_detail WHERE creation_request_id='${request.creationRequestId}';`),hash)
+ }
+ save('creation-result.json',{survivedColdRestore:true,replayId:replay,originalId:fixture.productId,singleProductAndSku:true,demandCreationRecovered:true,deletedDemandNotRevived:true})
  const before=(await rabbit('queues/%2F/gulimall.trade.stock')).message_stats?.ack||0
  for(const event of events)for(let i=0;i<2;i++)assert((await rabbit('exchanges/%2F/gulimall.trade/publish',{properties:{content_type:'application/json',delivery_mode:2},routing_key:'stock',payload:JSON.stringify({eventId:event.id}),payload_encoding:'string'})).routed)
  await until(async()=>((await rabbit('queues/%2F/gulimall.trade.stock')).message_stats?.ack||0)>=before+4)
  assert.equal(sql(`SELECT stock,stock_locked FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id=${fixture.sku};`),'4\t0')
  for(const event of events)assert.equal(sql(`SELECT CAST(consumed_at AS CHAR) FROM gulimall_oms_demo.oms_trade_event WHERE id=${event.id};`),event.consumed)
  assert.equal(sql(`SELECT task_status FROM gulimall_wms_demo.wms_ware_order_task WHERE order_sn='${fixture.pending}';`),'2')
- save('compensation-result.json',{coldCheckpointRecovered:true,emptyBroker:true,releaseConfirmed:true,duplicateMessagesAcknowledged:4,stock:'4/0',original:originalIntact()});console.log('PASS: cold pending release recovered from SQL; duplicate deduction/release messages ACKed without changing stock twice')
+ const request={creationRequestId:randomUUID(),skuId:fixture.sku,wareId:900001,skuNum:1,skuPrice:'1.00'}
+ const id=(await admin.call('/api/admin/ware/purchasedetail/save','POST',request)).id
+ const purchaseId=(await admin.call('/api/admin/ware/purchase/merge','POST',{items:[id]})).purchaseId
+ await admin.call('/api/admin/ware/purchase/received','POST',[purchaseId])
+ const receipt={id:purchaseId,items:[{itemId:id,status:3}]}
+ await admin.call('/api/admin/ware/purchase/done','POST',receipt);await admin.call('/api/admin/ware/purchase/done','POST',receipt)
+ assert.equal(sql(`SELECT stock,stock_locked FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id=${fixture.sku};`),'5\t0')
+ fixture.afterRecoveryDemand={id,purchaseId,request};save('restore-fixture.json',fixture)
+ save('compensation-result.json',{coldCheckpointRecovered:true,emptyBroker:true,releaseConfirmed:true,duplicateMessagesAcknowledged:4,stockAfterDuplicateMessages:'4/0',newProcurement:{id,purchaseId,repeatedReceiptAddedOnce:true,stock:'5/0'},original:originalIntact()});console.log('PASS: cold pending release recovered; duplicate messages did not change stock twice; new procurement completed once after second-generation recovery')
 }else if(action==='final'){
  const fixture=read(file('restore-fixture.json'));assert.match(fixture.afterRecovery,/^[a-f0-9]{32}$/)
- assert.equal(sql(`SELECT stock,stock_locked FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id=${fixture.sku};`),'3\t0')
+ assert.equal(sql(`SELECT stock,stock_locked FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id=${fixture.sku};`),'4\t0')
  for(const sn of [fixture.completed,fixture.afterRecovery])assert.equal(sql(`SELECT status,inventory_status,pay_amount FROM gulimall_oms_demo.oms_order WHERE order_sn='${sn}';`),'3\t1\t0.10')
- save('restore-result.json',{original:originalIntact(),newCompleted:[fixture.completed,fixture.afterRecovery],compensated:fixture.pending,compensation:read(file('compensation-result.json')),productCreation:read(file('creation-result.json')),stock:'3/0',realServices:false});console.log('PASS: original restored state retained and another genuine mock trade completed after cold recovery')
+ save('restore-result.json',{original:originalIntact(),newCompleted:[fixture.completed,fixture.afterRecovery],compensated:fixture.pending,compensation:read(file('compensation-result.json')),productCreation:read(file('creation-result.json')),stock:'4/0',realServices:false});console.log('PASS: original restored state retained and another genuine mock trade completed after cold recovery')
 }else throw new Error('Unknown restore verification phase')

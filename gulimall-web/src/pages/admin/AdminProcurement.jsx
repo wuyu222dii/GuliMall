@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { adminQuery } from '../../utils/admin'
 import * as admin from '../../api/admin'
@@ -49,8 +49,9 @@ export default function AdminProcurement() {
   const protectedQueryRef = useRef(protectedQuery); protectedQueryRef.current = protectedQuery
   const keepConfirmedForm = useRef(false)
   const guard = useUnsavedForm(protectedQuery, busy || warehouseDraft.busy)
+  const commit = guard.commit
   const protectReceipt = action => guard.request(action, receiptDirty)
-  const navigateView = (patch, replace = false) => {
+  const navigateView = useCallback((patch, replace = false) => {
     const next = { ...view, ...patch }, search = new URLSearchParams()
     if (next.tab !== 'purchases') next.purchaseId = ''
     if (next.tab !== 'stock') next.skuId = ''
@@ -60,7 +61,7 @@ export default function AdminProcurement() {
     for (const [key, value] of Object.entries(next)) if (value !== '' && value != null) search.set(key, String(value))
     if (search.toString() === query) return false
     setParams(search, { replace }); return true
-  }
+  }, [view, query, setParams])
   const changeView = patch => guard.request(() => {
     if (!pendingRef.current && !storageError) replaceForm(demandDraft())
     setActive(null); setResults([]); setSelected([]); setTarget(''); setTargetPage(1)
@@ -71,6 +72,8 @@ export default function AdminProcurement() {
     setKeyInput(view.key); setSelected([]); setTarget(''); setTargetPage(1)
     if (!pendingRef.current && !storageError && !keepConfirmedForm.current) replaceForm(demandDraft())
     keepConfirmedForm.current = false
+    // A storage failure or successful lookup alone must not clear the original demand form.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
   useEffect(() => {
     let current = true
@@ -79,9 +82,9 @@ export default function AdminProcurement() {
     if (parsed.error) { setListError(parsed.error); setLoading(false); return }
     const params = { page, limit: 20, wareId: filters.wareId, status: filters.status, key: filters.key }
     const operation = tab === 'demands' ? admin.listDemands(params) : tab === 'purchases' ? admin.listPurchases(params) : admin.listStock({ page, limit: 20, wareId: filters.wareId, skuId: filters.skuId })
-    operation.then(res => { if (current) { if (page > Math.max(1, res.page.totalPage) && !protectedQueryRef.current) guard.commit(() => navigateView({ page: String(Math.max(1, res.page.totalPage)), purchaseId: '' }, true)); else setData(res.page) } }).catch(e => { if (current) setListError(e.message) }).finally(() => { if (current) setLoading(false) })
+    operation.then(res => { if (current) { if (page > Math.max(1, res.page.totalPage) && !protectedQueryRef.current) commit(() => navigateView({ page: String(Math.max(1, res.page.totalPage)), purchaseId: '' }, true)); else setData(res.page) } }).catch(e => { if (current) setListError(e.message) }).finally(() => { if (current) setLoading(false) })
     return () => { current = false }
-  }, [filters, page, reload, tab, inWarehouses])
+  }, [filters, page, reload, tab, inWarehouses, parsed.error, commit, navigateView])
   useEffect(() => {
     let current = true
     if (inWarehouses) return

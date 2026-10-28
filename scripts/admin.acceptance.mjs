@@ -234,9 +234,11 @@ test('stage 3 administration, local images and procurement acceptance', async (t
     })
     await t.test('demand creation survives concurrency, changed data, merge, deletion and restart', async () => {
       const path='/api/admin/ware/purchasedetail/', request={creationRequestId:randomUUID(),skuId:sku1,wareId:warehouse,skuNum:3,skuPrice:'2.00'}
+      const before=Number(sql(`SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE sku_id=${sku1} AND ware_id=${warehouse};`))
       const replies=await Promise.all(Array.from({length:6},()=>success(path+'save','POST',request)))
       const id=replies[0].id;ids.demands.push(id);assert(replies.every(r=>r.id===id))
       assert.equal(sql(`SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE creation_request_id='${request.creationRequestId}';`),'1')
+      assert.equal(Number(sql(`SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE sku_id=${sku1} AND ware_id=${warehouse};`)),before+1,'Losing transactions must not leave unkeyed rows')
       assert.equal((await success(path+'save','POST',{...request,skuPrice:2})).id,id)
       assert.equal((await admin.call(path+'save','POST',{...request,skuNum:4})).status,409)
       assert.equal((await admin.call(path+'creation/not-a-uuid')).status,400)

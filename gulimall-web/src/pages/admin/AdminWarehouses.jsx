@@ -10,13 +10,14 @@ export default function AdminWarehouses({ onChanged, onStatus, protect, page, qu
   const replaceForm = next => { baseline.current = formSignature(next, Object.keys(empty())); setForm(next) }
   const dirty = formSignature(form, Object.keys(empty())) !== baseline.current || unknown
   const latestDirty = useRef(dirty); latestDirty.current = dirty
-  useEffect(() => { setKey(query); if (!unknown) replaceForm(empty()) }, [page, query])
+  const queryCallback = useRef(onQuery); queryCallback.current = onQuery
+  useEffect(() => { setKey(query); if (!unknown) replaceForm(empty()) }, [page, query, unknown])
   useEffect(() => { onStatus({ dirty, busy, unknown }) }, [dirty, busy, unknown, onStatus])
   useEffect(() => () => onStatus({ dirty: false, busy: false }), [onStatus])
   useEffect(() => {
     let active = true
     setLoading(true); setResult(null); setError('')
-    warehouses({ page, limit: 10, key: query }).then(res => { if (active) { const last = Math.max(1, res.page.totalPage); if (page > last && !latestDirty.current) onQuery({ page: String(last) }, true); else setResult(res.page) } }).catch(e => { if (active) setError(e.message) }).finally(() => { if (active) setLoading(false) })
+    warehouses({ page, limit: 10, key: query }).then(res => { if (active) { const last = Math.max(1, res.page.totalPage); if (page > last && !latestDirty.current) queryCallback.current({ page: String(last) }, true); else setResult(res.page) } }).catch(e => { if (active) setError(e.message) }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [page, query, reload])
   const save = async event => {

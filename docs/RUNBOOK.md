@@ -190,3 +190,22 @@ Test Recovery 复验通过，原 `_test` 保护不变；Node 36 项、PowerShell
 现有 Demo 在冷备份、暂停业务后执行 `infra/migrations/006-product-creation.sql`，再构建/启动；空库已含新列。`scripts/migration-check.ps1` 用无宿主端口的新 MySQL 验证重复执行、重复值预检和唯一约束，不触碰原库。Test 入口及两类恢复在启动业务前执行迁移，原 Test 数据库名/配置保护保留。
 
 旧 Demo 完整快照可在恢复副本补新列；只核对和迁移副本，不向原环境写回。重建后的创建请求必须返回原 SPU/SKU，并验证支付台账、消息补偿及继续交易。操作命令、适用边界和最终结果见 [阶段 26](STAGE26.md)。
+
+## 阶段 32–35 升级及复验
+
+现有 Demo 升级先冷备份，再暂停业务执行 `infra/migrations/007-procurement-creation.sql`。该迁移仅扩展需求表的请求标识、摘要、逻辑删除字段及唯一索引，可重复执行；重复标识必须先停止并排查，不能删除记录绕过。空库结构已同步，既有库不要重跑初始化。
+
+```powershell
+./scripts/migration-check.ps1
+./scripts/test.ps1 -Suite All
+./scripts/test.ps1 -Suite Diagnostics
+./scripts/test.ps1 -Suite Browser
+./scripts/test.ps1 -Suite SessionExpiry # 实际闲置超过两小时，默认 All 不包含
+./scripts/test.ps1 -Suite Recovery
+# 所有生命周期命令顺序运行，上一个命令完全返回后再执行下一个。
+./scripts/demo-restore.ps1 -Backup .data/backups/round6-before -PaymentConfig .tools/simulation/payment-config.json
+./scripts/simulation.ps1 Diagnose -Json
+./scripts/preflight.ps1 -Mode Simulation -Json
+```
+
+恢复入口先迁移受保护副本，再启动业务，包含 006 与 007。Test Recovery 核对已完成及已删除采购请求，Demo 两代恢复后还执行一次新增采购入库（重复完成只加一次）和完整模拟交易。正常人工资料、签名配置、支付台账和图片不被测试清理。实际结果、失败轮及证据位置统一见 [阶段 35](STAGE35.md)；真实第三方及公网继续未接入。

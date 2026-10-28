@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { adminQuery } from '../../utils/admin'
 import { deleteCatalog, getCatalog, saveCatalog, uploadImage } from '../../api/admin'
@@ -35,8 +35,9 @@ export default function AdminCatalog() {
   const replaceForm = next => { baseline.current = formSignature(next, Object.keys(empty())); setForm(next) }
   const dirty = formSignature(form, Object.keys(empty())) !== baseline.current || unknown
   const guard = useUnsavedForm(dirty, busy)
+  const commit = guard.commit
   const keepConfirmedForm = useRef(false), previousKind = useRef(kind)
-  const navigateQuery = (patch, replace = false) => {
+  const navigateQuery = useCallback((patch, replace = false) => {
     const values = { ...view, ...patch }, next = new URLSearchParams()
     if (!['groups', 'attrs'].includes(values.kind)) values.catalogId = ''
     if (!['brands', 'attrs'].includes(values.kind)) values.status = ''
@@ -44,19 +45,21 @@ export default function AdminCatalog() {
     for (const [key, value] of Object.entries(values)) if (value !== '' && value != null) next.set(key, String(value))
     if (next.toString() === query) return false
     setParams(next, { replace }); return true
-  }
+  }, [view, query, setParams])
   const changeQuery = patch => {
     if (unknown) { guard.commit(() => navigateQuery(patch)); return }
     guard.request(() => { reset(); locating.current = null; setPosition(''); setFocused(null); setError(''); setNotice(''); navigateQuery(patch) })
   }
-  const locateQuery = patch => {
+  const locateQuery = useCallback(patch => {
     keepConfirmedForm.current = editing != null
-    if (!guard.commit(() => navigateQuery(patch, true))) keepConfirmedForm.current = false
-  }
+    if (!commit(() => navigateQuery(patch, true))) keepConfirmedForm.current = false
+  }, [editing, commit, navigateQuery])
   useEffect(() => {
     const keep = keepConfirmedForm.current || unknown && previousKind.current === kind
     previousKind.current = kind; keepConfirmedForm.current = false
     if (!keep) { replaceForm(empty()); setEditing(null); setPendingDelete(null); setUnknown(false) }
+    // Reconcile only URL transitions; completing an unknown save must preserve the confirmed form.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
   useEffect(() => {
     let active = true
@@ -80,7 +83,7 @@ export default function AdminCatalog() {
     }
     const last = Math.max(1, Math.ceil(found.length / 20)); if (pageNumber > last) locateQuery({ page: String(last) }); setFocused(null)
     setPosition(target.action === 'check' ? `最新资料中未找到原编号 #${target.id}，请核对结果；未自动重发原操作。` : `已刷新${names[kind]}列表，保留原查询条件。`)
-  }, [meta, kind, filter, pageNumber, busy, loading, stale, unknown, dirty, parsed.error])
+  }, [meta, kind, filter, pageNumber, busy, loading, stale, unknown, dirty, parsed.error, locateQuery])
   const categories = meta ? catalogCategories(meta.categories) : []
   const leaves = meta ? leafCategories(meta.categories) : []
   const matches = catalogRows(meta, kind, filter), pages = Math.max(1, Math.ceil(matches.length / 20)), page = Math.min(pageNumber, pages)
