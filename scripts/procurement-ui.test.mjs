@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {parseProcurementRequest,demandMatches,purchaseMatches} from '../gulimall-web/src/utils/procurement.js'
+import {parseProcurementRequest,demandMatches,purchaseMatches,receiptSignature} from '../gulimall-web/src/utils/procurement.js'
 test('procurement snapshots reject damaged, invalid and ambiguous requests without replacing them',()=>{
  const request={type:'save',payload:{id:null,skuId:1,wareId:2,skuNum:3,skuPrice:'1.20'}}
  assert.deepEqual(parseProcurementRequest(JSON.stringify(request)),request);assert.equal(parseProcurementRequest(null),null)
@@ -11,9 +11,22 @@ test('demand comparison only checks contents; the page must explicitly confirm a
  assert(demandMatches({id:9,...submitted,skuPrice:1.2},submitted));assert(demandMatches({id:10,...submitted},submitted))
  assert(!demandMatches({...submitted,skuNum:4},submitted));assert(!demandMatches({...submitted,wareId:4},submitted))
 })
+
+test('new demand creation keys survive snapshots while legacy requests remain readable',()=>{
+ const request={type:'save',payload:{skuId:1,wareId:2,skuNum:3,skuPrice:'1.20',creationRequestId:'a2aba713-7b70-4eed-9ae4-0062e34082cc'}}
+ assert.deepEqual(parseProcurementRequest(JSON.stringify(request)),request)
+ for(const key of ['', 'not-a-uuid', 'A2ABA713-7B70-4EED-9AE4-0062E34082CC'])assert.throws(()=>parseProcurementRequest(JSON.stringify({...request,payload:{...request.payload,creationRequestId:key}})))
+})
 test('receipt confirmation requires the same complete purchase, results and failure reasons',()=>{
  const request={id:1,items:[{itemId:2,status:3,reason:''},{itemId:3,status:4,reason:' 缺货 '}]},result={purchase:{id:1,status:4},items:[{id:2,status:3,failureReason:''},{id:3,status:4,failureReason:'缺货'}]}
  assert(purchaseMatches(result,request));assert(!purchaseMatches({...result,purchase:{id:9,status:4}},request))
  assert(!purchaseMatches({...result,items:result.items.slice(0,1)},request));assert(!purchaseMatches({...result,purchase:{id:1,status:2}},request))
  assert(!purchaseMatches({...result,items:[result.items[0],{...result.items[1],failureReason:'其他原因'}]},request))
+})
+
+test('receipt dirtiness binds IDs and meaningful failure reasons without depending on row order',()=>{
+ const original=[{itemId:1,status:3,reason:''},{itemId:2,status:4,reason:'缺货'}]
+ assert.equal(receiptSignature(original),receiptSignature([{...original[1]},{...original[0],reason:'unused'}]))
+ assert.notEqual(receiptSignature(original),receiptSignature([{...original[0]}, {...original[1],reason:'其他原因'}]))
+ assert.notEqual(receiptSignature(original),receiptSignature([{...original[0],itemId:9},original[1]]))
 })

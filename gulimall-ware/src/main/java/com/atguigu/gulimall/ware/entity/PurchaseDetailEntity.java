@@ -2,6 +2,9 @@ package com.atguigu.gulimall.ware.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 import java.io.Serializable;
@@ -51,5 +54,13 @@ public class PurchaseDetailEntity implements Serializable {
 	private Integer status;
 
     private String failureReason;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String creationRequestId;
+    @JsonIgnore
+    private String creationRequestHash;
+    @TableLogic
+    @JsonIgnore
+    private Integer deleted = 0;
 
 }

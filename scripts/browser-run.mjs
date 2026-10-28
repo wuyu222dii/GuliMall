@@ -18,7 +18,7 @@ try {
   let ready=false
   for(let i=0;i<90;i++){try{await assertTestEnvironment();if((await fetch('http://127.0.0.1:8080/api/order/mine')).status===401){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,1000))}
   assert(ready,'Browser test services did not become ready')
-  const code=await new Promise((resolve,reject)=>{const child=spawn(process.execPath,['gulimall-web/node_modules/@playwright/test/cli.js','test','--config','gulimall-web/playwright.config.mjs'],{env:baseline,stdio:'inherit',windowsHide:true});child.on('error',reject);child.on('close',resolve)})
+  const code=await new Promise((resolve,reject)=>{const child=spawn(process.execPath,['gulimall-web/node_modules/@playwright/test/cli.js','test','--config','gulimall-web/playwright.config.mjs',...process.argv.slice(2)],{env:baseline,stdio:'inherit',windowsHide:true});child.on('error',reject);child.on('close',resolve)})
   assert.equal(code,0,'Browser regression failed; only redacted artifacts are retained')
 }finally{
   // Playwright's automatic DOM error context can contain development codes; retain only our masked screenshots and safe traces.

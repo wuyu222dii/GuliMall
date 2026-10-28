@@ -225,12 +225,60 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       assert.equal((await admin.call('/api/admin/ware/wareinfo/update','POST',{id:warehouse,name:'',address:'x'})).status,400)
       assert.equal((await admin.call('/api/admin/ware/wareinfo/update','POST',{id:999999999,name:'x',address:'x'})).status,404)
       assert.equal((await member.call('/api/admin/ware/wareinfo/update','POST',{id:warehouse,name:'x',address:'x'})).status,403)
-      for(const query of ['page=0','limit=101','page=x']) assert.equal((await admin.call('/api/admin/ware/wareinfo/list?'+query)).status,400)
-      for(const query of ['skuId=abc','skuId=-1','wareId=invalid']) assert.equal((await admin.call('/api/admin/ware/waresku/list?'+query)).status,400)
+      for(const query of ['page=0','limit=101','page=x','page=1&page=2','unknown=x']) assert.equal((await admin.call('/api/admin/ware/wareinfo/list?'+query)).status,400)
+      for(const query of ['skuId=abc','skuId=-1','wareId=invalid','page=1&page=2','unknown=x','wareId=1&ware_id=2']) assert.equal((await admin.call('/api/admin/ware/waresku/list?'+query)).status,400)
       for(let i=0;i<101;i++) ids.warehouses.push((await success('/api/admin/ware/wareinfo/save','POST',{name:label+'_paged_'+i,address:'Paged lookup'})).id)
       const last=(await success('/api/admin/ware/wareinfo/list?key='+label+'_paged_&page=11&limit=10')).page
       assert.equal(last.totalCount,101);assert.equal(last.list.length,1)
       assert.equal((await success('/api/admin/ware/wareinfo/list?key='+last.list[0].id)).page.list[0].id,last.list[0].id)
+    })
+    await t.test('demand creation survives concurrency, changed data, merge, deletion and restart', async () => {
+      const path='/api/admin/ware/purchasedetail/', request={creationRequestId:randomUUID(),skuId:sku1,wareId:warehouse,skuNum:3,skuPrice:'2.00'}
+      const before=Number(sql(`SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE sku_id=${sku1} AND ware_id=${warehouse};`))
+      const replies=await Promise.all(Array.from({length:6},()=>success(path+'save','POST',request)))
+      const id=replies[0].id;ids.demands.push(id);assert(replies.every(r=>r.id===id))
+      assert.equal(sql(`SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE creation_request_id='${request.creationRequestId}';`),'1')
+      assert.equal(Number(sql(`SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE sku_id=${sku1} AND ware_id=${warehouse};`)),before+1,'Losing transactions must not leave unkeyed rows')
+      assert.equal((await success(path+'save','POST',{...request,skuPrice:2})).id,id)
+      assert.equal((await admin.call(path+'save','POST',{...request,skuNum:4})).status,409)
+      assert.equal((await admin.call(path+'creation/not-a-uuid')).status,400)
+      assert.equal((await admin.call(path+'save')).status,405)
+      assert.equal((await admin.call(path+'delete','POST',[-1])).status,400)
+      assert.equal((await guest.call(path+'creation/'+request.creationRequestId)).status,401)
+      assert.equal((await member.call(path+'creation/'+request.creationRequestId)).status,403)
+      const invalid={...request,creationRequestId:randomUUID(),wareId:999999999}
+      assert.equal((await admin.call(path+'save','POST',invalid)).status,400)
+      assert.equal((await success(path+'creation/'+invalid.creationRequestId)).found,false)
+      await success(path+'update','POST',{id,skuId:sku1,wareId:warehouse,skuNum:5,skuPrice:'3.00',creationRequestId:randomUUID(),creationRequestHash:'forged',deleted:1})
+      assert.equal((await success(path+'save','POST',request)).id,id)
+      const updated=(await success(path+'info/'+id)).purchaseDetail
+      assert.equal(updated.skuNum,5);assert(!('creationRequestHash' in updated));assert(!('deleted' in updated))
+      await merge([id]);assert.equal((await success(path+'save','POST',request)).id,id)
+      const second={...request,creationRequestId:randomUUID()},removed=(await success(path+'save','POST',second)).id;ids.demands.push(removed)
+      await success(path+'delete','POST',[removed]);await success(path+'delete','POST',[removed])
+      assert.equal((await admin.call(path+'info/'+removed)).status,404)
+      assert.equal((await admin.call(path+'save','POST',second)).status,409)
+      assert.equal((await success(path+'creation/'+second.creationRequestId)).deleted,true)
+      assert.equal((await admin.call('/api/admin/ware/purchase/merge','POST',{items:[removed]})).status,404)
+      assert.equal((await admin.call(path+'update','POST',{...second,id:removed})).status,404)
+      assert(!(await success(path+'list?wareId='+warehouse+'&limit=100')).page.list.some(d=>d.id===removed))
+      try { service('Stop','ware') } finally { service('Start','ware') }
+      let ready=false
+      for(let i=0;i<90;i++){try{if((await success(path+'creation/'+request.creationRequestId)).id===id){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,1000))}
+      assert(ready,'Original request must remain queryable after warehouse restart')
+      assert.equal((await success(path+'save','POST',request)).id,id)
+      assert.equal((await admin.call(path+'save','POST',second)).status,409)
+    })
+    await t.test('sync lookup filters exact products and states with matching paged totals and permissions', async () => {
+      const path='/api/admin/product/search-sync'
+      await success(path+'/'+productId+'/publish?status=1','POST')
+      const found=(await success(path+'?spuId='+productId+'&limit=1')).page
+      assert.equal(found.totalCount,1);assert.equal(found.list.length,1);assert.equal(found.list[0].spu_id,productId)
+      assert.equal((await success(path+'?spuId='+productId+'&limit=1&page=2')).page.list.length,0)
+      for(const state of [0,1,2]){const page=(await success(path+'?spuId='+productId+'&state='+state)).page;assert.equal(page.totalCount,page.list.length);assert(page.list.every(r=>r.spu_id===productId&&r.state===state))}
+      assert.equal((await success(path+'?spuId=999999999')).page.totalCount,0)
+      for(const query of ['spuId=0','spuId=wrong','state=3','state=-1','page=0','page=1&page=2','unknown=x'])assert.equal((await admin.call(path+'?'+query)).status,400)
+      assert.equal((await guest.call(path)).status,401);assert.equal((await member.call(path)).status,403)
     })
     await t.test('procurement lookup validates filters and independently pages unreceived targets', async () => {
       const created=[]
@@ -244,7 +292,7 @@ test('stage 3 administration, local images and procurement acceptance', async (t
       const info=await success('/api/admin/ware/purchasedetail/info/'+ids.demands.at(-1));assert.equal(info.purchaseDetail.wareId,warehouse)
       assert.equal((await admin.call('/api/admin/ware/purchasedetail/info/999999999')).status,404)
       for(const path of ['/api/admin/ware/purchase/list','/api/admin/ware/purchase/unreceive/list','/api/admin/ware/purchasedetail/list']) {
-        for(const invalid of ['page=1000001','page=0','limit=101','wareId=-1','key=wrong','status=5']) assert.equal((await admin.call(path+'?'+invalid)).status,400,path+' '+invalid)
+        for(const invalid of ['page=1000001','page=0','limit=101','wareId=-1','key=wrong','status=5','page=1&page=2','unknown=x','wareId=1&ware_id=2']) assert.equal((await admin.call(path+'?'+invalid)).status,400,path+' '+invalid)
         assert.equal((await guest.call(path)).status,401);assert.equal((await member.call(path)).status,403)
       }
       assert.equal((await member.call('/api/admin/ware/purchasedetail/info/'+ids.demands.at(-1))).status,403)

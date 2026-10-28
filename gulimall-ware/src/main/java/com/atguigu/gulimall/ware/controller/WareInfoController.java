@@ -35,8 +35,8 @@ public class WareInfoController {
      */
     @RequestMapping("/list")
     //@RequiresPermissions("ware:wareinfo:list")
-    public R list(@RequestParam Map<String, Object> params){
-        PageUtils page = wareInfoService.queryPage(params);
+    public R list(@RequestParam org.springframework.util.MultiValueMap<String,String> params){
+        PageUtils page = wareInfoService.queryPage(com.atguigu.common.utils.Query.singleParameters(params,"key"));
 
         return R.ok().put("page", page);
     }

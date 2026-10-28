@@ -1,6 +1,8 @@
 # Chromium 与 Edge 本地浏览器回归
 
-最新阶段 31：48 项通过（阶段 30 的 44 + 两浏览器各 2 项交付边界），保留两轮 Chromium 完整页面交易和 Edge 关键链，扩展原测试的返回与脏仓库切换。全套 All、Diagnostics 和 Test/Demo Recovery 本轮重跑通过，见 [STAGE31](STAGE31.md)。下文阶段 19/30 数值保留为历史记录。
+最新阶段 35：58 项通过，Chromium/Edge 各 29（原 48 + 采购结果/商品退出保护 4 + 查询导航 6）。保留 Chromium 两轮完整页面交易、Edge 关键链、375px 键盘与输入保护；补采购持久请求恢复、资料/仓库/采购 URL 和同步定位。失败轮及全量、恢复结果见 [STAGE35](STAGE35.md)。下文阶段 19/30/31 数值保留为历史记录。
+
+自然 Session 使用独立 `./scripts/test.ps1 -Suite SessionExpiry`，不放入默认 Browser，避免每次浏览器回归强制等待两小时。本轮已实测原 7200 秒 TTL，连续闲置 7205.456 秒后接口 401 和安全登录返回通过；主动退出测试继续保留，不能替代这项自然失效证据。
 
 继续使用 LOCAL_TEST 付款、开发验证码和本地图片。所有业务请求到本机，测试仅使用独立 _test 库；不接真实第三方或公网。
 
@@ -52,4 +54,4 @@ Edge 的商品与采购夹具通过受保护的真实业务接口准备；消费
 
 最终索引 `.tools/stage19-evidence.json`，主日志 `.tools/stage19-browser-final.log`，截图另存 `.tools/stage19-edge-*.png`。原演示数据、.env 和签名密钥保留，常驻模式恢复后 18 项诊断健康。
 
-Chromium 与 Edge 同属 Chromium 系；Firefox、Safari、实体设备、自然 Session TTL、容量与高可用未验证。独立机器/第二位操作者仍待补；Demo 备份完整业务恢复仍属于后续阶段 20。
+Chromium 与 Edge 同属 Chromium 系；Firefox、Safari、实体设备、容量与高可用未验证，独立机器/第二位操作者仍待补。自然 Session TTL 和 Demo 备份完整恢复已在阶段 35 补验通过，不能据此证明真实第三方或生产环境兼容。

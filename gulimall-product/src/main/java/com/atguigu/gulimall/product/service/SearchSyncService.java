@@ -45,10 +45,17 @@ public class SearchSyncService {
         List<Map<String,Object>> result = db.queryForList("SELECT * FROM pms_search_sync WHERE spu_id=?", id);
         return result.isEmpty() ? null : result.get(0);
     }
-    public PageUtils list(int page, int limit) {
+    @Transactional(readOnly = true)
+    public PageUtils list(int page, int limit, Long spuId, Integer state) {
         if (page < 1 || page > 100000 || limit < 1 || limit > 100) throw new ApiProblem(400, "分页参数不正确");
-        return new PageUtils(db.queryForList("SELECT s.*,p.spu_name,p.publish_status FROM pms_search_sync s JOIN pms_spu_info p ON p.id=s.spu_id ORDER BY s.state DESC,s.updated_at DESC,s.spu_id LIMIT ? OFFSET ?", limit, (page-1)*limit),
-                db.queryForObject("SELECT COUNT(*) FROM pms_search_sync s JOIN pms_spu_info p ON p.id=s.spu_id", Integer.class), limit, page);
+        if (spuId != null && spuId < 1 || state != null && (state < 0 || state > 2)) throw new ApiProblem(400,"同步查询条件不正确");
+        String where = " FROM pms_search_sync s JOIN pms_spu_info p ON p.id=s.spu_id WHERE 1=1";
+        List<Object> values = new ArrayList<>();
+        if (spuId != null) { where += " AND s.spu_id=?"; values.add(spuId); }
+        if (state != null) { where += " AND s.state=?"; values.add(state); }
+        int count = db.queryForObject("SELECT COUNT(*)" + where, values.toArray(), Integer.class);
+        values.add(limit); values.add((page-1)*limit);
+        return new PageUtils(db.queryForList("SELECT s.*,p.spu_name,p.publish_status" + where + " ORDER BY s.state DESC,s.updated_at DESC,s.spu_id LIMIT ? OFFSET ?", values.toArray()), count, limit, page);
     }
     public List<Long> due() { return db.queryForList("SELECT spu_id FROM pms_search_sync WHERE state<>1 AND next_attempt<=NOW() ORDER BY next_attempt,spu_id LIMIT 20", Long.class); }
     @Transactional public boolean synchronize(Long id) {

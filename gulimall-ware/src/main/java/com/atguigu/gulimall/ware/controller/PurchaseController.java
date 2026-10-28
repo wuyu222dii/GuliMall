@@ -64,8 +64,8 @@ public class PurchaseController {
 
     @RequestMapping("/unreceive/list")
     //@RequiresPermissions("ware:purchase:list")
-    public R unreceivelist(@RequestParam Map<String, Object> params) {
-        PageUtils page = purchaseService.queryPageUnreceive(params);
+    public R unreceivelist(@RequestParam org.springframework.util.MultiValueMap<String,String> params) {
+        PageUtils page = purchaseService.queryPageUnreceive(com.atguigu.common.utils.Query.singleParameters(params,"key","status","wareId","ware_id"));
 
         return R.ok().put("page", page);
     }
@@ -75,8 +75,8 @@ public class PurchaseController {
      */
     @RequestMapping("/list")
     //@RequiresPermissions("ware:purchase:list")
-    public R list(@RequestParam Map<String, Object> params) {
-        PageUtils page = purchaseService.queryPage(params);
+    public R list(@RequestParam org.springframework.util.MultiValueMap<String,String> params) {
+        PageUtils page = purchaseService.queryPage(com.atguigu.common.utils.Query.singleParameters(params,"key","status","wareId","ware_id"));
 
         return R.ok().put("page", page);
     }

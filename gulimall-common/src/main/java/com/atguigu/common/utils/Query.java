@@ -23,6 +23,22 @@ import java.util.Map;
  */
 public class Query<T> {
 
+    public static Map<String,Object> singleParameters(org.springframework.util.MultiValueMap<String,String> params, String... fields) {
+        java.util.Set<String> allowed = new java.util.HashSet<>(java.util.Arrays.asList(fields));
+        allowed.addAll(java.util.Arrays.asList("page", "limit", "sidx", "order"));
+        Map<String,Object> result = new java.util.LinkedHashMap<>();
+        params.forEach((key, values) -> {
+            if (!allowed.contains(key) || values.size() != 1) throw new com.atguigu.common.security.ApiProblem(400, "查询参数不正确或重复");
+            result.put(key, values.get(0));
+        });
+        if (result.containsKey("ware_id")) {
+            String legacy = (String)result.remove("ware_id"), current = (String)result.get("wareId");
+            if (StringUtils.isNotEmpty(current) && StringUtils.isNotEmpty(legacy) && !current.equals(legacy)) throw new com.atguigu.common.security.ApiProblem(400, "仓库查询条件冲突");
+            if (StringUtils.isEmpty(current)) result.put("wareId", legacy);
+        }
+        return result;
+    }
+
     public IPage<T> getPage(Map<String, Object> params) {
         return this.getPage(params, null, false);
     }
