@@ -41,8 +41,8 @@ public class PurchaseDetailController {
      */
     @RequestMapping("/list")
     //@RequiresPermissions("ware:purchasedetail:list")
-    public R list(@RequestParam Map<String, Object> params){
-        PageUtils page = purchaseDetailService.queryPage(params);
+    public R list(@RequestParam org.springframework.util.MultiValueMap<String,String> params){
+        PageUtils page = purchaseDetailService.queryPage(com.atguigu.common.utils.Query.singleParameters(params,"key","status","wareId","ware_id","purchaseId"));
 
         return R.ok().put("page", page);
     }

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { adminQuery } from '../../utils/admin'
 import { deleteCatalog, getCatalog, saveCatalog, uploadImage } from '../../api/admin'
 import useUnsavedForm from '../../hooks/useUnsavedForm'
 import { formSignature } from '../../utils/form'
@@ -12,8 +13,13 @@ const empty = () => ({ name: '', sort: 0, catLevel: 1, parentCid: 0, catelogId: 
 
 
 export default function AdminCatalog() {
-  const [kind, setKind] = useState('categories')
-  const [fields, setFields] = useState(blankFilter), [filter, setFilter] = useState(blankFilter), [pageNumber, setPage] = useState(1)
+  const [params, setParams] = useSearchParams(), query = params.toString()
+  const parsed = useMemo(() => { try { return { values: adminQuery('catalog', query), error: '' } } catch (e) { return { values: adminQuery('catalog', ''), error: e.message } } }, [query])
+  const view = parsed.values, kind = view.kind, pageNumber = Number(view.page)
+  const filter = useMemo(() => ({ key: view.key, catalogId: view.catalogId, status: view.status, type: view.type }), [view])
+  const [fieldDraft, setFieldDraft] = useState({ query, values: filter })
+  const fields = fieldDraft.query === query ? fieldDraft.values : filter
+  const setFields = values => setFieldDraft({ query, values })
   const [focused, setFocused] = useState(null), [position, setPosition] = useState(''), locating = useRef(null)
   const [loading, setLoading] = useState(true)
   const [meta, setMeta] = useState(null)
@@ -27,7 +33,31 @@ export default function AdminCatalog() {
   const [stale, setStale] = useState(false), [unknown, setUnknown] = useState(false), working = useRef(false)
   const baseline = useRef(formSignature(empty(), Object.keys(empty())))
   const replaceForm = next => { baseline.current = formSignature(next, Object.keys(empty())); setForm(next) }
-  const guard = useUnsavedForm(formSignature(form, Object.keys(empty())) !== baseline.current || unknown, busy)
+  const dirty = formSignature(form, Object.keys(empty())) !== baseline.current || unknown
+  const guard = useUnsavedForm(dirty, busy)
+  const keepConfirmedForm = useRef(false), previousKind = useRef(kind)
+  const navigateQuery = (patch, replace = false) => {
+    const values = { ...view, ...patch }, next = new URLSearchParams()
+    if (!['groups', 'attrs'].includes(values.kind)) values.catalogId = ''
+    if (!['brands', 'attrs'].includes(values.kind)) values.status = ''
+    if (values.kind !== 'attrs') values.type = ''
+    for (const [key, value] of Object.entries(values)) if (value !== '' && value != null) next.set(key, String(value))
+    if (next.toString() === query) return false
+    setParams(next, { replace }); return true
+  }
+  const changeQuery = patch => {
+    if (unknown) { guard.commit(() => navigateQuery(patch)); return }
+    guard.request(() => { reset(); locating.current = null; setPosition(''); setFocused(null); setError(''); setNotice(''); navigateQuery(patch) })
+  }
+  const locateQuery = patch => {
+    keepConfirmedForm.current = editing != null
+    if (!guard.commit(() => navigateQuery(patch, true))) keepConfirmedForm.current = false
+  }
+  useEffect(() => {
+    const keep = keepConfirmedForm.current || unknown && previousKind.current === kind
+    previousKind.current = kind; keepConfirmedForm.current = false
+    if (!keep) { replaceForm(empty()); setEditing(null); setPendingDelete(null); setUnknown(false) }
+  }, [query])
   useEffect(() => {
     let active = true
     setLoading(true)
@@ -35,23 +65,22 @@ export default function AdminCatalog() {
     return () => { active = false }
   }, [retry])
   useEffect(() => {
-    if (!meta || busy || loading || stale) return
+    if (!meta || busy || loading || stale || unknown || parsed.error || dirty) return
     const target = locating.current, found = catalogRows(meta, kind, filter)
-    if (!target || target.kind !== kind) { setPage(current => Math.min(current, Math.max(1, Math.ceil(found.length / 20)))); return }
+    if (!target || target.kind !== kind) { const last = Math.max(1, Math.ceil(found.length / 20)); if (pageNumber > last) locateQuery({ page: String(last) }); return }
     locating.current = null
     const exists = found.findIndex(row => row[keys[kind]] === target.id)
     if (target.action !== 'delete') {
       const all = catalogRows(meta, kind, blankFilter()), index = all.findIndex(row => row[keys[kind]] === target.id)
       if (index >= 0) {
         const cleared = exists < 0, next = Math.floor((cleared ? index : exists) / 20) + 1
-        if (cleared) { setFilter(blankFilter()); setFields(blankFilter()) }
-        setPage(next); setFocused(target.id); setPosition(`已定位${names[kind]} #${target.id}，第 ${next} 页。${cleared ? '原筛选不包含此记录，已清除条件。' : ''}${target.action === 'check' ? '请核对最新资料，未自动重发原操作。' : ''}`)
+        locateQuery({ ...(cleared ? blankFilter() : {}), page: String(next) }); setFocused(target.id); setPosition(`已定位${names[kind]} #${target.id}，第 ${next} 页。${cleared ? '原筛选不包含此记录，已清除条件。' : ''}${target.action === 'check' ? '请核对最新资料，未自动重发原操作。' : ''}`)
         return
       }
     }
-    setPage(current => Math.min(current, Math.max(1, Math.ceil(found.length / 20)))); setFocused(null)
+    const last = Math.max(1, Math.ceil(found.length / 20)); if (pageNumber > last) locateQuery({ page: String(last) }); setFocused(null)
     setPosition(target.action === 'check' ? `最新资料中未找到原编号 #${target.id}，请核对结果；未自动重发原操作。` : `已刷新${names[kind]}列表，保留原查询条件。`)
-  }, [meta, kind, filter, busy, loading, stale])
+  }, [meta, kind, filter, pageNumber, busy, loading, stale, unknown, dirty, parsed.error])
   const categories = meta ? catalogCategories(meta.categories) : []
   const leaves = meta ? leafCategories(meta.categories) : []
   const matches = catalogRows(meta, kind, filter), pages = Math.max(1, Math.ceil(matches.length / 20)), page = Math.min(pageNumber, pages)
@@ -103,17 +132,17 @@ export default function AdminCatalog() {
   }
   return <section>{guard.dialog}
     <div className="admin-toolbar"><h2>商品基础资料</h2><Link to="/admin/products">返回商品列表</Link><button className="btn btn-outline" disabled={busy} onClick={() => setRetry(retry + 1)}>刷新基础资料</button></div>
-    <div className="admin-actions" role="group" aria-label="基础资料类型">{Object.entries(names).map(([value, label]) => <button key={value} disabled={busy || loading || stale || unknown} className={`btn ${kind === value ? 'btn-primary' : 'btn-outline'}`} onClick={() => guard.request(() => { setKind(value); reset(); setFilter(blankFilter()); setFields(blankFilter()); setPage(1); setFocused(null); setPosition(''); setError(''); setNotice('') })}>{label}</button>)}</div>
+    <div className="admin-actions" role="group" aria-label="基础资料类型">{Object.entries(names).map(([value, label]) => <button key={value} disabled={busy || loading || stale || unknown} className={`btn ${kind === value ? 'btn-primary' : 'btn-outline'}`} onClick={() => changeQuery({ kind: value, ...blankFilter(), page: '1' })}>{label}</button>)}</div>
     {error && <p className="error-msg" role="alert">{error} <button className="btn btn-outline" disabled={busy} onClick={() => setRetry(retry + 1)}>重新加载资料</button></p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
     {stale && meta && <p role="status">当前显示上次成功加载的基础资料，重新加载成功前暂停修改。</p>}
     {unknown && <div className="admin-confirm" role="status">本次新增结果未知，原输入已保留。请重新加载列表核对后，再决定是否放弃表单。<button className="btn btn-outline" disabled={busy} onClick={() => { reset(); setUnknown(false); setError('') }}>已核对，放弃本次资料表单</button></div>}
-    {!meta ? <p role="status">{loading ? '正在加载基础资料…' : '基础资料加载失败，请重新加载。'}</p> : <>
-      <form className="admin-search" aria-label="基础资料查询" onSubmit={e => { e.preventDefault(); setFilter({ ...fields, key: fields.key.trim() }); setPage(1); setPosition(''); setFocused(null) }}>
+    {parsed.error ? <p className="error-msg" role="alert">{parsed.error}<button className="btn btn-outline" onClick={() => changeQuery({ ...adminQuery('catalog', '') })}>清除无效查询</button></p> : !meta ? <p role="status">{loading ? '正在加载基础资料…' : '基础资料加载失败，请重新加载。'}</p> : <>
+      <form className="admin-search" aria-label="基础资料查询" onSubmit={e => { e.preventDefault(); changeQuery({ ...fields, key: fields.key.trim(), page: '1' }) }}>
         <label>查询名称或编号<input className="input" maxLength={100} value={fields.key} onChange={e => setFields({ ...fields, key: e.target.value })} /></label>
         {['groups', 'attrs'].includes(kind) && <label>筛选所属分类<select aria-label="筛选所属分类" className="input" value={fields.catalogId} onChange={e => setFields({ ...fields, catalogId: e.target.value })}><option value="">全部分类</option>{leaves.map(c => <option key={c.id} value={c.id}>{c.label} · #{c.id}</option>)}</select></label>}
         {['brands', 'attrs'].includes(kind) && <label>筛选资料状态<select aria-label="筛选资料状态" className="input" value={fields.status} onChange={e => setFields({ ...fields, status: e.target.value })}><option value="">全部状态</option><option value="1">启用</option><option value="0">{kind === 'brands' ? '隐藏' : '停用'}</option></select></label>}
         {kind === 'attrs' && <label>筛选属性类型<select aria-label="筛选属性类型" className="input" value={fields.type} onChange={e => setFields({ ...fields, type: e.target.value })}><option value="">全部类型</option><option value="1">基础参数</option><option value="0">销售属性</option></select></label>}
-        <button className="btn btn-outline" disabled={busy}>查询资料</button><button type="button" className="btn btn-outline" disabled={busy} onClick={() => { setFields(blankFilter()); setFilter(blankFilter()); setPage(1); setPosition(''); setFocused(null) }}>清除资料条件</button>
+        <button className="btn btn-outline" disabled={busy}>查询资料</button><button type="button" className="btn btn-outline" disabled={busy} onClick={() => changeQuery({ ...blankFilter(), page: '1' })}>清除资料条件</button>
       </form>
       {position && <p className="admin-note" role="status">{position}</p>}
       <p className="admin-note">当前{names[kind]}共 {matches.length} 条匹配记录，每页 20 条。分类按层级及同级排序、编号稳定展示；查询和分页只影响列表，编辑选项仍使用全部资料。</p>
@@ -126,7 +155,7 @@ export default function AdminCatalog() {
         {kind === 'attrs' && <><label>属性类型<select aria-label="属性类型" className="input" disabled={!!editing} value={form.attrType} onChange={(e) => set('attrType', Number(e.target.value))}><option value={1}>基础参数</option><option value={0}>销售属性</option></select></label>{Number(form.attrType) === 1 && <label>属性分组<select aria-label="属性分组" className="input" required value={form.attrGroupId} onChange={(e) => set('attrGroupId', Number(e.target.value))}><option value="">请选择</option>{meta.groups.filter((g) => g.catelogId === Number(form.catelogId)).map((g) => <option key={g.attrGroupId} value={g.attrGroupId}>{g.attrGroupName}</option>)}</select></label>}<label>可选值（用分号分隔）<input className="input" maxLength={255} value={form.valueSelect || ''} onChange={(e) => set('valueSelect', e.target.value)} /></label><label>属性状态<select aria-label="属性状态" className="input" value={form.enable} onChange={(e) => set('enable', Number(e.target.value))}><option value={1}>启用</option><option value={0}>停用</option></select></label></>}
       </div><div className="admin-actions"><button className="btn btn-primary">{busy ? '正在保存…' : '保存基础资料'}</button><button type="button" className="btn btn-outline" onClick={() => guard.request(reset)}>取消编辑</button></div></fieldset></form>
       {pendingDelete && <div className="admin-confirm" role="alert">确认删除“{pendingDelete.name || pendingDelete.attrName || pendingDelete.attrGroupName}”？已被商品使用的资料不能删除。<div className="admin-actions"><button className="btn btn-primary" disabled={busy || loading || stale || unknown} onClick={() => guard.request(remove, editing === pendingDelete[keys[kind]] && formSignature(form, Object.keys(empty())) !== baseline.current)}>确认删除</button><button className="btn btn-outline" disabled={busy || loading || stale || unknown} onClick={() => setPendingDelete(null)}>取消</button></div></div>}
-      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>编号</th><th>名称</th><th>分类 / 状态</th><th>操作</th></tr></thead><tbody>{rows.map((row) => <tr key={row[keys[kind]]}><td>{row[keys[kind]]}{focused === row[keys[kind]] && <span> · 当前定位</span>}</td><td>{row.name || row.attrGroupName || row.attrName}{kind === 'categories' && <p className="admin-note">{row.path}</p>}</td><td>{kind === 'categories' ? `${row.catLevel} 级 · 父分类 #${row.parentCid}` : kind === 'brands' ? row.showStatus === 1 ? '启用' : '隐藏' : (categories.find((c) => c.catId === row.catelogId)?.path || '分类名称未加载') + ' · #' + row.catelogId}{kind === 'attrs' && ` · ${row.attrType === 1 ? '参数' : '销售'} · ${Number(row.enable) === 1 ? '启用' : '停用'}`}</td><td><button className="btn btn-outline" disabled={busy || loading || stale || unknown} onClick={() => edit(row)}>编辑</button><button className="btn btn-outline" disabled={busy || loading || stale || unknown} onClick={() => setPendingDelete(row)}>删除</button></td></tr>)}{!rows.length && <tr><td colSpan={4}>没有匹配的资料，请调整条件或新增。</td></tr>}</tbody></table></div><div className="pagination" aria-label="基础资料分页"><button disabled={page <= 1 || busy} onClick={() => setPage(page - 1)}>上一页</button><span>第 {page} / {pages} 页</span><button disabled={page >= pages || busy} onClick={() => setPage(page + 1)}>下一页</button></div>
+      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>编号</th><th>名称</th><th>分类 / 状态</th><th>操作</th></tr></thead><tbody>{rows.map((row) => <tr key={row[keys[kind]]}><td>{row[keys[kind]]}{focused === row[keys[kind]] && <span> · 当前定位</span>}</td><td>{row.name || row.attrGroupName || row.attrName}{kind === 'categories' && <p className="admin-note">{row.path}</p>}</td><td>{kind === 'categories' ? `${row.catLevel} 级 · 父分类 #${row.parentCid}` : kind === 'brands' ? row.showStatus === 1 ? '启用' : '隐藏' : (categories.find((c) => c.catId === row.catelogId)?.path || '分类名称未加载') + ' · #' + row.catelogId}{kind === 'attrs' && ` · ${row.attrType === 1 ? '参数' : '销售'} · ${Number(row.enable) === 1 ? '启用' : '停用'}`}</td><td><button className="btn btn-outline" disabled={busy || loading || stale || unknown} onClick={() => edit(row)}>编辑</button><button className="btn btn-outline" disabled={busy || loading || stale || unknown} onClick={() => setPendingDelete(row)}>删除</button></td></tr>)}{!rows.length && <tr><td colSpan={4}>没有匹配的资料，请调整条件或新增。</td></tr>}</tbody></table></div><div className="pagination" aria-label="基础资料分页"><button disabled={page <= 1 || busy} onClick={() => changeQuery({ page: String(page - 1) })}>上一页</button><span>第 {page} / {pages} 页</span><button disabled={page >= pages || busy} onClick={() => changeQuery({ page: String(page + 1) })}>下一页</button></div>
     </>}
   </section>
 }

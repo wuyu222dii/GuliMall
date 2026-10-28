@@ -52,7 +52,7 @@ public class PurchaseDetailServiceImpl extends ServiceImpl<PurchaseDetailDao, Pu
     @Override
     @org.springframework.transaction.annotation.Transactional
     public void deleteDemands(List<Long> ids) {
-        if (ids == null || ids.isEmpty() || ids.size() > 100 || ids.contains(null) || new java.util.HashSet<>(ids).size() != ids.size()) throw new com.atguigu.common.security.ApiProblem(400, "需求编号不正确");
+        if (ids == null || ids.isEmpty() || ids.size() > 100 || ids.stream().anyMatch(id -> id == null || id < 1) || new java.util.HashSet<>(ids).size() != ids.size()) throw new com.atguigu.common.security.ApiProblem(400, "需求编号不正确");
         List<PurchaseDetailEntity> details = list(new QueryWrapper<PurchaseDetailEntity>().in("id", ids).orderByAsc("id").last("FOR UPDATE"));
         String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
         if (db.queryForObject("SELECT COUNT(*) FROM wms_purchase_detail WHERE id IN (" + placeholders + ")", ids.toArray(), Long.class) != ids.size())

@@ -132,7 +132,7 @@ export default function AdminProductEditor() {
   if (!meta) return <p className="error-msg" role="alert">{error || '基础资料加载失败，请刷新。'}</p>
   return <section>
     {guard.dialog}
-    <div className="admin-toolbar"><h2>{id ? `编辑商品 #${id}` : '新建商品'}</h2><Link to={listUrl}>返回列表</Link><Link to="/admin/products/catalog">维护基础资料</Link><Link to={'/admin/products/sync' + listSuffix}>查看搜索同步</Link><button className="btn btn-outline" disabled={!!id || busy || !!pending && !pending.validationFailed || storageError} onClick={example}>填入双 SKU 示例</button></div>
+    <div className="admin-toolbar"><h2>{id ? `编辑商品 #${id}` : '新建商品'}</h2><Link to={listUrl}>返回列表</Link><Link to="/admin/products/catalog">维护基础资料</Link><Link to={'/admin/products/sync' + listSuffix + (id ? (listSuffix ? '&' : '?') + 'syncSpuId=' + id : '')}>查看搜索同步</Link><button className="btn btn-outline" disabled={!!id || busy || !!pending && !pending.validationFailed || storageError} onClick={example}>填入双 SKU 示例</button></div>
     {error && <p className="error-msg" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
     {pending && <div className="admin-confirm"><p>{pending.validationFailed ? '本次校验未通过，可修正内容后复用原请求标识保存；如原商品已存在，请先查询。' : '创建请求已保留，内容已锁定。刷新后仍可查询或重试同一提交，避免重复录入。'}</p><button className="btn btn-outline" type="button" disabled={busy} onClick={lookup}>查询原创建结果</button></div>}
     <form onSubmit={save} className="admin-form">

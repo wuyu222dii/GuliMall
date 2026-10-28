@@ -6,8 +6,8 @@ import {saveSafeTrace} from '../browser-artifacts.mjs'
 export const base='http://127.0.0.1:8080'
 export async function json(page,path){const r=await page.request.get(base+path);expect(r.status()).toBe(200);return r.json()}
 export function sql(query){assert(/^SELECT\s/.test(query));const r=spawnSync('docker',['compose','exec','-T','mysql','sh','-c','MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -ugulimall --batch --skip-column-names'],{input:query,encoding:'utf8',windowsHide:true});assert.equal(r.status,0,'Read-only test assertion failed');return r.stdout.trim()}
-export async function login(page,account){try{
- await page.goto('/admin/login');await page.getByLabel('管理员账号',{exact:true}).fill(account.username);await page.getByLabel('密码',{exact:true}).fill(account.password)
+export async function submitAdminLogin(page,account){try{
+ await page.getByLabel('管理员账号',{exact:true}).fill(account.username);await page.getByLabel('密码',{exact:true}).fill(account.password)
  for(let attempt=0;attempt<2;attempt++){
   const response=page.waitForResponse(r=>r.url().endsWith('/api/auth/admin/login')&&r.request().method()==='POST')
   await page.getByRole('button',{name:'登录',exact:true}).click()
@@ -16,8 +16,9 @@ export async function login(page,account){try{
   console.info('测试管理员登录触发现有 60 秒限流，等待窗口结束后重试一次。')
   await new Promise(resolve=>setTimeout(resolve,61000))
  }
- await expect(page.getByRole('heading',{name:'商品列表',exact:true})).toBeVisible()
+ await expect(page.getByRole('heading',{name:'商城管理',exact:true})).toBeVisible()
 }catch{throw new Error('测试管理员登录失败（敏感输入已隐藏）')}}
+export async function login(page,account){await page.goto('/admin/login');await submitAdminLogin(page,account);await expect(page.getByRole('heading',{name:'商品列表',exact:true})).toBeVisible()}
 export async function signIn(page,account){try{await page.getByLabel('用户名或手机号',{exact:true}).fill(account.username);await page.getByLabel('密码',{exact:true}).fill(account.password);await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('button',{name:'退出登录',exact:true})).toBeVisible()}catch{throw new Error('测试会员登录失败（敏感输入已隐藏）')}}
 export async function register(page,username,password='Browser_'+randomUUID().slice(0,12)+'!'){
  try{

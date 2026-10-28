@@ -43,8 +43,8 @@ public class WareSkuController {
      */
     @RequestMapping("/list")
     //@RequiresPermissions("ware:waresku:list")
-    public R list(@RequestParam Map<String, Object> params) {
-        PageUtils page = wareSkuService.queryPage(params);
+    public R list(@RequestParam org.springframework.util.MultiValueMap<String,String> params) {
+        PageUtils page = wareSkuService.queryPage(com.atguigu.common.utils.Query.singleParameters(params,"skuId","wareId","ware_id"));
 
         return R.ok().put("page", page);
     }

@@ -3,7 +3,9 @@ import { useBlocker } from 'react-router-dom'
 
 export default function useUnsavedForm(dirty, busy = false) {
   const [action, setAction] = useState(null), keep = useRef(null), previousFocus = useRef(null)
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty && currentLocation.pathname + currentLocation.search !== nextLocation.pathname + nextLocation.search)
+  const confirmed = useRef(false)
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => !confirmed.current && dirty && currentLocation.pathname + currentLocation.search !== nextLocation.pathname + nextLocation.search)
+  const commit = next => { const previous = confirmed.current; confirmed.current = true; try { return next() } finally { confirmed.current = previous } }
   const open = !!action || blocker.state === 'blocked'
   useEffect(() => {
     if (!dirty) return
@@ -26,7 +28,7 @@ export default function useUnsavedForm(dirty, busy = false) {
   const cancel = () => { setAction(null); if (blocker.state === 'blocked') blocker.reset() }
   const proceed = () => {
     if (busy) return
-    if (action) { setAction(null); if (blocker.state === 'blocked') blocker.reset(); action() }
+    if (action) { setAction(null); if (blocker.state === 'blocked') blocker.reset(); commit(action) }
     else if (blocker.state === 'blocked') blocker.proceed()
   }
   const request = (next, changed = dirty) => { if (open) return; if (changed) setAction(() => next); else next() }
@@ -43,5 +45,5 @@ export default function useUnsavedForm(dirty, busy = false) {
     {busy && <p role="status">请求处理中，请等待结果后再继续。</p>}
     <div className="admin-actions"><button type="button" className="btn btn-outline" ref={keep} onClick={cancel}>继续编辑</button><button type="button" className="btn btn-primary" disabled={busy} onClick={proceed}>确认放弃并继续</button></div>
   </div></div>
-  return { request, dialog }
+  return { request, dialog, commit }
 }

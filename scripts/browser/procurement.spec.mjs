@@ -92,7 +92,7 @@ test('采购分页：超过五十 SKU、跨页合并目标与故障依赖隔离'
  expect((await json(page,'/api/admin/ware/purchasedetail/info/'+demand)).purchaseDetail.purchaseId).toBe(targetIds[0]);expect(stockRequests).toBe(0)
  await page.getByLabel('查询采购单编号',{exact:true}).fill(String(targetIds[0]));await page.getByRole('button',{name:'查询采购记录',exact:true}).click();await expect(page.locator('.admin-table tbody tr')).toHaveCount(1)
  await page.getByRole('button',{name:'库存',exact:true}).click();await expect(page.getByRole('alert')).toContainText('采购或库存查询失败');await expect(page.getByText('暂无匹配库存，完成采购后会增加库存。',{exact:true})).toHaveCount(0)
- await page.unroute('**/waresku/list**');await page.getByRole('button',{name:'采购单',exact:true}).click();await page.getByRole('button',{name:'查询采购记录',exact:true}).click();await expect(page.locator('.admin-table tbody tr')).toHaveCount(1)
+ await page.unroute('**/waresku/list**');await page.goBack();await expect(page.getByLabel('查询采购单编号',{exact:true})).toHaveValue(String(targetIds[0]));await page.getByRole('button',{name:'查询采购记录',exact:true}).click();await expect(page.locator('.admin-table tbody tr')).toHaveCount(1)
  await page.setViewportSize({width:375,height:812});await fits(page);await page.screenshot({path:info.outputPath('procurement-paged-mobile.png'),fullPage:true})
 })
 test('采购恢复：合并领取响应丢失、原完成结果重试及库存只处理一次',async({browser},info)=>{
