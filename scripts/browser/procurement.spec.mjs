@@ -47,11 +47,18 @@ test('采购风险：切换明细失败不能操作旧单，新增响应丢失�
  expect.soft(created,'真实保存响应丢失仍只能生成一条本次需求').toBe(1)
  writeFileSync('.tools/stage27-procurement-observation-'+info.project.name+'.json',JSON.stringify({staleWhileLoading,staleAfterFailure,posted,created,ware,purchases},null,2)+'\n')
  await reloadProtected(page);await expect(save).toBeDisabled();await expect(page.getByLabel('采购数量',{exact:true})).toHaveValue('7')
- await page.unroute('**/purchasedetail/save');await page.getByRole('button',{name:'查询候选需求',exact:true}).click()
+ await page.unroute('**/purchasedetail/save')
+ const originalKey='gulimall-procurement:'+(await json(page,'/api/auth/me')).user.username
+ const original=await page.evaluate(key=>JSON.parse(sessionStorage.getItem(key)),originalKey)
+ expect(original.payload.creationRequestId).toMatch(/^[a-f0-9-]{36}$/)
+ await page.getByRole('button',{name:'查询原创建结果',exact:true}).click()
  const candidate=(await json(page,'/api/admin/ware/purchasedetail/list?wareId='+ware+'&key=900001')).page.list.find(d=>d.skuNum===7)
- await page.getByRole('button',{name:'核对此需求 '+candidate.id,exact:true}).click();await page.getByRole('button',{name:'确认此需求为本次新增',exact:true}).click()
  await expect(page.getByText('编辑未分配需求 #'+candidate.id,{exact:true})).toBeVisible();await save.click();await expect(save).toBeEnabled()
  expect(sql('SELECT COUNT(*) FROM gulimall_wms_test.wms_purchase_detail WHERE ware_id='+ware+' AND sku_num=7;')).toBe('1')
+ // Existing pre-stage32 snapshots retain the manual candidate path rather than inventing a key.
+ delete original.payload.creationRequestId
+ await page.evaluate(({key,request})=>sessionStorage.setItem(key,JSON.stringify(request)),{key:originalKey,request:original});await reloadProtected(page)
+ await page.getByRole('button',{name:'查询候选需求',exact:true}).click();await page.getByRole('button',{name:'核对此需求 '+candidate.id,exact:true}).click();await page.getByRole('button',{name:'确认此需求为本次新增',exact:true}).click()
 })
 
 async function administrator(browser) {

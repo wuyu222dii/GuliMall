@@ -96,7 +96,7 @@ export default function AdminProcurement() {
     working.current = true; setBusy(true); setError(''); setNotice(''); setCanRetry(false)
     let request
     try {
-      request = retry ? pendingRef.current : parseProcurementRequest(JSON.stringify({ type, payload }))
+      request = retry ? pendingRef.current : parseProcurementRequest(JSON.stringify({ type, payload: type === 'save' && !payload.id ? { ...payload, creationRequestId: crypto.randomUUID() } : payload }))
       if (!request || !persist(request)) return
       acknowledge(request, await send(request))
     } catch (e) {
@@ -110,6 +110,13 @@ export default function AdminProcurement() {
     working.current = true; setBusy(true); setError(''); setCanRetry(false)
     try {
       if (request.type === 'save' && !p.id) {
+        if (p.creationRequestId) {
+          const actual = await admin.findDemandCreation(p.creationRequestId)
+          if (!actual.found) { setCanRetry(true); setNotice('尚未查询到原需求，可以继续查询或安全重试同一创建请求。'); return }
+          if (actual.deleted) { setNotice('原采购需求 #' + actual.id + ' 已删除，旧请求不会重新创建。核对后可结束本次记录。'); return }
+          const detail = (await admin.getDemand(actual.id)).purchaseDetail
+          acknowledge(request, { id: actual.id }); replaceForm(detail); return
+        }
         setTab('demands'); setFilters({ wareId: String(p.wareId), status: '', skuId: '', key: String(p.skuId) }); setKeyInput(String(p.skuId)); setPage(1); setReload(v => v + 1)
         setNotice('以下只是候选需求，不会按相同字段自动认定成功。请核对编号后明确选择；结果仍有疑问请保留操作记录。'); return
       }
@@ -149,7 +156,7 @@ export default function AdminProcurement() {
     {(pending || storageError) && <div className="admin-confirm" role="status"><h3>原采购操作待核对</h3>{storageError ? <p>标签页记录无法读取或保存，暂停采购写入。请先查询原需求或采购单，勿清空记录后重复提交。</p> : <>
       <p>操作：{({ save: '保存需求', merge: '合并需求', receive: '领取采购单', finish: '完成入库', delete: '删除需求' })[pending.type]}。刷新本页仍保留；未自动重发。</p>
       {pending.type === 'save' ? <p>需求：{original.id || '新增，编号待核对'}；SKU {original.skuId}；仓库 {original.wareId}；数量 {original.skuNum}；总金额 ¥{original.skuPrice}。</p> : pending.type === 'merge' ? <p>需求编号：{original.items.join('、')}；目标：{original.purchaseId || '新建采购单'}。</p> : <p>{pending.type === 'delete' ? '需求' : '采购单'} #{original.id}{pending.type === 'finish' && '；原结果：' + original.items.map(i => i.itemId + ' ' + (i.status === 3 ? '入库' : '失败：' + i.reason)).join('；')}</p>}
-      <button className="btn btn-outline" disabled={busy} onClick={check}>{pending.type === 'save' && !original.id ? '查询候选需求' : '查询原操作结果'}</button>
+      <button className="btn btn-outline" disabled={busy} onClick={check}>{pending.type === 'save' && !original.id ? original.creationRequestId ? '查询原创建结果' : '查询候选需求' : '查询原操作结果'}</button>
       {canRetry && <button className="btn btn-outline" disabled={busy} onClick={() => perform(pending.type, pending.payload, true)}>重试原请求</button>}
       {candidate && <div className="admin-confirm"><p>候选需求 #{candidate.id}；SKU {candidate.skuId}；仓库 {candidate.wareId}；数量 {candidate.skuNum}；金额 ¥{candidate.skuPrice}；状态 {statusNames[candidate.status]}。相同内容不代表唯一匹配，请确认此编号确为本次新增。</p><button className="btn btn-primary" disabled={busy} onClick={() => { acknowledge(pending, { id: candidate.id }); replaceForm({ ...candidate }) }}>确认此需求为本次新增</button></div>}
     </>}<button className="btn btn-outline" disabled={busy} onClick={() => setDiscard(true)}>人工核对后结束记录</button>{discard && <div className="admin-confirm"><p>仅结束本标签页核对，不撤销服务器操作，也不会自动新增。原请求仍可能已经保存；有疑问请继续核对。</p><button className="btn btn-outline" disabled={busy} onClick={() => { if (persist(null)) { setStorageError(false); replaceForm(demandDraft()); setNotice('本标签页记录已人工结束，未重发任何写入。') } }}>已人工核对，结束记录</button><button className="btn btn-outline" disabled={busy} onClick={() => setDiscard(false)}>继续保留记录</button></div>}</div>}

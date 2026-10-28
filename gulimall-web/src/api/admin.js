@@ -21,6 +21,7 @@ export const deleteDemand = (id) => request.post('/api/admin/ware/purchasedetail
 export const listPurchases = (params) => request.get('/api/admin/ware/purchase/list', { params })
 export const listUnreceivedPurchases = (params) => request.get('/api/admin/ware/purchase/unreceive/list', { params })
 export const getDemand = (id) => request.get('/api/admin/ware/purchasedetail/info/'+id)
+export const findDemandCreation = (requestId) => request.get('/api/admin/ware/purchasedetail/creation/'+requestId)
 export const getPurchase = (id) => request.get(`/api/admin/ware/purchase/info/${id}`)
 export const mergeDemands = (data) => request.post('/api/admin/ware/purchase/merge', data)
 export const receivePurchase = (id) => request.post('/api/admin/ware/purchase/received', [id])

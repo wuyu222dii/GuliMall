@@ -36,7 +36,17 @@ try {
     $null=Invoke-MigrationSql "INSERT INTO gulimall_pms_demo.pms_spu_info VALUES(4,'first','$key',REPEAT('a',64));"
     $null=Invoke-MigrationSql "INSERT INTO gulimall_pms_demo.pms_spu_info VALUES(5,'second','$key',REPEAT('a',64));" -Reject
     if((Invoke-MigrationSql "SELECT COUNT(*) FROM gulimall_pms_demo.pms_spu_info WHERE creation_request_id='$key';") -ne '1'){throw 'Unique creation index did not hold'}
-    Write-Output 'PASS: fresh unpublished MySQL, additive migration twice, UTF-8 preservation, duplicate precheck and actual unique constraint.'
+    $null=Invoke-MigrationSql "CREATE DATABASE gulimall_wms_demo CHARACTER SET utf8mb4; USE gulimall_wms_demo; CREATE TABLE wms_purchase_detail(id BIGINT PRIMARY KEY,sku_num INT); INSERT INTO wms_purchase_detail VALUES(1,3);"
+    $demandSql=[IO.File]::ReadAllText((Join-Path $migrationRoot 'infra/migrations/007-procurement-creation.sql'))
+    $null=Invoke-MigrationSql $demandSql;$null=Invoke-MigrationSql $demandSql
+    if((Invoke-MigrationSql 'SELECT CONCAT(id,CHAR(44),sku_num,CHAR(44),deleted) FROM gulimall_wms_demo.wms_purchase_detail WHERE id=1;') -ne '1,3,0'){throw 'Demand migration changed historical fields'}
+    $null=Invoke-MigrationSql "USE gulimall_wms_demo; ALTER TABLE wms_purchase_detail DROP INDEX uk_demand_creation_request; INSERT INTO wms_purchase_detail(id,sku_num,creation_request_id) VALUES(2,1,'$key'),(3,2,'$key');"
+    if((Invoke-MigrationSql $demandSql -Reject) -notmatch 'Duplicate demand creation requests'){throw 'Demand migration did not reject duplicates'}
+    $null=Invoke-MigrationSql 'DELETE FROM gulimall_wms_demo.wms_purchase_detail WHERE id=3;'
+    $null=Invoke-MigrationSql $demandSql
+    $null=Invoke-MigrationSql "USE gulimall_wms_demo; UPDATE wms_purchase_detail SET deleted=1 WHERE id=2; INSERT INTO wms_purchase_detail(id,sku_num,creation_request_id) VALUES(4,3,'$key');" -Reject
+    if((Invoke-MigrationSql "SELECT COUNT(*) FROM gulimall_wms_demo.wms_purchase_detail WHERE creation_request_id='$key';") -ne '1'){throw 'Deleted demand lost its unique request reservation'}
+    Write-Output 'PASS: product/demand additive migrations twice, old fields, duplicate prechecks, unique constraints including deleted demand.'
 } finally {
     try {
         if($migrationId -and $migrationId -match '^[a-f0-9]{64}$'){

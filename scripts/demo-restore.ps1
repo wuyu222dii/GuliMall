@@ -57,9 +57,16 @@ function Restore-Import([string]$InputBackup,[int]$Phase){
     if($LASTEXITCODE -ne 0){throw 'Old product projection failed before migration'}
     [IO.File]::ReadAllText((Join-Path $restoreSource 'infra/migrations/006-product-creation.sql'))|& docker exec -i $mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
     if($LASTEXITCODE -ne 0){throw 'Restored product migration failed before business startup'}
+    $oldDemands='SELECT id,purchase_id,sku_id,sku_num,sku_price,ware_id,status,HEX(failure_reason) FROM gulimall_wms_demo.wms_purchase_detail ORDER BY id;'
+    $beforeDemands=$oldDemands|& docker exec -i $mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4 --batch --skip-column-names'
+    if($LASTEXITCODE -ne 0){throw 'Old demand projection failed before migration'}
+    [IO.File]::ReadAllText((Join-Path $restoreSource 'infra/migrations/007-procurement-creation.sql'))|& docker exec -i $mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
+    if($LASTEXITCODE -ne 0){throw 'Restored demand migration failed before business startup'}
+    $afterDemands=$oldDemands|& docker exec -i $mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4 --batch --skip-column-names'
+    if($LASTEXITCODE -ne 0 -or ($beforeDemands -join "`n") -cne ($afterDemands -join "`n")){throw 'Restore migration changed original demand fields'}
     $afterFields=$oldFields|& docker exec -i $mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4 --batch --skip-column-names'
     if($LASTEXITCODE -ne 0 -or ($beforeFields -join "`n") -cne ($afterFields -join "`n")){throw 'Restore migration changed original product fields'}
-    [IO.File]::WriteAllText((Join-Path $restoreSource ('.tools/migration-'+$Phase+'.json')),(@{phase=$Phase;additive=$true;originalProductFieldsIdentical=$true;beforeBusinessStartup=$true;newColumns=@('creation_request_id','creation_request_hash');newUniqueIndex='uk_spu_creation_request'}|ConvertTo-Json -Depth 3),(New-Object Text.UTF8Encoding($false)))
+    [IO.File]::WriteAllText((Join-Path $restoreSource ('.tools/migration-'+$Phase+'.json')),(@{phase=$Phase;additive=$true;originalProductFieldsIdentical=$true;originalDemandFieldsIdentical=$true;beforeBusinessStartup=$true;newColumns=@('creation_request_id','creation_request_hash','wms_purchase_detail.deleted');newUniqueIndex=@('uk_spu_creation_request','uk_demand_creation_request')}|ConvertTo-Json -Depth 3),(New-Object Text.UTF8Encoding($false)))
     Restore-Docker -Arguments @('compose','create','redis')
     & node "$restoreSource/scripts/demo-restore-guard.mjs" guard $env:GULIMALL_DEMO_RESTORE_CONTEXT redis;if($LASTEXITCODE -ne 0){throw 'Redis destination ownership failed before import'}
     $redisConfig=Join-Path $restoreSource '.data/restore.conf';[IO.File]::WriteAllText($redisConfig,("appendonly no`nsave `"`"`nrequirepass `""+$env:REDIS_PASSWORD+"`"`n"),(New-Object Text.UTF8Encoding($false)))

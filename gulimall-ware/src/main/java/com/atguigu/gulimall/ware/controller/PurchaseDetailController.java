@@ -29,6 +29,12 @@ import com.atguigu.common.utils.R;
 public class PurchaseDetailController {
     @Autowired
     private PurchaseDetailService purchaseDetailService;
+    @Autowired private com.atguigu.gulimall.ware.service.DemandCreationService creation;
+
+    @org.springframework.web.bind.annotation.GetMapping("/creation/{requestId}")
+    public R creation(@PathVariable String requestId) {
+        R result = R.ok(); result.putAll(creation.find(requestId)); return result;
+    }
 
     /**
      * List
@@ -58,16 +64,16 @@ public class PurchaseDetailController {
     /**
      * Save
      */
-    @RequestMapping("/save")
+    @org.springframework.web.bind.annotation.PostMapping("/save")
     //@RequiresPermissions("ware:purchasedetail:save")
     public R save(@RequestBody PurchaseDetailEntity purchaseDetail){
-        return R.ok().put("id", purchaseDetailService.saveDemand(purchaseDetail));
+        return R.ok().put("id", creation.save(purchaseDetail));
     }
 
     /**
      * Update
      */
-    @RequestMapping("/update")
+    @org.springframework.web.bind.annotation.PostMapping("/update")
     //@RequiresPermissions("ware:purchasedetail:update")
     public R update(@RequestBody PurchaseDetailEntity purchaseDetail){
         if (purchaseDetail == null || purchaseDetail.getId() == null) throw new com.atguigu.common.security.ApiProblem(400, "需求编号不能为空");
@@ -77,7 +83,7 @@ public class PurchaseDetailController {
     /**
      * Delete
      */
-    @RequestMapping("/delete")
+    @org.springframework.web.bind.annotation.PostMapping("/delete")
     //@RequiresPermissions("ware:purchasedetail:delete")
     public R delete(@RequestBody Long[] ids){
         if (ids == null) throw new com.atguigu.common.security.ApiProblem(400, "需求编号不能为空");

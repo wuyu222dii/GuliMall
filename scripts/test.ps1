@@ -69,6 +69,8 @@ try {
     $taskMigration=[IO.File]::ReadAllText((Join-Path $taskRoot 'infra/migrations/006-product-creation.sql')).Replace('gulimall_pms_demo','gulimall_pms_test')
     $taskMigration | & docker compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
     if($LASTEXITCODE -ne 0){throw 'Test product creation migration failed before service startup'}
+    [IO.File]::ReadAllText((Join-Path $taskRoot 'infra/migrations/007-procurement-creation.sql')).Replace('gulimall_wms_demo','gulimall_wms_test') | & docker compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
+    if($LASTEXITCODE -ne 0){throw 'Test demand creation migration failed before service startup'}
     & "$PSScriptRoot/services.ps1" Start
     Wait-TestServices
     & "$PSScriptRoot/search-index.ps1"

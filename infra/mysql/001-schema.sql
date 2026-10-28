@@ -887,7 +887,11 @@ CREATE TABLE `wms_purchase_detail` (
   `ware_id` BIGINT,
   `status` INT,
   `failure_reason` VARCHAR(255),
-  PRIMARY KEY (`id`)
+  `creation_request_id` CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
+  `creation_request_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
+  `deleted` TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_demand_creation_request` (`creation_request_id`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `wms_purchase` (

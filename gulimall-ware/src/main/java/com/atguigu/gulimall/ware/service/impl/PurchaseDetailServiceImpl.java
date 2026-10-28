@@ -21,15 +21,12 @@ import com.atguigu.gulimall.ware.service.PurchaseDetailService;
 public class PurchaseDetailServiceImpl extends ServiceImpl<PurchaseDetailDao, PurchaseDetailEntity> implements PurchaseDetailService {
     @org.springframework.beans.factory.annotation.Autowired private com.atguigu.gulimall.ware.service.WareInfoService warehouses;
     @org.springframework.beans.factory.annotation.Autowired private com.atguigu.gulimall.ware.feign.ProductFeignService products;
+    @org.springframework.beans.factory.annotation.Autowired private org.springframework.jdbc.core.JdbcTemplate db;
 
     @Override
     @org.springframework.transaction.annotation.Transactional
     public Long saveDemand(PurchaseDetailEntity request) {
-        if (request == null || request.getSkuId() == null || request.getSkuId() < 1 || request.getWareId() == null || request.getWareId() < 1
-                || request.getSkuNum() == null || request.getSkuNum() < 1 || request.getSkuNum() > 1000000 || request.getSkuPrice() == null
-                || request.getSkuPrice().signum() < 0 || request.getSkuPrice().scale() > 2 || request.getSkuPrice().compareTo(new java.math.BigDecimal("999999999999.99")) > 0)
-            throw new com.atguigu.common.security.ApiProblem(400, "采购需求数量或金额不正确");
-        if (request.getPurchaseId() != null || request.getStatus() != null && request.getStatus() != 0) throw new com.atguigu.common.security.ApiProblem(400, "采购状态只能由业务操作变更");
+        validateDemand(request);
         if (warehouses.getById(request.getWareId()) == null) throw new com.atguigu.common.security.ApiProblem(400, "仓库不存在");
         com.atguigu.common.utils.R product;
         try { product = products.info(request.getSkuId()); }
@@ -44,12 +41,22 @@ public class PurchaseDetailServiceImpl extends ServiceImpl<PurchaseDetailDao, Pu
         value.setWareId(request.getWareId()); value.setSkuPrice(request.getSkuPrice()); value.setStatus(0); saveOrUpdate(value); return value.getId();
     }
 
+    public static void validateDemand(PurchaseDetailEntity request) {
+        if (request == null || request.getSkuId() == null || request.getSkuId() < 1 || request.getWareId() == null || request.getWareId() < 1
+                || request.getSkuNum() == null || request.getSkuNum() < 1 || request.getSkuNum() > 1000000 || request.getSkuPrice() == null
+                || request.getSkuPrice().signum() < 0 || request.getSkuPrice().scale() > 2 || request.getSkuPrice().compareTo(new java.math.BigDecimal("999999999999.99")) > 0)
+            throw new com.atguigu.common.security.ApiProblem(400, "采购需求数量或金额不正确");
+        if (request.getPurchaseId() != null || request.getStatus() != null && request.getStatus() != 0) throw new com.atguigu.common.security.ApiProblem(400, "采购状态只能由业务操作变更");
+    }
+
     @Override
     @org.springframework.transaction.annotation.Transactional
     public void deleteDemands(List<Long> ids) {
         if (ids == null || ids.isEmpty() || ids.size() > 100 || ids.contains(null) || new java.util.HashSet<>(ids).size() != ids.size()) throw new com.atguigu.common.security.ApiProblem(400, "需求编号不正确");
         List<PurchaseDetailEntity> details = list(new QueryWrapper<PurchaseDetailEntity>().in("id", ids).orderByAsc("id").last("FOR UPDATE"));
-        if (details.size() != ids.size()) throw new com.atguigu.common.security.ApiProblem(404, "需求不存在");
+        String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+        if (db.queryForObject("SELECT COUNT(*) FROM wms_purchase_detail WHERE id IN (" + placeholders + ")", ids.toArray(), Long.class) != ids.size())
+            throw new com.atguigu.common.security.ApiProblem(404, "需求不存在");
         if (details.stream().anyMatch(d -> !Integer.valueOf(0).equals(d.getStatus()) || d.getPurchaseId() != null)) throw new com.atguigu.common.security.ApiProblem(409, "已分配需求不能删除");
         removeByIds(ids);
     }

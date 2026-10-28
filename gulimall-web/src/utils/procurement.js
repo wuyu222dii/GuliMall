@@ -5,6 +5,7 @@ export function parseProcurementRequest(raw) {
   const request = JSON.parse(raw), p = request?.payload
   let valid = false
   if (p && request.type === 'save') valid = (p.id == null || id(p.id)) && id(p.skuId) && id(p.wareId) && Number.isInteger(p.skuNum) && p.skuNum >= 1 && p.skuNum <= 1000000 && /^\d{1,12}(\.\d{1,2})?$/.test(String(p.skuPrice))
+  if (p?.creationRequestId != null) valid = valid && request.type === 'save' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(p.creationRequestId)
   if (p && request.type === 'merge') valid = (p.purchaseId == null || id(p.purchaseId)) && ids(p.items)
   if (p && ['receive', 'delete'].includes(request.type)) valid = id(p.id)
   if (p && request.type === 'finish') valid = id(p.id) && Array.isArray(p.items) && ids(p.items.map(item => item?.itemId)) && p.items.every(item => [3, 4].includes(item.status) && typeof item.reason === 'string' && item.reason.length <= 255 && (item.status === 3 || item.reason.trim()))
