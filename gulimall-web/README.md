@@ -1,5 +1,7 @@
 # Gulimall React Frontend
 
+阶段 27–31 已完成采购、后台商品/订单、四类基础资料查询和五类表单保护；当前 Browser 48 项覆盖 Chromium 两轮完整交易及 Edge。新增明确退出、空表单不误拦、分类失败恢复、放弃后返回及仓库切换检查，详见 [阶段 31](../docs/STAGE31.md)。下文旧阶段数值保留为历史记录。
+
 React 18 / Vite 5 / React Router 6 / Axios / Zustand。阶段 1–6 已验收。阶段 7 的支付/返回页和履约门禁已通过本地浏览器验收；真实支付宝沙箱与公网回调待账号开通后补验。
 
 阶段 8 的订单筛选、物流发货、订单详情/历史、确认收货和待付款取消已通过浏览器联调，见 [FULFILLMENT.md](../docs/FULFILLMENT.md)。
