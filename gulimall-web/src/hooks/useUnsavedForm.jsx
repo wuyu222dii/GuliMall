@@ -2,36 +2,37 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useBlocker } from 'react-router-dom'
 
 export default function useUnsavedForm(dirty, busy = false) {
+  const protectedInput = dirty || busy
   const [action, setAction] = useState(null), keep = useRef(null), previousFocus = useRef(null)
   const confirmed = useRef(false)
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => !confirmed.current && dirty && currentLocation.pathname + currentLocation.search !== nextLocation.pathname + nextLocation.search)
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => !confirmed.current && protectedInput && currentLocation.pathname + currentLocation.search !== nextLocation.pathname + nextLocation.search)
   const commit = useCallback(next => { const previous = confirmed.current; confirmed.current = true; try { return next() } finally { confirmed.current = previous } }, [])
   const open = !!action || blocker.state === 'blocked'
   useEffect(() => {
-    if (!dirty) return
+    if (!protectedInput) return
     const warn = event => { event.preventDefault(); event.returnValue = '' }
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
-  }, [dirty])
+  }, [protectedInput])
   useEffect(() => {
     if (!open) return
     previousFocus.current = document.activeElement; keep.current?.focus()
     return () => { if (previousFocus.current?.isConnected) previousFocus.current.focus() }
   }, [open])
   useEffect(() => {
-    if (!dirty) return
+    if (!protectedInput) return
     const logout = event => { event.preventDefault(); if (!open) setAction(() => event.detail.proceed) }
     window.addEventListener('gulimall-before-logout', logout)
     return () => window.removeEventListener('gulimall-before-logout', logout)
-  }, [dirty, open])
-  useEffect(() => { if (!dirty) { if (action) setAction(null); if (blocker.state === 'blocked') blocker.reset() } }, [dirty, action, blocker])
+  }, [protectedInput, open])
+  useEffect(() => { if (!protectedInput) { if (action) setAction(null); if (blocker.state === 'blocked') blocker.reset() } }, [protectedInput, action, blocker])
   const cancel = () => { setAction(null); if (blocker.state === 'blocked') blocker.reset() }
   const proceed = () => {
     if (busy) return
     if (action) { setAction(null); if (blocker.state === 'blocked') blocker.reset(); commit(action) }
     else if (blocker.state === 'blocked') blocker.proceed()
   }
-  const request = (next, changed = dirty) => { if (open) return; if (changed) setAction(() => next); else next() }
+  const request = (next, changed = dirty) => { if (open) return; if (changed || busy) setAction(() => next); else next() }
   const keyboard = event => {
     if (event.key === 'Escape') { event.preventDefault(); cancel() }
     if (event.key === 'Tab') {
