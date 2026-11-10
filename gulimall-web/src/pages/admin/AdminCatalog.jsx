@@ -106,11 +106,12 @@ export default function AdminCatalog() {
       if (kind === 'groups') data = { attrGroupId: editing, attrGroupName: form.name, catelogId: Number(form.catelogId), sort: Number(form.sort) }
       if (kind === 'attrs') data = { attrId: editing, attrName: form.name, catelogId: Number(form.catelogId), attrType: Number(form.attrType), attrGroupId: Number(form.attrGroupId) || null, enable: Number(form.enable), valueSelect: form.valueSelect }
       const response = await saveCatalog(kind, data); saved = true; baseline.current = formSignature(form, Object.keys(empty())); const id = response.id || editing; setEditing(id); locating.current = { kind, id, action: 'save' }; setNotice(`${names[kind]}已保存。`)
+      setBusy(false); setLoading(true)
       setMeta((await getCatalog()).data); setStale(false); reset()
     } catch (e) {
       if (saved) { setStale(true); setError('资料已保存，但列表刷新失败，请重新加载核对；当前表单已绑定原编号。') }
       else { const uncertain = !e.status || e.status >= 500; setUnknown(!editing && uncertain); if (uncertain) setStale(true); if (uncertain && editing) { locating.current = { kind, id: editing, action: 'check' } } setError(`${e.message} 请先刷新核对原操作结果。`) }
-    } finally { working.current = false; setBusy(false) }
+    } finally { working.current = false; setBusy(false); setLoading(false) }
   }
   const remove = async () => {
     if (working.current || loading || stale || unknown || !pendingDelete) return
@@ -119,11 +120,12 @@ export default function AdminCatalog() {
     try {
       await deleteCatalog(kind, id); deleted = true; locating.current = { kind, id, action: 'delete' }; setNotice(names[kind] + '已删除。')
       if (editing === id) reset()
+      setBusy(false); setLoading(true)
       setMeta((await getCatalog()).data); setStale(false)
     } catch (e) {
       if (deleted) { setStale(true); setError('删除已确认，但列表刷新失败，请重新加载核对；原查询条件已保留，暂停修改。') }
       else { if (!e.status || e.status >= 500) { setStale(true); locating.current = { kind, id, action: 'check' } } setError(e.message + ' 删除结果请重新加载核对。') }
-    } finally { working.current = false; setBusy(false); setPendingDelete(null) }
+    } finally { working.current = false; setBusy(false); setLoading(false); setPendingDelete(null) }
   }
   const uploadLogo = async (event) => {
     const input = event.currentTarget, file = input.files?.[0]

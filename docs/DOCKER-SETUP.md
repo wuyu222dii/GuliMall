@@ -50,3 +50,9 @@ docker info
 - Docker 安装日志：`C:\Users\w\AppData\Local\Docker\install-log.txt`
 
 官方参考：[Docker Windows 安装](https://docs.docker.com/desktop/setup/install/windows-install/)、[Microsoft WSL 安装](https://learn.microsoft.com/en-us/windows/wsl/install)。
+
+## 2026-11-10 启动恢复
+
+阶段 36 遇到当前 Codex 运行上下文读不到旧安装注册信息，启动器退出，不能连接 Linux 引擎。原数据盘实际位于 `C:\Users\w\AppData\Local\Packages\OpenAI.Codex_2p2nqsd0c76g0\LocalCache\Local\Docker\wsl\disk\docker_data.vhdx`。先在 Docker/WSL 停止时保留离线副本和配置，再用已验证 Docker Inc 签名的同版本 4.96.3 安装包修复当前用户安装，指定原 `wsl` 目录，并恢复 containerd 镜像存储，原 Demo/Test 容器及卷重新可见。没有卸载、重置或初始化数据库。
+
+离线副本留在私有 `.tools/stage36-docker-backup/`。当前仍使用原数据盘，**不要清理上述旧应用缓存目录**。若重启后只看到空容器列表，先核对数据盘与镜像存储模式，不执行重建、删卷或初始化来绕过。迁移 Docker 数据目录需另做冷备份及恢复核对，本阶段没有移动原数据盘。
