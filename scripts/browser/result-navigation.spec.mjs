@@ -1,0 +1,95 @@
+import {test,expect} from '../../gulimall-web/node_modules/@playwright/test/index.mjs'
+import {readFileSync} from 'node:fs'
+import {randomUUID} from 'node:crypto'
+import {assertTestEnvironment} from '../test-environment.mjs'
+import {openPage,closeContexts,register,login,signIn,json,fits,sql} from './helpers.mjs'
+let contexts=[]
+test.beforeEach(async()=>{contexts=[];await assertTestEnvironment()})
+test.afterEach(async({},info)=>closeContexts(contexts,info))
+const prompt=page=>page.getByRole('alertdialog',{name:'未保存内容确认',exact:true})
+async function api(page){const csrf=(await json(page,'/api/auth/csrf')).csrfToken;return async(path,data,method='POST')=>{const response=await page.request.fetch(path,{method,headers:{'X-CSRF-Token':csrf},data});expect(response.status()).toBe(200);return response.json()}}
+async function admin(browser){const page=await openPage(browser,contexts);await login(page,JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE,'utf8')));return {page,post:await api(page)}}
+const username=()=> 'n37_'+randomUUID().replaceAll('-','').slice(0,8)
+async function fillAddress(page,name){for(const[label,value]of Object.entries({'收件人':name,'手机号':'13800000001','省份':'浙江省','城市':'杭州市','区县':'西湖区','详细地址':'结果定位37号'}))await page.getByLabel(label,{exact:true}).fill(value)}
+
+test('地址结果：保存后读取失败仍可核对、默认定位、URL与草稿及会员边界',async({browser},info)=>{
+ const page=await openPage(browser,contexts),account={username:username(),password:'Nav_'+randomUUID()+'!'};await register(page,account.username,account.password);const post=await api(page)
+ for(let i=0;i<11;i++)await post('/api/member/addresses',{name:'分页地址'+i,phone:'13800000001',detailAddress:'独立 Test',defaultStatus:0})
+ await page.goto('/member/address?page=2');await expect(page.locator('.address-item')).toHaveCount(1);await expect(page.locator('.pagination')).toContainText('第 2 / 2 页')
+ const copy=await page.context().newPage();await copy.goto(page.url());await expect(copy.locator('.address-item')).toHaveCount(1);await copy.close()
+ let failRead=true,creates=0,updates=0,dropCreate=false
+ await page.route('**/api/member/addresses**',async route=>{const request=route.request(),url=new URL(request.url());if(request.method()==='POST'){creates++;if(dropCreate){expect((await route.fetch()).status()).toBe(200);await route.abort('failed');return}}if(request.method()==='PUT')updates++;return request.method()==='GET'&&url.pathname==='/api/member/addresses'&&failRead?route.abort('failed'):route.continue()})
+ await page.getByRole('button',{name:'新增地址',exact:true}).click();await fillAddress(page,'已保存地址37')
+ const created=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/member/addresses'&&r.request().method()==='POST');await page.getByRole('button',{name:'保存',exact:true}).click();const id=(await(await created).json()).id
+ await expect(page).toHaveURL(/\/member\/address\?page=1$/);const receipt=page.getByRole('region',{name:'已确认地址结果',exact:true});await expect(receipt).toContainText('地址 #'+id);await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByText('暂无收货地址',{exact:true})).toHaveCount(0)
+ await page.getByRole('button',{name:'查看已保存地址 '+id,exact:true}).click();await expect(receipt).toContainText('已保存地址37');await page.getByRole('button',{name:'编辑已保存地址 '+id,exact:true}).click();await page.getByLabel('详细地址',{exact:true}).fill('原编号继续编辑37号');await page.getByRole('button',{name:'保存',exact:true}).click();await expect(page.locator('.address-form')).toHaveCount(0);expect(creates).toBe(1);expect(updates).toBe(1)
+ failRead=false;await page.getByRole('button',{name:'刷新地址',exact:true}).click();await expect(page.getByRole('button',{name:'编辑地址 '+id,exact:true})).toBeVisible();expect((await json(page,'/api/member/addresses?limit=100')).page.totalCount).toBe(12)
+ await page.getByRole('button',{name:'新增地址',exact:true}).click();await fillAddress(page,'未知后续地址37');dropCreate=true;await page.getByRole('button',{name:'保存',exact:true}).click();await expect(page.getByRole('alert')).toContainText('新增结果尚未确认');await expect(receipt).toHaveCount(0);await expect(page.getByLabel('收件人',{exact:true})).toBeDisabled();expect((await json(page,'/api/member/addresses?limit=100')).page.totalCount).toBe(13)
+ await page.getByRole('button',{name:'刷新地址',exact:true}).click();await expect(page.locator('.address-item').first()).toContainText('未知后续地址37');await page.getByRole('button',{name:'已核对，放弃本次表单',exact:true}).click()
+ await page.getByRole('button',{name:'新增地址',exact:true}).click();await page.getByLabel('收件人',{exact:true}).fill('保留的地址输入');await page.getByRole('button',{name:'下一页',exact:true}).click();await expect(prompt(page)).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByLabel('收件人',{exact:true})).toHaveValue('保留的地址输入')
+ await page.getByRole('button',{name:'下一页',exact:true}).click();await prompt(page).getByRole('button',{name:'确认放弃并继续',exact:true}).click();await expect(page).toHaveURL(/page=2$/);await expect(page.locator('.address-form')).toHaveCount(0)
+ const makeDefault=page.getByRole('button',{name:/^设为默认地址 /}).first(),defaultId=Number((await makeDefault.innerText()).match(/\d+/)[0]);await makeDefault.click();await expect(page).toHaveURL(/page=1$/);await expect(page.locator('.address-item').first()).toContainText('［默认地址］');expect((await json(page,'/api/member/addresses')).page.list[0].id).toBe(defaultId)
+ await page.goto('/member/address?page=999');await expect(page).toHaveURL(/page=2$/);await page.reload();await expect(page.locator('.pagination')).toContainText('第 2 / 2 页');await page.goBack();expect(page.url()).not.toContain('999')
+ await page.goto('/member/address?page=1&page=2');await expect(page.getByRole('alert')).toContainText('查询参数不正确或重复');await page.getByRole('button',{name:'清除无效地址查询',exact:true}).click();await expect(page.locator('.address-item')).toHaveCount(10)
+ await page.setViewportSize({width:375,height:812});await fits(page);await page.getByRole('button',{name:'下一页',exact:true}).click();await page.screenshot({path:info.outputPath('address-result-mobile.png'),fullPage:true,mask:[page.locator('input')]})
+ const fresh=await openPage(browser,contexts);await fresh.goto('/member/address?page=2');await expect(fresh).toHaveURL(/\/login\?redirect=/);await signIn(fresh,account);await expect(fresh).toHaveURL(/\/member\/address\?page=2$/);await expect(fresh.locator('.address-item')).toHaveCount(3)
+ const other=await openPage(browser,contexts);await register(other,username());expect((await other.request.get('/api/member/addresses/'+id)).status()).toBe(403);await other.goto('/member/address?page=2');await expect(other).toHaveURL(/page=1$/);await expect(other.getByText('暂无收货地址',{exact:true})).toBeVisible()
+})
+
+test('仓库结果：保留编号与筛选、失败不重复新增、引用不变和末页定位',async({browser},info)=>{
+ const {page,post}=await admin(browser),label='定位仓37 '+randomUUID(),ids=[]
+ for(let i=0;i<23;i++)ids.push((await post('/api/admin/ware/wareinfo/save',{name:label+' '+i,address:'原仓库地址'})).id)
+ const demand=(await post('/api/admin/ware/purchasedetail/save',{skuId:900001,wareId:ids[12],skuNum:3,skuPrice:'1.00'})).id,purchase=(await post('/api/admin/ware/purchase/merge',{items:[demand]})).purchaseId
+ await post('/api/admin/ware/purchase/received',[purchase]);await post('/api/admin/ware/purchase/done',{id:purchase,items:[{itemId:demand,status:3}]})
+ const stockBefore=sql('SELECT ware_id,stock,stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE ware_id='+ids[12]+' AND sku_id=900001;')
+ const original='/admin/procurement?tab=warehouses&key='+encodeURIComponent(label)+'&page=2';await page.goto(original);await expect(page.locator('.admin-table tbody tr')).toHaveCount(10);await page.reload();await expect(page.locator('.pagination')).toContainText('第 2 / 3 页')
+ await page.getByRole('button',{name:'编辑仓库 '+ids[12],exact:true}).click();await page.getByLabel('仓库地址',{exact:true}).fill('引用仍保持37号');await page.getByRole('button',{name:'保存仓库',exact:true}).click();await expect(page.getByRole('cell',{name:'引用仍保持37号',exact:true})).toBeVisible();expect(new URL(page.url()).searchParams.get('page')).toBe('2');expect(sql('SELECT ware_id,stock,stock_locked FROM gulimall_wms_test.wms_ware_sku WHERE ware_id='+ids[12]+' AND sku_id=900001;')).toBe(stockBefore);expect(sql('SELECT ware_id FROM gulimall_wms_test.wms_purchase WHERE id='+purchase+';')).toBe(String(ids[12]))
+ await page.getByRole('button',{name:'取消仓库编辑',exact:true}).click();let failRead=true,creates=0,updates=0
+ await page.route('**/api/admin/ware/wareinfo/**',route=>{const req=route.request(),url=new URL(req.url());if(url.pathname.endsWith('/save'))creates++;if(url.pathname.endsWith('/update'))updates++;return url.pathname.endsWith('/list')&&url.searchParams.get('limit')==='10'&&failRead?route.abort('failed'):route.continue()})
+ await page.getByLabel('仓库名称',{exact:true}).fill('筛选以外37 '+randomUUID());await page.getByLabel('仓库地址',{exact:true}).fill('保存后核对地址')
+ const saved=page.waitForResponse(r=>r.url().endsWith('/wareinfo/save'));await page.getByRole('button',{name:'保存仓库',exact:true}).click();const id=(await(await saved).json()).id,receipt=page.getByRole('region',{name:'已确认仓库结果',exact:true})
+ await expect(receipt).toContainText('仓库 #'+id);await expect(page.getByRole('group',{name:'编辑仓库 #'+id,exact:true})).toBeVisible();expect(new URL(page.url()).searchParams.get('key')).toBe(label)
+ await page.getByRole('button',{name:'查看已保存仓库 '+id,exact:true}).click();await expect(receipt).toContainText('保存后核对地址')
+ let releaseOld,enteredOld,finishedOld;const oldPause=new Promise(r=>releaseOld=r),oldRead=new Promise(r=>enteredOld=r),oldDone=new Promise(r=>finishedOld=r),infoPath='**/api/admin/ware/wareinfo/info/'+id
+ await page.route(infoPath,async route=>{const response=await route.fetch();expect(response.status()).toBe(200);enteredOld();await oldPause;try{await route.fulfill({response})}finally{finishedOld()}})
+ try{
+  await page.getByRole('button',{name:'查看已保存仓库 '+id,exact:true}).click();await oldRead;await page.getByLabel('仓库地址',{exact:true}).fill('同编号更新37号');await page.getByRole('button',{name:'保存仓库',exact:true}).click();await expect(page.getByRole('button',{name:'保存仓库',exact:true})).toBeEnabled();expect(creates).toBe(1);expect(updates).toBe(1)
+  releaseOld();await oldDone;await expect(page.getByRole('button',{name:'查看已保存仓库 '+id,exact:true})).toBeEnabled();await expect(receipt).not.toContainText('保存后核对地址')
+ }finally{releaseOld();await page.unroute(infoPath)}
+ await page.getByRole('button',{name:'查看已保存仓库 '+id,exact:true}).click();await expect(receipt).toContainText('同编号更新37号')
+ failRead=false;await page.getByRole('button',{name:'刷新仓库列表',exact:true}).click();await expect(page.locator('.admin-table tbody tr')).toHaveCount(10);await expect(receipt).toContainText('未自动清除查询条件')
+ await page.getByRole('button',{name:'按编号查询仓库 '+id+'（替换筛选）',exact:true}).click();await expect(page.getByRole('button',{name:'编辑仓库 '+id,exact:true})).toBeVisible();expect(new URL(page.url()).searchParams.get('key')).toBe(String(id))
+ await page.getByRole('button',{name:'编辑仓库 '+id,exact:true}).click();await page.getByLabel('仓库地址',{exact:true}).fill('保留的仓库输入');await page.goBack();await expect(prompt(page)).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByLabel('仓库地址',{exact:true})).toHaveValue('保留的仓库输入')
+ await page.goBack();await prompt(page).getByRole('button',{name:'确认放弃并继续',exact:true}).click();await expect(page.getByLabel('仓库地址',{exact:true})).toHaveValue('');await page.reload();await expect(page.locator('.pagination')).toContainText('第 2 / 3 页')
+ await page.goto('/admin/procurement?tab=warehouses');await page.getByLabel('仓库名称',{exact:true}).fill('无筛选新仓37 '+randomUUID());await page.getByLabel('仓库地址',{exact:true}).fill('最后一页定位')
+ const newest=page.waitForResponse(r=>r.url().endsWith('/wareinfo/save'));await page.getByRole('button',{name:'保存仓库',exact:true}).click();const newestId=(await(await newest).json()).id,last=Math.ceil((await json(page,'/api/admin/ware/wareinfo/list?limit=1')).page.totalCount/10)
+ await expect(page).toHaveURL(new RegExp('page='+last+'(?:&|$)'));await expect(page.getByRole('button',{name:'编辑仓库 '+newestId,exact:true})).toBeVisible();await expect(page.getByRole('group',{name:'编辑仓库 #'+newestId,exact:true})).toBeVisible()
+ await page.setViewportSize({width:375,height:812});await fits(page);await page.screenshot({path:info.outputPath('warehouse-result-mobile.png'),fullPage:true,mask:[page.locator('input')]})
+ expect((await page.request.get('/api/admin/ware/wareinfo/info/999999999')).status()).toBe(404);expect((await page.request.get('/api/admin/ware/wareinfo/info/0')).status()).toBe(400)
+ await page.getByRole('button',{name:'取消仓库编辑',exact:true}).click();const uncertain='unknown37'+randomUUID();await page.getByLabel('仓库名称',{exact:true}).fill(uncertain);await page.getByLabel('仓库地址',{exact:true}).fill('未知新仓库')
+ await page.route('**/api/admin/ware/wareinfo/save',async route=>{expect((await route.fetch()).status()).toBe(200);await route.abort('failed')});await page.getByRole('button',{name:'保存仓库',exact:true}).click();await expect(page.getByRole('alert')).toContainText('新增结果未知');await expect(receipt).toHaveCount(0);await expect(page.getByLabel('仓库名称',{exact:true})).toBeDisabled();expect((await json(page,'/api/admin/ware/wareinfo/list?key='+encodeURIComponent(uncertain))).page.totalCount).toBe(1)
+ await page.getByRole('button',{name:'已核对，放弃本次仓库表单',exact:true}).click();await expect(page.getByLabel('仓库名称',{exact:true})).toBeEnabled()
+})
+
+test('消费者查询：订单与搜索越界替换、品牌规格多值、失败恢复和权限',async({browser},info)=>{
+ const {page:administrator,post:manage}=await admin(browser),label='query37'+randomUUID().replaceAll('-','')
+ const product=(await manage('/api/admin/product/spuinfo/editor',{spuName:label,spuDescription:'独立 Test',catalogId:900003,brandId:900001,weight:'0.2',images:['/demo-product.svg'],decript:[],baseAttrs:[{attrId:900001,attrValues:'8GB,闪存',showDesc:1}],skus:Array.from({length:13},(_,i)=>({skuName:label+' '+i,skuTitle:label+' '+i,price:(i+1)+'.00',images:[{imgUrl:'/demo-product.svg',defaultImg:1}],attr:[{attrId:900002,attrName:'颜色',attrValue:'款'+i}]}))})).id
+ const sku=(await json(administrator,'/api/admin/product/spuinfo/editor/'+product)).product.skus[0].skuId,demand=(await manage('/api/admin/ware/purchasedetail/save',{skuId:sku,wareId:900001,skuNum:30,skuPrice:'1.00'})).id,purchase=(await manage('/api/admin/ware/purchase/merge',{items:[demand]})).purchaseId
+ await manage('/api/admin/ware/purchase/received',[purchase]);await manage('/api/admin/ware/purchase/done',{id:purchase,items:[{itemId:demand,status:3}]});await manage('/api/admin/product/search-sync/'+product+'/publish?status=1',{})
+ const page=await openPage(browser,contexts);await register(page,username());const post=await api(page),address=(await post('/api/member/addresses',{name:'原快照37',phone:'13800000001',detailAddress:'原快照地址37号',defaultStatus:0})).id,orders=[]
+ for(let i=0;i<11;i++){await post('/api/cart/items',{skuId:sku,count:1});const token=(await post('/api/order/mine/confirm',{})).confirmation.token;orders.push((await post('/api/order/mine/submit',{token,addressId:address})).result.order)}
+ await page.addInitScript(()=>{window.__falseEmpty=false;new MutationObserver(()=>{if(document.querySelector('.search-header')?.textContent.includes('共找到 0 件商品')||[...document.querySelectorAll('.empty-state')].some(element=>element.textContent.includes('暂无订单')))window.__falseEmpty=true}).observe(document,{childList:true,subtree:true})})
+ await page.goto('/member/orders?status=0&page=999');await expect(page).toHaveURL(/status=0&page=2$/);await expect(page.locator('.order-summary')).toHaveCount(1);expect(await page.evaluate(()=>window.__falseEmpty)).toBe(false);await page.reload();await expect(page.locator('.order-summary')).toHaveCount(1)
+ await page.getByRole('link',{name:'查看订单 '+orders[0].orderSn,exact:true}).click();await expect(page.getByRole('heading',{name:'订单详情',exact:true})).toBeVisible();await page.getByRole('link',{name:'返回订单列表',exact:true}).click();await expect(page).toHaveURL(/status=0&page=2$/)
+ await page.getByLabel('查询订单号',{exact:true}).fill(orders[10].orderSn);await page.getByRole('button',{name:'查询我的订单',exact:true}).click();await expect(page.locator('.order-summary')).toHaveCount(1);await page.reload();await expect(page.getByLabel('查询订单号',{exact:true})).toHaveValue(orders[10].orderSn)
+ await post('/api/member/addresses/'+address,{name:'新地址资料',phone:'13800000001',detailAddress:'新地址资料37号',defaultStatus:0},'PUT');expect((await json(page,'/api/order/mine/'+orders[0].id)).order.receiverDetailAddress).toBe('原快照地址37号')
+ await page.goto('/member/orders?page=1&page=2');await expect(page.getByRole('alert')).toContainText('查询参数不正确或重复');await page.getByRole('button',{name:'清除订单筛选',exact:true}).click();await expect(page.locator('.order-summary')).toHaveCount(10)
+ const query=new URLSearchParams({keyword:label,catalog3Id:'900003',page:'500'});query.append('brandId','900001');query.append('brandId','12345');query.append('attrs','900001_8GB,闪存');query.append('attrs','900001_8GB,闪存')
+ await page.goto('/search?'+query);await expect.poll(()=>new URL(page.url()).searchParams.get('page')).toBe('2');await expect(page.locator('.product-grid .product-card')).toHaveCount(1);expect(await page.evaluate(()=>window.__falseEmpty)).toBe(false);await page.reload();await expect(page.locator('.product-grid .product-card')).toHaveCount(1)
+ await page.getByLabel('排序',{exact:true}).selectOption('price_desc');await page.getByRole('button',{name:'应用筛选',exact:true}).click();const preserved=new URL(page.url()).searchParams;expect(preserved.getAll('brandId')).toEqual(['900001','12345']);expect(preserved.getAll('attrs')).toEqual(['900001_8GB,闪存','900001_8GB,闪存']);await expect(page.locator('.product-grid .product-card')).toHaveCount(12)
+ await page.route('**/api/search*',route=>route.abort('failed'));await page.getByRole('button',{name:'下一页',exact:true}).click();await expect(page.getByRole('alert')).toBeVisible();await expect(page.locator('.search-header')).toHaveCount(0);await page.unroute('**/api/search*');await page.getByRole('button',{name:'重试搜索',exact:true}).click();await expect(page.locator('.product-grid .product-card')).toHaveCount(1)
+ await page.setViewportSize({width:375,height:812});await fits(page);await page.getByLabel('品牌',{exact:true}).focus();await page.keyboard.press('Tab');await page.screenshot({path:info.outputPath('consumer-query-mobile.png'),fullPage:true,mask:[page.locator('input')]})
+ await page.goto('/search?keyword=x&keyword=y');await expect(page.getByRole('alert')).toContainText('查询参数不正确或重复');await page.getByRole('link',{name:'清除筛选',exact:true}).click();await expect(page.locator('.search-header')).toBeVisible()
+ const other=await openPage(browser,contexts);await register(other,username());expect((await other.request.get('/api/order/mine/'+orders[0].id)).status()).toBe(403);expect((await other.request.get('/api/admin/ware/wareinfo/info/900001')).status()).toBe(403)
+ const guest=await openPage(browser,contexts);expect((await guest.request.get('/api/admin/ware/wareinfo/info/900001')).status()).toBe(401)
+})

@@ -78,6 +78,12 @@ test('stage 4 Elasticsearch search and durable synchronization acceptance',async
       const mapping=await(await fetch(`${es}/${index}/_mapping`)).json();assert.equal(mapping[index].mappings.properties.attrs.type,'nested');assert.equal(mapping[index].mappings.properties.skuTitle.analyzer,'cjk')
       const aliases=await(await fetch(`${es}/${index}/_alias`)).json();assert.ok(aliases[index].aliases['gulimall-products-write'])
     })
+    await t.test('public query protocol preserves multi-value filters, category aliases and rejects ambiguous scalars',async()=>{
+      const prefix='/api/search?keyword='+label
+      const brands=await guest.call(prefix+'&brandId=900001&brandId=12345&catalog3Id=900003');assert.equal(brands.status,200);assert.equal(brands.data.page.totalCount,3)
+      const attrs=await guest.call(prefix+'&attrs=900001_16GB&attrs=900001_8GB');assert.equal(attrs.status,200);assert.equal(attrs.data.page.totalCount,0)
+      for(const suffix of ['keyword=x','page=1&page=2','unknown=x','catalogId=900003&catalog3Id=1','brandId=','max=1e2'])assert.equal((await guest.call(prefix+'&'+suffix)).status,400)
+    })
     await t.test('published price changes synchronize and older replays cannot overwrite a newer version',async()=>{
       await ok(`/api/admin/product/attr/update/${id}`,'POST',[{attrId:900001,attrName:'内存',attrValue:'16GB',quickShow:1}])
       await retry();assert.equal((await search({attrs:'900001_16GB'})).totalCount,3)

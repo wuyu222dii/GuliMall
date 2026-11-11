@@ -17,10 +17,12 @@ public class MemberAddressController {
     @Autowired private MemberReceiveAddressService addresses;
     @Autowired private com.atguigu.gulimall.member.service.MemberAddressService mutations;
     @GetMapping
-    public R list(@RequestParam Map<String,Object> params, HttpServletRequest request) {
+    public R list(@RequestParam org.springframework.util.MultiValueMap<String,String> query, HttpServletRequest request) {
+        if(query.containsKey("sidx") || query.containsKey("order")) throw new ApiProblem(400,"地址查询不支持排序参数");
+        Map<String,Object> params=Query.singleParameters(query);
         int limit = Integer.parseInt((String) params.getOrDefault("limit", "20"));
         int page = Integer.parseInt((String) params.getOrDefault("page", "1"));
-        if (limit < 1 || limit > 100 || page < 1) { throw new ApiProblem(400, "分页参数不正确"); }
+        if (limit < 1 || limit > 100 || page < 1 || page > 1000000 || !String.valueOf(params.getOrDefault("page","1")).matches("[1-9][0-9]{0,6}")) { throw new ApiProblem(400, "分页参数不正确"); }
         long memberId=RequestIdentity.memberId(request);
         return R.ok().put("page", new PageUtils(addresses.page(new Query<MemberReceiveAddressEntity>().getPage(params),
                 new QueryWrapper<MemberReceiveAddressEntity>().eq("member_id",memberId).orderByDesc("default_status","id"))))

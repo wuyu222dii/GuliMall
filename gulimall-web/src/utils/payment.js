@@ -1,3 +1,4 @@
+import { consumerQuery } from './consumer.js'
 export const orderStatuses = { 0: '待付款', 1: '已支付', 2: '已发货', 3: '已完成', 4: '已关闭', 5: '无效订单', 6: '创建中，等待库存确认', 7: '关闭中，等待释放确认', 8: '关闭中，等待付款确认', 9: '付款异常，需人工核对' }
 export const canStartNewConfirmation = (status) => Number.isInteger(status) && status >= 0 && status <= 5
 export const paymentSettled = (order) => order?.status === 3 || order?.status === 4 && order.inventoryStatus === 2
@@ -9,14 +10,12 @@ export function paymentTarget(action, mode) {
   return url.href
 }
 export function memberRedirect(value) {
-  if (/^\/member\/orders(?:\/[1-9][0-9]{0,18})?(?:\?|$)/.test(value || '')) {
-    const url = new URL(value, 'http://app.local'), keys = [...url.searchParams.keys()]
-    if (!url.hash && keys.every(key => ['page', 'status', 'orderSn'].includes(key) && url.searchParams.getAll(key).length === 1)
-      && (!url.searchParams.has('page') || /^[1-9][0-9]{0,6}$/.test(url.searchParams.get('page')) && Number(url.searchParams.get('page')) <= 1000000)
-      && (!url.searchParams.has('status') || /^[0-9]$/.test(url.searchParams.get('status')))
-      && (!url.searchParams.has('orderSn') || /^[a-f0-9]{32}$/.test(url.searchParams.get('orderSn')))) return url.pathname + url.search
+  if (/^\/member\/address(?:\?|$)/.test(value || '')) {
+    try { const url = new URL(value, 'http://app.local'); if (url.origin === 'http://app.local' && !url.hash) { consumerQuery('address', url.search); return url.pathname + url.search } } catch { /* Reject malformed or external login targets. */ }
   }
-
+  if (/^\/member\/orders(?:\/[1-9][0-9]{0,18})?(?:\?|$)/.test(value || '')) {
+    try { const url = new URL(value, 'http://app.local'); if (url.origin === 'http://app.local' && !url.hash) { consumerQuery('orders', url.search); return url.pathname + url.search } } catch { /* Reject invalid member queries. */ }
+  }
   if (['/member/orders', '/member/address', '/checkout', '/cart'].includes(value)) return value
   if (value?.startsWith('/checkout?')) {
     const parsed = new URL(value, 'http://app.local'), tokens = parsed.searchParams.getAll('confirmation')

@@ -68,8 +68,12 @@ test('仓库维护：创建编辑、分页、选仓查找和库存 SKU 筛选',a
  const page=await openPage(browser,contexts),name='仓库回归 '+randomUUID()
  await login(page,JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE,'utf8')))
  await page.getByRole('link',{name:'采购与库存',exact:true}).click();await page.getByRole('button',{name:'仓库维护',exact:true}).click()
+ await expect(page.locator('.admin-table')).toBeVisible()
+ let releaseList,enteredList,holdList=true;const listPause=new Promise(r=>releaseList=r),listRead=new Promise(r=>enteredList=r),listRoute='**/api/admin/ware/wareinfo/list*'
+ await page.route(listRoute,async route=>{if(!holdList||new URL(route.request().url()).searchParams.get('limit')!=='10')return route.fallback();holdList=false;const response=await route.fetch();enteredList();await listPause;await route.fulfill({response})})
  await page.getByLabel('仓库名称',{exact:true}).fill(name);await page.getByLabel('仓库地址',{exact:true}).fill('本地仓库地址');await page.getByLabel('区域编码',{exact:true}).fill('001')
  const created=page.waitForResponse(r=>r.url().endsWith('/wareinfo/save')&&r.request().method()==='POST');await page.getByRole('button',{name:'保存仓库',exact:true}).click();const response=await created;expect(response.status()).toBe(200);const id=(await response.json()).id
+ try{await listRead;await page.getByLabel('查询仓库名称或编号',{exact:true}).fill(String(id));releaseList();await expect(page.getByText('正在查询仓库…',{exact:true})).toHaveCount(0);await expect(page.getByLabel('查询仓库名称或编号',{exact:true})).toHaveValue(String(id));expect(new URL(page.url()).searchParams.get('page')||'1').toBe('1')}finally{releaseList();await page.unroute(listRoute)}
  await page.getByLabel('查询仓库名称或编号',{exact:true}).fill(String(id));await page.getByRole('button',{name:'查询仓库',exact:true}).click();await page.getByRole('button',{name:'编辑仓库 '+id,exact:true}).click();await page.getByLabel('仓库地址',{exact:true}).fill('已编辑的本地仓库');await page.getByRole('button',{name:'保存仓库',exact:true}).click();await expect(page.getByRole('cell',{name:'已编辑的本地仓库',exact:true})).toBeVisible()
  const csrf=(await json(page,'/api/auth/csrf')).csrfToken
  for(let i=0;i<11;i++)expect((await page.request.post('/api/admin/ware/wareinfo/save',{headers:{'X-CSRF-Token':csrf},data:{name:name+' '+i,address:'分页仓库'}})).status()).toBe(200)

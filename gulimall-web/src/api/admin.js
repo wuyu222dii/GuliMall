@@ -13,6 +13,7 @@ export const uploadImage = (file) => {
   return request.post('/api/admin/thirdparty/images', form)
 }
 export const warehouses = (params = { page: 1, limit: 20 }) => request.get('/api/admin/ware/wareinfo/list', { params })
+export const getWarehouseInfo = (id) => request.get(`/api/admin/ware/wareinfo/info/${id}`)
 export const saveWarehouse = (data) => request.post('/api/admin/ware/wareinfo/save', data)
 export const updateWarehouse = (data) => request.post('/api/admin/ware/wareinfo/update', data)
 export const listDemands = (params) => request.get('/api/admin/ware/purchasedetail/list', { params })

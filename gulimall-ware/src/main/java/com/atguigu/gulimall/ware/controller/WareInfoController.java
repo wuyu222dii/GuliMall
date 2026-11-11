@@ -48,7 +48,9 @@ public class WareInfoController {
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("ware:wareinfo:info")
     public R info(@PathVariable("id") Long id){
+		if(id<1) throw new com.atguigu.common.security.ApiProblem(400,"仓库编号不正确");
 		WareInfoEntity wareInfo = wareInfoService.getById(id);
+		if(wareInfo==null) throw new com.atguigu.common.security.ApiProblem(404,"仓库不存在");
 
         return R.ok().put("wareInfo", wareInfo);
     }

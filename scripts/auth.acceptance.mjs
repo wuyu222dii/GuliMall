@@ -139,7 +139,8 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       const created = await a.client.call('/api/member/addresses', { method: 'POST', body: address })
       assert.equal(created.status, 200, created.data.msg); addressId = created.data.id
       assert.ok(addressId !== 900002, 'Client-supplied primary IDs must be ignored')
-      const list = await a.client.call(`/api/member/addresses?memberId=${b.account.id}`)
+      assert.equal((await a.client.call(`/api/member/addresses?memberId=${b.account.id}`)).status,400)
+      const list = await a.client.call('/api/member/addresses')
       assert.equal(list.status, 200)
       assert.ok(list.data.page.totalCount >= 1)
       assert.ok(list.data.page.list.every((x) => x.memberId === a.account.id))
@@ -151,10 +152,16 @@ test('stage 1 real-service authentication and authorization acceptance', async (
       assert.equal((await a.client.call(`/api/member/addresses/${addressId}`, { method: 'PUT', body: address, csrf: false })).status, 403)
       assert.equal((await a.client.call(`/api/member/addresses/${addressId}`, { method: 'PUT', body: address })).status, 200)
     })
+    await t.test('consumer query whitelists reject duplicates and unknown fields without changing identity', async () => {
+      for(const path of ['/api/member/addresses?page=1&page=2','/api/member/addresses?unknown=x','/api/member/addresses?sidx=id','/api/order/mine?status=0&status=1','/api/order/mine?unknown=x','/api/order/mine?page=1000001']) assert.equal((await a.client.call(path)).status,400)
+      assert.equal((await a.client.call('/api/auth/me')).data.user.id,a.account.id)
+      assert((await a.client.call('/api/member/addresses')).data.page.list.every(x=>x.memberId===a.account.id))
+    })
     await t.test('order listing, details and payment use the server member identity', async () => {
       sql(`INSERT INTO gulimall_oms_test.oms_order(member_id,order_sn,status,pay_amount) VALUES (${a.account.id},'acceptA_${runId}',0,1),(${b.account.id},'acceptB_${runId}',0,1);`)
       const orderId = Number(sql(`SELECT id FROM gulimall_oms_test.oms_order WHERE order_sn='acceptA_${runId}';`))
-      const list = await a.client.call(`/api/order/mine?memberId=${b.account.id}`)
+      assert.equal((await a.client.call(`/api/order/mine?memberId=${b.account.id}`)).status,400)
+      const list = await a.client.call('/api/order/mine')
       assert.equal(list.status, 200); assert.ok(list.data.page.totalCount >= 1)
       assert.ok(list.data.page.list.every((x) => x.memberId === a.account.id))
       assert.equal((await a.client.call(`/api/order/mine/${orderId}`)).status, 200)

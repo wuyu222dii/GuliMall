@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { getOrders, getOrder, cancelOrder, receiveOrder } from '../api/order'
 import OrderDetails from '../components/OrderDetails'
 import { useAuthStore } from '../store/authStore'
 import { orderStatuses } from '../utils/payment'
 import { orderTime } from '../utils/order'
+import { consumerQuery } from '../utils/consumer'
 
 export default function MemberOrders() {
   const user = useAuthStore((s) => s.user)
@@ -12,7 +13,8 @@ export default function MemberOrders() {
   const [loading, setLoading] = useState(true)
   const { id } = useParams()
   const [params, setParams] = useSearchParams(), query = params.toString()
-  const page = Number(params.get('page') || 1)
+  const parsed = useMemo(() => { try { return { values: consumerQuery('orders', query), error: '' } } catch (e) { return { values: { page: '1' }, error: e.message } } }, [query])
+  const page = Number(parsed.values.page), invalid = id && !/^[1-9][0-9]{0,18}$/.test(id) ? '订单编号不正确。' : parsed.error
   const [fields, setFields] = useState({ orderSn: '', status: '' })
   useEffect(() => { const p = new URLSearchParams(query); setFields({ orderSn: p.get('orderSn') || '', status: p.get('status') || '' }) }, [query])
   const setPage = next => { const p = new URLSearchParams(query); p.set('page', String(next)); setParams(p) }
@@ -25,13 +27,17 @@ export default function MemberOrders() {
   const [notice, setNotice] = useState('')
   useEffect(() => { setNotice('') }, [user.id])
   useEffect(() => {
-    let active = true
+    let active = true, redirecting = false
     setLoading(true); setError(''); setOrders([]); setDetail(null); setAction(null)
-    const p = new URLSearchParams(query)
-    const operation = id ? getOrder(id, user.id) : getOrders({ page: p.get('page') || '1', limit: 10, status: p.get('status') || '', orderSn: p.get('orderSn') || '' }, user.id)
-    operation.then((res) => { if (active) { setOrders(id ? [res.order] : res.page.list); setTotalPage(id ? 1 : res.page.totalPage || 1); if (id) setDetail(res) } }).catch((e) => { if (active) setError(e.message) }).finally(() => { if (active) setLoading(false) })
+    if (invalid) { setError(invalid); setLoading(false); return }
+    const operation = id ? getOrder(id, user.id) : getOrders({ ...parsed.values, limit: 10 }, user.id)
+    operation.then((res) => { if (active) {
+      const last = id ? 1 : Math.max(1, res.page.totalPage)
+      if (!id && page > last) { redirecting = true; const p = new URLSearchParams(query); p.set('page', String(last)); setParams(p, { replace: true }); return }
+      setOrders(id ? [res.order] : res.page.list); setTotalPage(last); if (id) setDetail(res)
+    } }).catch((e) => { if (active) setError(e.message) }).finally(() => { if (active && !redirecting) setLoading(false) })
     return () => { active = false }
-  }, [id, query, retry, user.id])
+  }, [id, query, retry, user.id, invalid, parsed.values, page, setParams])
   const perform = async () => {
     if (busy || !action) return
     setBusy(true); setError(''); setNotice('')

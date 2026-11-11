@@ -20,7 +20,10 @@ public class MemberOrderController {
         if(expected!=null && !Long.toString(id).equals(expected)) throw new ApiProblem(409,"会员会话已变化，请刷新"); return id;
     }
     @GetMapping
-    public R list(@RequestParam Map<String,Object> params, HttpServletRequest request) {
+    public R list(@RequestParam org.springframework.util.MultiValueMap<String,String> query, HttpServletRequest request) {
+        if(query.containsKey("sidx") || query.containsKey("order")) throw new ApiProblem(400,"订单查询不支持排序参数");
+        Map<String,Object> params=com.atguigu.common.utils.Query.singleParameters(query,"status","orderSn");
+        if(params.containsKey("page") && !String.valueOf(params.get("page")).matches("[1-9][0-9]{0,6}")) throw new ApiProblem(400,"页码不正确");
         return R.ok().put("page", orders.getMemberOrderPage(params, member(request)));
     }
     @GetMapping("/{id}")
