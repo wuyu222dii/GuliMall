@@ -2,6 +2,7 @@ import { consumerQuery } from './consumer.js'
 export const orderStatuses = { 0: '待付款', 1: '已支付', 2: '已发货', 3: '已完成', 4: '已关闭', 5: '无效订单', 6: '创建中，等待库存确认', 7: '关闭中，等待释放确认', 8: '关闭中，等待付款确认', 9: '付款异常，需人工核对' }
 export const canStartNewConfirmation = (status) => Number.isInteger(status) && status >= 0 && status <= 5
 export const paymentSettled = (order) => order?.status === 3 || order?.status === 4 && order.inventoryStatus === 2
+export const paymentQueryCanRetry = (status) => ![400, 401, 403, 404, 409].includes(status)
 export function paymentTarget(action, mode) {
   const url = new URL(action)
   const sandbox = mode === 'ALIPAY_SANDBOX' && url.protocol === 'https:' && ['openapi-sandbox.dl.alipaydev.com', 'openapi.alipaydev.com'].includes(url.hostname) && !url.port

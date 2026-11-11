@@ -1,6 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { paymentTarget, memberRedirect, paymentSettled } from '../gulimall-web/src/utils/payment.js'
+import { paymentTarget, memberRedirect, paymentSettled, paymentQueryCanRetry } from '../gulimall-web/src/utils/payment.js'
+
+test('payment queries stop on invalid identity or missing orders but recover transient and unknown results',()=>{
+  for(const status of [400,401,403,404,409])assert.equal(paymentQueryCanRetry(status),false)
+  for(const status of [undefined,408,429,500,502,503,504])assert.equal(paymentQueryCanRetry(status),true)
+})
 test('payment polling stops only for completed orders or confirmed closed releases', () => {
   assert.equal(paymentSettled({status:3}),true)
   assert.equal(paymentSettled({status:4,inventoryStatus:2}),true)

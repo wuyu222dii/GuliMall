@@ -18,21 +18,24 @@ let starting = []
 try { starting = local().guestItems } catch { /* Refresh presents the stored-data error without replacing it. */ }
 export const useCartStore = create((set, get) => ({
   owner: 'guest', items: starting, loading: false, busy: false, error: '', pendingCount: 0,
-  totalAmount: null, readyToCheckout: false,
+  totalAmount: null, readyToCheckout: false, stale: false, warning: '',
+  // shortcut: uncertain additions stay in this tab's memory; durable recovery needs server request IDs.
+  additionUnknown: null,
   activate: (user) => {
     generation++; flight = null
     const owner = !user ? 'guest' : user.admin ? 'admin' : String(user.id)
-    set({ owner, items: [], loading: false, busy: false, error: '', pendingCount: 0, totalAmount: null, readyToCheckout: false })
+    set({ owner, items: [], loading: false, busy: false, error: '', pendingCount: 0, totalAmount: null, readyToCheckout: false, stale: false, warning: '', additionUnknown: null })
     return get().refresh()
   },
-  refresh: () => {
+  refresh: (readOnly = false) => {
     const owner = get().owner, revision = generation
+    const reconcileOnly = readOnly || !!get().additionUnknown
     if (flight?.owner === owner) return flight.promise
     if (owner === 'admin') {
       set({ items: [], loading: false, error: '请使用会员账号购物，管理员账号不使用会员购物车。', readyToCheckout: false })
       return Promise.resolve(false)
     }
-    set({ loading: true, error: '', readyToCheckout: false })
+    set({ loading: true, error: '', readyToCheckout: false, stale: true })
     const active = () => generation === revision && get().owner === owner
     const promise = (async () => {
       try {
@@ -45,13 +48,13 @@ export const useCartStore = create((set, get) => ({
               return { ...saved, ...result.item.info, count: saved.count, checked: saved.checked !== false, status: reason ? 'UNAVAILABLE' : 'AVAILABLE', message: reason || '可购买' }
             } catch (e) { return { ...saved, price: null, status: e.status === 404 ? 'DELETED' : 'SERVICE_UNAVAILABLE', message: e.message } }
           }))
-          if (active()) { const totals = cartTotals(items); set({ items, totalAmount: totals.totalAmount, readyToCheckout: totals.readyToCheckout }) }
+          if (active()) { const totals = cartTotals(items); set({ items, totalAmount: totals.totalAmount, readyToCheckout: totals.readyToCheckout, stale: false }) }
           return true
         }
-        const first = await api.getCart(owner)
+        let result = await api.getCart(owner)
         if (!active()) return false
-        set({ items: first.cart.items, totalAmount: first.cart.totalAmount, readyToCheckout: false })
-        while (active()) {
+        set({ items: result.cart.items, totalAmount: result.cart.totalAmount, readyToCheckout: false })
+        while (!reconcileOnly && active()) {
           const pending = local()
           if (!pending.pending[owner] && !pending.guestItems.length) break
           const batch = await locked(() => {
@@ -63,14 +66,16 @@ export const useCartStore = create((set, get) => ({
           await api.mergeCart(owner, batch)
           await locked(() => { const latest = local(); acknowledgeGuest(latest, owner, batch.id); saveLocal(latest) }, true)
         }
-        const result = await api.getCart(owner)
-        if (active()) set({ items: result.cart.items, totalAmount: result.cart.totalAmount, readyToCheckout: result.cart.readyToCheckout, pendingCount: 0 })
+        if (!reconcileOnly) result = await api.getCart(owner)
+        if (active()) set({ items: result.cart.items, totalAmount: result.cart.totalAmount, readyToCheckout: result.cart.readyToCheckout, stale: false,
+          pendingCount: (local().pending[owner]?.items || []).reduce((sum, item) => sum + item.count, 0),
+          additionUnknown: get().additionUnknown ? { ...get().additionUnknown, reviewed: true } : null })
         return true
       } catch (e) {
         if (active()) {
           let count = 0
           try { count = (local().pending[owner]?.items || []).reduce((sum, i) => sum + i.count, 0) } catch { /* Keep the original error. */ }
-          set({ error: e.message, readyToCheckout: false, totalAmount: null, pendingCount: count })
+          set({ error: e.message, readyToCheckout: false, totalAmount: null, pendingCount: count, stale: true })
         }
         return false
       } finally {
@@ -80,18 +85,28 @@ export const useCartStore = create((set, get) => ({
     flight = { owner, promise }
     return promise
   },
-  mutate: async (remote, guest) => {
+  acknowledgeAddition: () => {
+    if (!get().additionUnknown?.reviewed || get().loading || get().busy || get().stale) return false
+    set({ additionUnknown: null }); return true
+  },
+  mutate: async (remote, guest, change = {}) => {
     if (get().busy || get().loading) throw new Error('购物车同步中，请稍后重试。')
+    if (get().additionUnknown || get().stale) throw new Error('请先刷新购物车并核对上次结果，再继续操作。')
     const owner = get().owner, revision = generation
     if (owner === 'admin') throw new Error('请使用会员账号购物。')
-    set({ busy: true, error: '', readyToCheckout: false })
+    set({ busy: true, error: '', warning: '', readyToCheckout: false })
     try {
       if (owner === 'guest') await locked(() => { const value = local(); guest(value.guestItems, value); value.guestId = crypto.randomUUID(); saveLocal(value) })
       else await remote(owner)
-      if (revision === generation) await get().refresh()
+      if (revision === generation) return await get().refresh()
     } catch (e) {
-      if (revision === generation) set({ error: e.message, readyToCheckout: false })
-      throw e
+      const addition = owner !== 'guest' && (!e.status || e.status >= 500) ? change.addition : null
+      const message = addition ? '加购结果未知，请先查看购物车核对，勿重复加购。' : change.all ? '全选未全部完成，可能已部分保存，请核对服务端勾选状态。' : e.message
+      if (revision === generation) {
+        set({ error: message, warning: change.all ? message : '', readyToCheckout: false, stale: true, totalAmount: null, ...(addition ? { additionUnknown: { ...addition, reviewed: false } } : {}) })
+        if (change.all) await get().refresh(true)
+      }
+      const failure = new Error(message); failure.status = e.status; throw failure
     } finally { if (revision === generation) set({ busy: false }) }
   },
   addItem: async (sku, count = 1) => {
@@ -100,21 +115,22 @@ export const useCartStore = create((set, get) => ({
       const existing = items.find((i) => i.skuId === sku.skuId)
       if (existing) { validQuantity(existing.count + count); existing.count += count }
       else { if (items.length >= 100) throw new Error('购物车最多保存 100 个 SKU。'); items.push({ skuId: sku.skuId, skuName: sku.skuName || sku.skuTitle, skuDefaultImg: sku.skuDefaultImg, price: sku.price, count, checked: true }) }
-    })
+    }, { addition: { skuId: sku.skuId, count } })
   },
   updateCount: async (skuId, count) => { validQuantity(count); return get().mutate((owner) => api.updateCartCount(owner, skuId, count), (items) => { const item = items.find((i) => i.skuId === skuId); if (item) item.count = count }) },
   setChecked: (skuId, checked) => get().mutate((owner) => api.checkCart(owner, skuId, checked), (items) => { const item = items.find((i) => i.skuId === skuId); if (item) item.checked = checked }),
   setAllChecked: (checked) => {
     const ids = get().items.map(item => item.skuId)
-    return get().mutate(async owner => { for (const id of ids) await api.checkCart(owner, id, checked) }, items => { for (const item of items) item.checked = checked })
+    return get().mutate(async owner => { for (const id of ids) await api.checkCart(owner, id, checked) }, items => { for (const item of items) item.checked = checked }, { all: true })
   },
   removeItem: (skuId) => get().mutate((owner) => api.removeCart(owner, skuId), (items, data) => { data.guestItems = items.filter((i) => i.skuId !== skuId) }),
   clearCart: () => get().mutate(api.clearCart, (_, data) => { data.guestItems = [] }),
   selected: async () => {
     if (get().owner === 'guest' || get().owner === 'admin') throw new Error('请使用会员账号登录后结算。')
+    if (get().additionUnknown) throw new Error('请先核对上次加购结果，再结算。')
     const owner = get().owner
     await get().refresh()
-    if (get().owner !== owner || get().busy || get().error || get().pendingCount) throw new Error('请先刷新购物车并完成访客合并。')
+    if (get().owner !== owner || get().busy || get().error || get().stale || get().additionUnknown || get().pendingCount) throw new Error('请先刷新购物车并完成访客合并。')
     return (await api.getSelected(owner)).cart
   },
 }))
