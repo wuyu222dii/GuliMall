@@ -10,6 +10,12 @@ export function readGuest(raw) {
 export function validQuantity(count) {
   if (!Number.isInteger(count) || count < 1 || count > 999) throw new Error('数量必须为 1–999 的整数。')
 }
+export function readAdditionRequest(raw) {
+  if (raw === null) return null
+  const value = JSON.parse(raw)
+  if (!value || Array.isArray(value) || Object.keys(value).sort().join(',') !== 'count,requestId,skuId' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value.requestId) || !Number.isSafeInteger(value.skuId) || value.skuId < 1) throw new Error('原加购请求记录不正确，请先核对。')
+  validQuantity(value.count); return value
+}
 export function claimGuest(local, owner) {
   if (local.pending[owner]) return local.pending[owner]
   if (!local.guestItems.length) return null

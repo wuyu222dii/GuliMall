@@ -7,12 +7,13 @@ import useUnsavedForm from '../hooks/useUnsavedForm'
 
 export default function Cart() {
   const navigate = useNavigate()
-  const { owner, items, loading, busy, error, warning, stale, additionUnknown, acknowledgeAddition, pendingCount, totalAmount, readyToCheckout, refresh, updateCount, setChecked, setAllChecked, removeItem, clearCart, selected } = useCartStore()
+  const { owner, items, loading, busy, error, warning, stale, additionUnknown, acknowledgeAddition, retryAddition, pendingCount, totalAmount, readyToCheckout, refresh, updateCount, setChecked, setAllChecked, removeItem, clearCart, selected } = useCartStore()
   const [checking, setChecking] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
   const [quantities, setQuantities] = useState({}), [clearOpen, setClearOpen] = useState(false)
+  const [endingAddition, setEndingAddition] = useState(false)
   useEffect(() => { refresh() }, [owner, refresh])
-  useEffect(() => { setQuantities({}); setClearOpen(false) }, [owner])
+  useEffect(() => { setQuantities({}); setClearOpen(false); setEndingAddition(false) }, [owner])
   const act = (action) => { setCheckoutError(''); action().catch((e) => setCheckoutError(e.message)) }
   const draft = item => quantities[item.skuId] !== undefined && quantities[item.skuId] !== String(item.count)
   const hasDraft = items.some(draft), allChecked = items.length > 0 && items.every(item => item.checked !== false)
@@ -36,7 +37,7 @@ export default function Cart() {
     {(error || checkoutError) && <p className="error-msg" role="alert">{error || checkoutError} 界面保留已有条目，服务端结果请刷新核对。</p>}
     {warning && <p className="error-msg" role="status">{warning} {loading ? '正在只读核对。' : stale ? '读取未确认，当前条目为旧数据。' : '已重新读取当前结果。'}</p>}
     {stale && !loading && !!items.length && <p role="status">当前显示上次读取的旧数据，价格、勾选和数量尚未重新确认，请刷新后操作。</p>}
-    {additionUnknown && <section className="card" aria-label="加购结果核对"><p role="status">SKU {additionUnknown.skuId} 增加 {additionUnknown.count} 件的加购结果未知。请核对当前购物车；不会自动重发增量，也不会撤销已保存商品。</p><button className="btn btn-outline" disabled={waiting || stale || !additionUnknown.reviewed} onClick={acknowledgeAddition}>已核对加购结果，继续购买</button></section>}
+    {additionUnknown && <section className="card" aria-label="加购结果核对"><p role="status">{additionUnknown.recordError || `SKU ${additionUnknown.skuId} 增加 ${additionUnknown.count} 件的原加购请求。`}{additionUnknown.executed === true ? '服务端已执行过一次；当前条目可能已被修改、删除或下单，旧请求不会恢复商品。' : '请查询或重试原请求，不会自动重发增量或更换请求号。'}</p><div className="admin-actions"><button className="btn btn-outline" disabled={waiting} onClick={() => act(() => refresh(true))}>查询原加购结果</button>{additionUnknown.requestId && additionUnknown.executed !== true && <button className="btn btn-outline" disabled={waiting} onClick={() => guard.request(() => act(retryAddition))}>重试原加购请求</button>}<button className="btn btn-outline" disabled={waiting || stale || !additionUnknown.reviewed} onClick={() => { if (additionUnknown.executed === true) acknowledgeAddition(); else setEndingAddition(true) }}>已核对加购结果，继续购买</button>{(additionUnknown.executed !== true || stale || error) && <button className="btn btn-outline" disabled={waiting} onClick={() => setEndingAddition(true)}>结束本地加购记录</button>}</div>{endingAddition && <div className="admin-confirm" role="alert"><p>尚未确认原请求执行结果。结束本地记录不能撤销迟到请求；建议先重试同一请求。确认结束后，下次加购将是新请求。</p><button className="btn btn-outline" disabled={waiting} onClick={() => { if (acknowledgeAddition(true)) setEndingAddition(false) }}>确认结束原加购请求</button><button className="btn btn-outline" disabled={waiting} onClick={() => setEndingAddition(false)}>保留原加购请求</button></div>}</section>}
     {hasDraft && <p role="status">数量有修改，请先更新数量，或刷新购物车恢复服务端结果，再结算。</p>}
     {loading && <p role="status">正在刷新价格、可售状态和购物车…</p>}
     {busy && !loading && <p role="status">正在保存购物车修改，请勿重复操作…</p>}

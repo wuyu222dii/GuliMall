@@ -71,7 +71,7 @@ export default function ProductDetail() {
           <div className="detail-price-box">价格 <span className="price">{sku.price == null ? '暂不可用' : `¥${Number(sku.price).toFixed(2)}`}</span></div>
           <p className="detail-stock" role="status">{unavailable || '有货，可购买'}</p>
           {(unavailable || purchaseError || cartStale) && <button className="btn btn-outline" disabled={busy} onClick={() => { setRetry(retry + 1); if (cartStale && !additionUnknown) useCartStore.getState().refresh() }}>刷新可售状态</button>}
-          {additionUnknown && <section className="card" aria-label="加购结果核对"><p role="status">SKU {additionUnknown.skuId} 增加 {additionUnknown.count} 件的加购结果未知。请先查看购物车核对，刷新可售状态不会重发或结束原加购。</p><Link className="btn btn-outline" to="/cart">核对加购结果</Link></section>}
+          {additionUnknown && <section className="card" aria-label="加购结果核对"><p role="status">{additionUnknown.recordError || `SKU ${additionUnknown.skuId} 增加 ${additionUnknown.count} 件的原加购请求待核对。`}请先查看购物车查询或重试原请求，刷新可售状态不会重发或结束原加购。</p><Link className="btn btn-outline" to="/cart">核对加购结果</Link></section>}
           <fieldset className="sku-choices"><legend>选择规格</legend>
             {(item.variants || []).map((variant) => {
               const attrs = (item.saleAttr || []).flatMap((attr) => (attr.attrValues || []).filter((v) => String(v.skuIds).split(',').includes(String(variant.skuId))).map((v) => `${attr.attrName}: ${v.attrValue}`))

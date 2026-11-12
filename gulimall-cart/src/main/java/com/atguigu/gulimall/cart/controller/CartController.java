@@ -19,6 +19,7 @@ public class CartController {
     @GetMapping public R list(HttpServletRequest request) { return R.ok().put("cart",cart.view(member(request),false)); }
     @GetMapping("/selected") public R selected(HttpServletRequest request) { return R.ok().put("cart",cart.view(member(request),true)); }
     @PostMapping("/items") public R add(@RequestBody CartInput item,HttpServletRequest request) { cart.add(member(request),item); return R.ok(); }
+    @GetMapping("/items/requests/{requestId}") public R addition(@PathVariable String requestId,HttpServletRequest request) { return R.ok(cart.addition(member(request),requestId)); }
     @PutMapping("/items/count") public R count(@RequestBody CartInput item,HttpServletRequest request) { cart.count(member(request),item); return R.ok(); }
     @PutMapping("/items/checked") public R checked(@RequestBody CartInput item,HttpServletRequest request) { cart.check(member(request),item); return R.ok(); }
     @DeleteMapping("/items/{skuId}") public R remove(@PathVariable Long skuId,HttpServletRequest request) { cart.remove(member(request),skuId); return R.ok(); }

@@ -6,4 +6,6 @@ public class CartInput {
     private Integer count;
     private Boolean checked;
     private String revision;
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    private String requestId;
 }

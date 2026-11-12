@@ -27,6 +27,7 @@ public class CartService {
     private final DefaultRedisScript<Long> mutate = script("mutate");
     private final DefaultRedisScript<Long> merge = script("merge");
     private final DefaultRedisScript<Long> ordered = script("ordered");
+    private final DefaultRedisScript<Long> addition = script("addition");
     private static DefaultRedisScript<Long> script(String name) {
         DefaultRedisScript<Long> result = new DefaultRedisScript<>(); result.setLocation(new ClassPathResource("cart/"+name+".lua")); result.setResultType(Long.class); return result;
     }
@@ -45,14 +46,56 @@ public class CartService {
         if (result == -3) throw new ApiProblem(409,"同一合并编号不能对应不同的访客购物车");
         if (result == -4) throw new ApiProblem(409,"此会员的合并记录已达到上限，请联系管理员；本地购物车仍保留");
         if (result == -5) throw new ApiProblem(404,"购物车中没有此 SKU，请刷新");
+        if (result == -7) throw new ApiProblem(409,"同一加购请求不能修改 SKU 或增量数量，请查询原请求");
+        if (result == -8) throw new ApiProblem(409,"此会员的加购回执已达到10000条上限，新加购未执行；原请求仍可查询和重放");
         if (result < 0) throw new ApiProblem(400,"购物车操作不正确");
         return result;
     }
     public void add(long memberId, CartInput item) {
         validate(item,true);
+        String requestId=item.getRequestId(),digest=null;
+        if(requestId!=null) {
+            validateAdditionId(requestId); digest=additionDigest(item);
+            Map<String,Object> receipt=additionReceipt(memberId,requestId);
+            if(receipt!=null) { replayAddition(receipt,digest); return; }
+        }
         CartView fresh = enrich(Collections.singletonList(item));
         reject(fresh.getItems().get(0));
-        execute(mutate,Collections.singletonList(key(memberId)),"add",item.getSkuId().toString(),item.getCount().toString());
+        if(requestId==null) execute(mutate,Collections.singletonList(key(memberId)),"add",item.getSkuId().toString(),item.getCount().toString());
+        else execute(addition,Arrays.asList(key(memberId),additionKey(memberId)),requestId,digest,item.getSkuId().toString(),item.getCount().toString());
+    }
+    private String additionKey(long memberId) { key(memberId); return "gulimall:cart:{"+memberId+"}:adds"; }
+    private static void validateAdditionId(String value) {
+        if(value==null || !value.matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}")) throw new ApiProblem(400,"加购请求标识须为小写UUID");
+    }
+    static String additionDigest(CartInput item) { return sha256(JSON.toJSONString(Arrays.asList(item.getSkuId().toString(),item.getCount()))); }
+    private static String sha256(String payload) {
+        try {
+            byte[] hash=MessageDigest.getInstance("SHA-256").digest(payload.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex=new StringBuilder(); for(byte value:hash) hex.append(String.format("%02x",value&255)); return hex.toString();
+        } catch(java.security.NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
+    }
+    private Map<String,Object> additionReceipt(long memberId,String requestId) {
+        Object raw;
+        try { raw=redis.opsForHash().get(additionKey(memberId),requestId); }
+        catch(DataAccessException unavailable) { throw new ApiProblem(503,"加购回执暂不可用，请保留原请求并重试查询"); }
+        if(raw==null) return null;
+        try {
+            Map<String,Object> value=JSON.parseObject(raw.toString());
+            if(value.size()!=3 || !(value.get("hash") instanceof String) || !((String)value.get("hash")).matches("[a-f0-9]{64}")
+                    || !(value.get("skuId") instanceof String) || !((String)value.get("skuId")).matches("[1-9][0-9]*") || Long.parseLong((String)value.get("skuId"))<1
+                    || !(value.get("count") instanceof Integer) || (Integer)value.get("count")<1 || (Integer)value.get("count")>999) throw new IllegalStateException("Invalid addition receipt");
+            return value;
+        } catch(RuntimeException malformed) { throw new ApiProblem(503,"加购回执无法读取，请保留原请求并联系管理员，不能另建请求替代"); }
+    }
+    private void replayAddition(Map<String,Object> receipt,String digest) {
+        if(!digest.equals(receipt.get("hash"))) throw new ApiProblem(409,"同一加购请求不能修改 SKU 或增量数量，请查询原请求");
+    }
+    public Map<String,Object> addition(long memberId,String requestId) {
+        validateAdditionId(requestId); Map<String,Object> receipt=additionReceipt(memberId,requestId),result=new LinkedHashMap<>();
+        result.put("executed",receipt!=null);
+        if(receipt!=null) { result.put("skuId",Long.valueOf((String)receipt.get("skuId"))); result.put("count",receipt.get("count")); }
+        return result;
     }
     public void count(long memberId, CartInput item) { validate(item,true); execute(mutate,Collections.singletonList(key(memberId)),"count",item.getSkuId().toString(),item.getCount().toString()); }
     public void check(long memberId, CartInput item) { validate(item,false); if (item.getChecked() == null) throw new ApiProblem(400,"勾选状态不能为空"); execute(mutate,Collections.singletonList(key(memberId)),"check",item.getSkuId().toString(),item.getChecked().toString()); }
@@ -76,11 +119,7 @@ public class CartService {
         List<Map<String,Object>> lines = normalize(request).stream().map(item -> {
             Map<String,Object> value = new LinkedHashMap<>(); value.put("skuId",item.getSkuId().toString()); value.put("count",item.getCount()); value.put("checked",item.getChecked()); return value;
         }).collect(Collectors.toList());
-        String payload = JSON.toJSONString(lines), digest;
-        try {
-            byte[] hash = MessageDigest.getInstance("SHA-256").digest(payload.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hex = new StringBuilder(); for (byte value : hash) hex.append(String.format("%02x", value & 255)); digest=hex.toString();
-        } catch (java.security.NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
+        String payload = JSON.toJSONString(lines), digest=sha256(payload);
         // Receipts outlive cart clearing, so a delayed retry never restores intentionally removed items.
         return execute(merge,Arrays.asList(key(memberId),"gulimall:cart:{"+memberId+"}:merges"),request.getMergeId().toLowerCase(Locale.ROOT),digest,payload) == 0;
     }
