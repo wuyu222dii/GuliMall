@@ -13,7 +13,7 @@ function Invoke-MigrationSql([string]$Sql,[switch]$Reject) {
         $code=$LASTEXITCODE
     } finally { $ErrorActionPreference=$previousPreference }
     if($Reject){if($code -eq 0){throw 'Invalid duplicate migration was accepted'};return ($output -join "`n")}
-    if($code -ne 0){throw 'Isolated migration SQL failed'}
+    if($code -ne 0){throw ('Isolated migration SQL failed: '+($output -join "`n"))}
     return ($output -join "`n")
 }
 try {
@@ -47,6 +47,39 @@ try {
     $null=Invoke-MigrationSql "USE gulimall_wms_demo; UPDATE wms_purchase_detail SET deleted=1 WHERE id=2; INSERT INTO wms_purchase_detail(id,sku_num,creation_request_id) VALUES(4,3,'$key');" -Reject
     if((Invoke-MigrationSql "SELECT COUNT(*) FROM gulimall_wms_demo.wms_purchase_detail WHERE creation_request_id='$key';") -ne '1'){throw 'Deleted demand lost its unique request reservation'}
     Write-Output 'PASS: product/demand additive migrations twice, old fields, duplicate prechecks, unique constraints including deleted demand.'
+    $null=Invoke-MigrationSql "CREATE USER 'gulimall'@'%' ACCOUNT LOCK; CREATE DATABASE gulimall_pms_test CHARACTER SET utf8mb4;"
+    $fullSql=[IO.File]::ReadAllText((Join-Path $migrationRoot 'infra/mysql/001-schema.sql')) -replace 'gulimall_(pms|sms|ums|oms|wms)_demo','gulimall_$1_test'
+    $null=Invoke-MigrationSql $fullSql
+    & node (Join-Path $migrationRoot 'scripts/schema-version.mjs') $migrationId test 2
+    if($LASTEXITCODE -ne 0){throw 'Empty 72-table Test schema did not match structure version 2'}
+    # Construct a legacy fixture only in this newly owned, portless MySQL instance.
+    $null=Invoke-MigrationSql 'DROP TABLE gulimall_ums_test.ums_address_creation_receipt; ALTER TABLE gulimall_wms_test.wms_ware_info DROP INDEX uk_ware_creation_request,DROP COLUMN creation_request_id,DROP COLUMN creation_request_hash;'
+    & node (Join-Path $migrationRoot 'scripts/schema-version.mjs') $migrationId test 1
+    if($LASTEXITCODE -ne 0){throw 'Legacy 71-table Test fixture did not match structure version 1'}
+    $null=Invoke-MigrationSql "INSERT INTO gulimall_wms_test.wms_ware_info(id,name,address,areacode) VALUES(1,'迁移前仓库','保留的旧资料','100'); INSERT INTO gulimall_ums_test.ums_member_receive_address(id,member_id,name,phone,province,detail_address,default_status) VALUES(1,1,'旧地址','13800000001','旧省份','不进入回执的正文',1);"
+    $wareFields='SELECT id,HEX(name),HEX(address),HEX(areacode) FROM gulimall_wms_test.wms_ware_info ORDER BY id;'
+    $addressFields='SELECT id,member_id,HEX(name),HEX(phone),HEX(post_code),HEX(province),HEX(city),HEX(region),HEX(detail_address),HEX(areacode),default_status FROM gulimall_ums_test.ums_member_receive_address ORDER BY id;'
+    $wareBefore=Invoke-MigrationSql $wareFields;$addressesBefore=Invoke-MigrationSql $addressFields
+    $creationSql=[IO.File]::ReadAllText((Join-Path $migrationRoot 'infra/migrations/008-address-warehouse-creation.sql')) -replace 'gulimall_(ums|wms)_demo','gulimall_$1_test'
+    $null=Invoke-MigrationSql $creationSql;$null=Invoke-MigrationSql $creationSql
+    if((Invoke-MigrationSql $wareFields) -cne $wareBefore -or (Invoke-MigrationSql $addressFields) -cne $addressesBefore){throw 'Creation receipt migration changed old warehouse or address fields'}
+    & node (Join-Path $migrationRoot 'scripts/schema-version.mjs') $migrationId test 2
+    if($LASTEXITCODE -ne 0){throw 'Migrated Test schema did not match the exact receipt structure'}
+    $null=Invoke-MigrationSql "UPDATE gulimall_wms_test.wms_ware_info SET creation_request_id='$key',creation_request_hash=REPEAT('a',64) WHERE id=1; INSERT INTO gulimall_ums_test.ums_address_creation_receipt VALUES(1,'$key',REPEAT('a',64),1),(2,'$key',REPEAT('b',64),2); DELETE FROM gulimall_ums_test.ums_member_receive_address WHERE id=1;"
+    if((Invoke-MigrationSql "INSERT INTO gulimall_ums_test.ums_address_creation_receipt VALUES(1,'$key',REPEAT('a',64),3);" -Reject) -notmatch 'Duplicate entry'){throw 'Member/request receipt uniqueness was not enforced'}
+    if((Invoke-MigrationSql "SELECT COUNT(*) FROM gulimall_ums_test.ums_address_creation_receipt WHERE member_id=1 AND creation_request_id='$key';") -ne '1'){throw 'Physical address deletion lost its receipt'}
+    if((Invoke-MigrationSql "INSERT INTO gulimall_wms_test.wms_ware_info(id,name,creation_request_id,creation_request_hash) VALUES(2,'重复请求','$key',REPEAT('a',64));" -Reject) -notmatch 'Duplicate entry'){throw 'Warehouse request uniqueness was not enforced'}
+    $null=Invoke-MigrationSql "ALTER TABLE gulimall_wms_test.wms_ware_info DROP INDEX uk_ware_creation_request; INSERT INTO gulimall_wms_test.wms_ware_info(id,name,creation_request_id,creation_request_hash) VALUES(3,'预检冲突','$key',REPEAT('b',64));"
+    if((Invoke-MigrationSql $creationSql -Reject) -notmatch 'Duplicate warehouse creation requests'){throw 'Warehouse migration did not stop at duplicate metadata'}
+    $null=Invoke-MigrationSql 'DELETE FROM gulimall_wms_test.wms_ware_info WHERE id=3;'
+    $null=Invoke-MigrationSql $creationSql
+    $null=Invoke-MigrationSql 'ALTER TABLE gulimall_ums_test.ums_address_creation_receipt ADD COLUMN address_body TEXT;'
+    if((Invoke-MigrationSql $creationSql -Reject) -notmatch 'Unexpected address receipt structure'){throw 'Unexpected receipt body column was silently accepted'}
+    $null=Invoke-MigrationSql 'ALTER TABLE gulimall_ums_test.ums_address_creation_receipt DROP COLUMN address_body;'
+    $null=Invoke-MigrationSql $creationSql
+    & node (Join-Path $migrationRoot 'scripts/schema-version.mjs') $migrationId test 2
+    if($LASTEXITCODE -ne 0){throw 'Final Test receipt structure was not valid'}
+    Write-Output 'PASS: 008 empty schema, legacy 71 to 72 migration twice, original fields, physical deletion receipts, member/request and warehouse uniqueness, duplicate prechecks and foreign structure rejection.'
 } finally {
     try {
         if($migrationId -and $migrationId -match '^[a-f0-9]{64}$'){

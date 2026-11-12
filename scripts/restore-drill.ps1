@@ -5,6 +5,8 @@ if($env:GULIMALL_TEST -ne '1' -or $env:COMPOSE_PROJECT_NAME -ne 'gulimall-test')
 $Backup=(Resolve-Path -LiteralPath $Backup).Path
 $taskManifest=Get-Content -LiteralPath (Join-Path $Backup 'manifest.json') -Raw | ConvertFrom-Json
 if($taskManifest.format -ne 1 -or $taskManifest.environment -ne 'Test' -or @($taskManifest.schemas | Where-Object {$_ -notmatch '^gulimall_(pms|sms|ums|oms|wms)_test$'}).Count){throw 'Only verified test backups can be rehearsed automatically'}
+$taskStructureVersion=& node --input-type=module -e "import {pathToFileURL} from 'node:url';import {readFileSync} from 'node:fs';const {backupStructureVersion}=await import(pathToFileURL(process.argv[1]).href);console.log(backupStructureVersion(JSON.parse(readFileSync(process.argv[2],'utf8'))));" (Join-Path $taskRoot 'scripts/schema-version.mjs') (Join-Path $Backup 'manifest.json')
+if($LASTEXITCODE -ne 0){throw 'Test backup structure version is not supported'}
 foreach($taskFile in $taskManifest.files){$taskPath=[IO.Path]::GetFullPath((Join-Path $Backup $taskFile.path));if(-not $taskPath.StartsWith($Backup+[IO.Path]::DirectorySeparatorChar) -or (Get-FileHash -LiteralPath $taskPath -Algorithm SHA256).Hash -ne $taskFile.sha256){throw 'Backup path or checksum failed; nothing restored'}}
 foreach($taskPort in @(3317,6390)){if(Get-NetTCPConnection -LocalPort $taskPort -State Listen -ErrorAction SilentlyContinue){throw "Restore port $taskPort is in use"}}
 $taskOriginal=@{};Get-ChildItem Env: | ForEach-Object {$taskOriginal[$_.Name]=$_.Value}
@@ -25,10 +27,16 @@ try {
     Docker-Checked -Arguments @('cp',(Join-Path $Backup 'database.sql'),($taskMysql+':/tmp/restore.sql'))
     Docker-Checked -Arguments @('exec',$taskMysql,'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot --default-character-set=utf8mb4 < /tmp/restore.sql')
     foreach($taskSchema in $taskManifest.schemas){$taskGrant="GRANT ALL PRIVILEGES ON ``$taskSchema``.* TO 'gulimall'@'%';";$taskGrant | & docker exec -i $taskMysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot';if($LASTEXITCODE -ne 0){throw 'Restore user grant failed'}}
+    & node "$PSScriptRoot/schema-version.mjs" $taskMysql test $taskStructureVersion
+    if($LASTEXITCODE -ne 0){throw 'Imported Test structure differs from its backup version'}
     [IO.File]::ReadAllText((Join-Path $taskRoot 'infra/migrations/006-product-creation.sql')).Replace('gulimall_pms_demo','gulimall_pms_test') | & docker exec -i $taskMysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
     if($LASTEXITCODE -ne 0){throw 'Restored product migration failed'}
     [IO.File]::ReadAllText((Join-Path $taskRoot 'infra/migrations/007-procurement-creation.sql')).Replace('gulimall_wms_demo','gulimall_wms_test') | & docker exec -i $taskMysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
     if($LASTEXITCODE -ne 0){throw 'Restored Test migration failed before service startup'}
+    [IO.File]::ReadAllText((Join-Path $taskRoot 'infra/migrations/008-address-warehouse-creation.sql')) -replace 'gulimall_(ums|wms)_demo','gulimall_$1_test' | & docker exec -i $taskMysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
+    if($LASTEXITCODE -ne 0){throw 'Restored Test receipt migration failed before service startup'}
+    & node "$PSScriptRoot/schema-version.mjs" $taskMysql test 2
+    if($LASTEXITCODE -ne 0){throw 'Restored Test receipt structure is invalid'}
     Docker-Checked -Arguments @('create','--name',$taskRedis,'-p','127.0.0.1:6390:6379','-e','REDIS_PASSWORD','-e','REDISCLI_AUTH','-v',($taskRedis+':/data'),'redis:6.2.16-alpine','sh','-c','exec redis-server --appendonly no --requirepass "$REDIS_PASSWORD"')
     Docker-Checked -Arguments @('cp',(Join-Path $Backup 'redis.rdb'),($taskRedis+':/data/dump.rdb'))
     Docker-Checked -Arguments @('start',$taskRedis)

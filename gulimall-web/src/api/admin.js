@@ -15,6 +15,7 @@ export const uploadImage = (file) => {
 export const warehouses = (params = { page: 1, limit: 20 }) => request.get('/api/admin/ware/wareinfo/list', { params })
 export const getWarehouseInfo = (id) => request.get(`/api/admin/ware/wareinfo/info/${id}`)
 export const saveWarehouse = (data) => request.post('/api/admin/ware/wareinfo/save', data)
+export const findWarehouseCreation = (requestId) => request.get(`/api/admin/ware/wareinfo/creation/${requestId}`)
 export const updateWarehouse = (data) => request.post('/api/admin/ware/wareinfo/update', data)
 export const listDemands = (params) => request.get('/api/admin/ware/purchasedetail/list', { params })
 export const saveDemand = (data) => request.post(`/api/admin/ware/purchasedetail/${data.id ? 'update' : 'save'}`, data)

@@ -69,11 +69,11 @@ function MemberRoute() {
   const { pathname, search } = useLocation()
   if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(pathname + search)}`} replace />
   if (user.admin) return <Navigate to="/admin" replace />
-  return <Outlet />
+  return <Outlet key={user.id} />
 }
 
 function AdminRoute() {
   const user = useAuthStore((s) => s.user)
   const { pathname, search } = useLocation()
-  return user?.admin ? <Outlet /> : <Navigate to={`/admin/login?redirect=${encodeURIComponent(pathname + search)}`} replace />
+  return user?.admin ? <Outlet key={user.username} /> : <Navigate to={`/admin/login?redirect=${encodeURIComponent(pathname + search)}`} replace />
 }

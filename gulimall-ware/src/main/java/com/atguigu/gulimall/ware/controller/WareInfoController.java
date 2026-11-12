@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.atguigu.gulimall.ware.entity.WareInfoEntity;
 import com.atguigu.gulimall.ware.service.WareInfoService;
+import com.atguigu.gulimall.ware.service.WarehouseCreationService;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.R;
 
@@ -29,6 +31,7 @@ import com.atguigu.common.utils.R;
 public class WareInfoController {
     @Autowired
     private WareInfoService wareInfoService;
+    @Autowired private WarehouseCreationService creation;
 
     /**
      * List
@@ -61,8 +64,11 @@ public class WareInfoController {
     @RequestMapping("/save")
     //@RequiresPermissions("ware:wareinfo:save")
     public R save(@RequestBody WareInfoEntity wareInfo){
-        WareInfoEntity value=validated(wareInfo);wareInfoService.save(value);
-        return R.ok().put("id",value.getId());
+        return R.ok().put("id",creation.save(wareInfo));
+    }
+    @GetMapping("/creation/{requestId}")
+    public R creation(@PathVariable String requestId){
+        return R.ok(creation.creation(requestId));
     }
 
     /**
@@ -73,13 +79,9 @@ public class WareInfoController {
     public R update(@RequestBody WareInfoEntity wareInfo){
         if(wareInfo==null || wareInfo.getId()==null || wareInfo.getId()<1) throw new com.atguigu.common.security.ApiProblem(400,"请选择仓库");
         if(wareInfoService.getById(wareInfo.getId())==null) throw new com.atguigu.common.security.ApiProblem(404,"仓库不存在");
-        WareInfoEntity value=validated(wareInfo);value.setId(wareInfo.getId());wareInfoService.updateById(value);
+        WareInfoEntity value=WarehouseCreationService.validated(wareInfo);value.setId(wareInfo.getId());wareInfoService.updateById(value);
 
         return R.ok();
-    }
-    private WareInfoEntity validated(WareInfoEntity input) {
-        if(input==null || input.getName()==null || input.getName().trim().isEmpty() || input.getName().length()>100 || input.getAddress()==null || input.getAddress().trim().isEmpty() || input.getAddress().length()>255 || input.getAreacode()!=null && input.getAreacode().length()>20) throw new com.atguigu.common.security.ApiProblem(400,"仓库名称、地址或区域编码不正确");
-        WareInfoEntity value=new WareInfoEntity();value.setName(input.getName().trim());value.setAddress(input.getAddress().trim());value.setAreacode(input.getAreacode()==null?"":input.getAreacode().trim());return value;
     }
 
     /**

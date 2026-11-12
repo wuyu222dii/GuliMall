@@ -475,6 +475,14 @@ CREATE TABLE `ums_member_receive_address` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 
+CREATE TABLE `ums_address_creation_receipt` (
+  `member_id` BIGINT NOT NULL,
+  `creation_request_id` CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `creation_request_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `address_id` BIGINT NOT NULL,
+  PRIMARY KEY (`member_id`, `creation_request_id`)
+) ENGINE=InnoDB;
+
 CREATE TABLE `ums_member_statistics_info` (
   `id` BIGINT NOT NULL AUTO_INCREMENT,
   `member_id` BIGINT,
@@ -913,7 +921,10 @@ CREATE TABLE `wms_ware_info` (
   `name` VARCHAR(255),
   `address` VARCHAR(255),
   `areacode` VARCHAR(255),
-  PRIMARY KEY (`id`)
+  `creation_request_id` CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
+  `creation_request_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ware_creation_request` (`creation_request_id`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `wms_ware_order_task_detail` (

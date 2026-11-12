@@ -1,5 +1,7 @@
 # 本地开发与运行验收
 
+阶段40结构补充：空库基线为72表，旧71表数据库必须先冷备份、暂停业务，再执行 `infra/migrations/008-address-warehouse-creation.sql`，随后用 `node scripts/schema-version.mjs gulimall-demo-mysql-1 demo 2` 核对。不要在已有库重跑空库初始化。008可重复执行，遇到重复请求标识或不兼容结构明确停止，不删除或合并记录；历史地址及仓库不补造回执。Test启动和恢复副本在启动业务前自动迁移，Demo日常启动不会代替这项人工升级。恢复版本约定见 [DEMO-RESTORE.md](DEMO-RESTORE.md)，本机迁移证据见 [阶段40](STAGE40.md)。
+
 阶段 0–17 本地验收已通过，真实第三方继续后置。日常演示统一使用 `./scripts/simulation.ps1 Start|Stop|Status|Diagnose`，浏览器 8080，持久模拟支付网关 18170；准备好构建产物后无需手工替换支付配置，见 [SIMULATION.md](SIMULATION.md)。独立测试与备份恢复见 [RUNBOOK.md](RUNBOOK.md)，中文交接见 [DEMO-HANDOFF.md](DEMO-HANDOFF.md)。下单见 [ORDERS.md](ORDERS.md)，支付与消息边界见 [PAYMENTS.md](PAYMENTS.md)，履约见 [FULFILLMENT.md](FULFILLMENT.md)，整体进度见 [implementation-plan.md](implementation-plan.md)。
 
 ## 工具与配置

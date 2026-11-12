@@ -4,6 +4,7 @@ import {join,resolve,relative,sep} from 'node:path'
 import {randomUUID,createHash} from 'node:crypto'
 import {assertRestoreEnvironment,restoreSql,docker} from './demo-restore-guard.mjs'
 import {moneyCents} from './backup-audit.mjs'
+import {inspectDatabaseStructure} from './schema-version.mjs'
 const ctx=assertRestoreEnvironment(process.env.GULIMALL_DEMO_RESTORE_CONTEXT,{allowStoppedBroker:process.argv[2]==='checkpoint'}),sql=q=>restoreSql(ctx,q),file=name=>join(ctx.source,'.tools',name),read=path=>JSON.parse(readFileSync(path,'utf8')),save=(name,value)=>writeFileSync(file(name),JSON.stringify(value,null,2)+'\n')
 const ledger=()=>read(join(ctx.source,'.data/simulation/payment/trades.json'))
 const until=async(fn)=>{for(let n=0;n<90;n++){if(await fn())return;await new Promise(r=>setTimeout(r,1000))}throw new Error('Restored business result did not confirm')}
@@ -11,10 +12,11 @@ const orders=()=>JSON.parse(sql("SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id',
 const stocks=()=>JSON.parse(sql("SELECT JSON_ARRAYAGG(JSON_OBJECT('id',id,'sku',sku_id,'ware',ware_id,'stock',stock,'locked',stock_locked)) FROM gulimall_wms_demo.wms_ware_sku;"))
 const details=()=>JSON.parse(sql("SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id',id,'sku',sku_id,'ware',ware_id,'count',sku_num,'state',lock_status)),JSON_ARRAY()) FROM gulimall_wms_demo.wms_ware_order_task_detail;"))
 function capture(){
+ const structure=inspectDatabaseStructure(sql,'demo',2)
  assert.equal(sql('SELECT @@global.event_scheduler;'),'OFF')
  assert.equal(sql('SELECT COUNT(*) FROM gulimall_wms_demo.wms_ware_sku WHERE stock<0 OR stock_locked<0 OR stock_locked>stock;'),'0')
  assert.equal(sql('SELECT COUNT(*) FROM gulimall_oms_demo.oms_order o JOIN (SELECT order_id,SUM(real_amount) amount FROM gulimall_oms_demo.oms_order_item GROUP BY order_id) i ON i.order_id=o.id WHERE i.amount+COALESCE(o.freight_amount,0)<>o.pay_amount;'),'0')
- const result={orders:orders(),stocks:stocks(),details:details(),trades:ledger().trades.map(t=>({sn:t.orderSn,state:t.state,amount:t.amount,tradeNo:t.tradeNo,paidAt:t.paidAt})),fingerprint:ledger().publicKeyFingerprint,tables:Number(sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema IN ('gulimall_pms_demo','gulimall_sms_demo','gulimall_ums_demo','gulimall_oms_demo','gulimall_wms_demo');"))}
+ const result={orders:orders(),stocks:stocks(),details:details(),trades:ledger().trades.map(t=>({sn:t.orderSn,state:t.state,amount:t.amount,tradeNo:t.tradeNo,paidAt:t.paidAt})),fingerprint:ledger().publicKeyFingerprint,tables:structure.tables,structureVersion:structure.structureVersion}
  for(const trade of result.trades){const order=result.orders.find(o=>o.sn===trade.sn);assert(order,'Restored ledger has no matching order');assert.equal(moneyCents(order.amount),moneyCents(trade.amount))}
  return result
 }
@@ -22,7 +24,7 @@ function originalIntact(){
  const original=read(file('original-state.json')),current=capture()
  for(const order of original.orders){const found=current.orders.find(o=>o.sn===order.sn);assert(found);assert.equal(found.snapshot,order.snapshot,'Original text/address snapshot changed');assert.equal(moneyCents(found.amount),moneyCents(order.amount));if([3,4].includes(order.status)&&[1,2].includes(order.inventory)){assert.equal(found.status,order.status);assert.equal(found.inventory,order.inventory)}}
  for(const stock of original.stocks){const expected={...stock};for(const detail of original.details.filter(d=>d.sku===stock.sku&&d.ware===stock.ware)){const next=current.details.find(d=>d.id===detail.id);assert(next,'Original stock detail disappeared');if(detail.state===1&&[2,3].includes(next.state)){expected.locked-=detail.count;if(next.state===3)expected.stock-=detail.count}else assert.equal(next.state,detail.state)}assert.deepEqual(current.stocks.find(s=>s.id===stock.id),expected,'Original inventory differs from its legitimate work-order transitions')}
- assert.equal(current.fingerprint,original.fingerprint);assert.equal(current.tables,original.tables)
+ assert.equal(current.fingerprint,original.fingerprint);assert.equal(current.tables,original.tables);assert.equal(current.structureVersion,original.structureVersion)
  for(const trade of original.trades){const found=current.trades.find(t=>t.sn===trade.sn);assert(found);assert.equal(found.tradeNo,trade.tradeNo);if(['TRADE_SUCCESS','TRADE_FINISHED','TRADE_CLOSED'].includes(trade.state))assert.deepEqual(found,trade)}
  return {orders:original.orders.length,inventoryRows:original.stocks.length,trades:original.trades.length,tables:original.tables}
 }
@@ -64,7 +66,8 @@ if(action==='snapshot'){
  assert.equal(sql(`SELECT COUNT(*) FROM gulimall_oms_demo.oms_trade_event WHERE order_sn='${fixture.pending}' AND event_type='STOCK_RELEASE' AND consumed_at IS NULL;`),'1')
  const walk=dir=>readdirSync(dir,{withFileTypes:true}).flatMap(d=>d.isDirectory()?walk(join(dir,d.name)):[join(dir,d.name)])
  const files=walk(checkpoint).map(path=>({path:relative(checkpoint,path).replaceAll('\\','/'),sha256:createHash('sha256').update(readFileSync(path)).digest('hex')}))
- writeFileSync(join(checkpoint,'manifest.json'),JSON.stringify({format:1,environment:'Demo',schemas:['pms','sms','ums','oms','wms'].map(n=>'gulimall_'+n+'_demo'),files,simulationPayments:true,parentBackup:ctx.backup,scenario:'restored-copy-pending-release'},null,2)+'\n');console.log('PASS: closed order and unconsumed release event captured in a new cold checkpoint')
+ const structure=inspectDatabaseStructure(sql,'demo',2)
+ writeFileSync(join(checkpoint,'manifest.json'),JSON.stringify({format:1,structureVersion:structure.structureVersion,environment:'Demo',schemas:['pms','sms','ums','oms','wms'].map(n=>'gulimall_'+n+'_demo'),files,simulationPayments:true,parentBackup:ctx.backup,scenario:'restored-copy-pending-release'},null,2)+'\n');console.log('PASS: closed order and unconsumed release event captured in a new cold checkpoint')
 }else if(action==='compensation'){
  const fixture=read(file('restore-fixture.json'));assert(Number.isSafeInteger(fixture.sku));assert.match(fixture.pending,/^[a-f0-9]{32}$/);assert.match(fixture.completed,/^[a-f0-9]{32}$/)
  await until(()=>sql(`SELECT inventory_status FROM gulimall_oms_demo.oms_order WHERE order_sn='${fixture.pending}';`)==='2')

@@ -53,6 +53,7 @@ export function assertRestoreEnvironment(file=process.env.GULIMALL_DEMO_RESTORE_
 export function restoreSql(ctx,query){assert.match(ctx.project,/^gulimall-handoff-[a-f0-9]{32}$/);assert(/^SELECT\s/.test(query));return docker(['exec','-i',ctx.project+'-mysql-1','sh','-c','MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -ugulimall --default-character-set=utf8mb4 --batch --skip-column-names'],query)}
 export function prepareFiles(contextFile,backup,keyFile){
  const ctx=descriptor(contextFile),input=verifyRestoreInput(backup,keyFile),uploads=join(ctx.source,'.data/uploads'),ledgerFile=join(ctx.source,'.data/simulation/payment/trades.json'),configFile=join(ctx.source,'.tools/simulation/payment-config.json')
+ ctx.inputStructureVersion=input.structureVersion
  mkdirSync(uploads,{recursive:true});mkdirSync(dirname(ledgerFile),{recursive:true});mkdirSync(dirname(configFile),{recursive:true})
  const changes=[],ledger=structuredClone(input.ledger),config={...input.config,notifyUrl:'http://127.0.0.1:88/api/payments/alipay/notify',returnUrl:'http://127.0.0.1:8080/payment/return'}
  for(const trade of ledger.trades)for(const[field,value]of Object.entries({notifyUrl:config.notifyUrl,returnUrl:config.returnUrl+'?orderSn='+trade.orderSn})){if(trade[field]!==value)changes.push({orderSn:trade.orderSn,field,before:trade[field],after:value});trade[field]=value}

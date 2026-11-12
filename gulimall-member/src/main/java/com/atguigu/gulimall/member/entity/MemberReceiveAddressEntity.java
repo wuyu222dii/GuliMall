@@ -2,6 +2,8 @@ package com.atguigu.gulimall.member.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -31,6 +33,9 @@ public class MemberReceiveAddressEntity implements Serializable {
 	 * member_id
 	 */
 	private Long memberId;
+	@TableField(exist = false)
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+	private String creationRequestId;
 	/**
 	 * Consignee name
 	 */
@@ -44,18 +49,22 @@ public class MemberReceiveAddressEntity implements Serializable {
 	/**
 	 * Postal code
 	 */
+	@Size(max = 255)
 	private String postCode;
 	/**
 	 * Province/municipality
 	 */
+	@Size(max = 255)
 	private String province;
 	/**
 	 * City
 	 */
+	@Size(max = 255)
 	private String city;
 	/**
 	 * District
 	 */
+	@Size(max = 255)
 	private String region;
 	/**
 	 * Detailed address (street)
@@ -65,6 +74,7 @@ public class MemberReceiveAddressEntity implements Serializable {
 	/**
 	 * Province/city/district code
 	 */
+	@Size(max = 255)
 	private String areacode;
 	/**
 	 * Whether default

@@ -30,7 +30,7 @@ java '-Dloader.main=com.atguigu.gulimall.auth.tool.AdminPasswordTool' -cp gulima
 
 停止：`simulation.ps1 Stop`，如需停基础设施再执行 `dev.ps1 Down`。Down 保留卷，不使用 `down -v`。模拟入口等待服务注册和实际 API 就绪；原 services.ps1 Start 只表示进程创建，不能代替就绪检查。Windows 上重建 jar 前先停止业务服务。日志分别在 `.tools/runtime`、`.tools/static-demo*.log`、`.tools/simulation/gateway*.log`；Compose 用 `docker compose logs --tail 100 <服务>` 排查。
 
-已有演示数据库按阶段迁移记录执行增量迁移，不重跑空库 SQL；当前基线 71 张表。阶段 9 没有新增业务表。初始化、已有库升级及本机工具说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
+已有演示数据库按阶段迁移记录执行增量迁移，不重跑空库SQL；阶段40当前基线为72张表（结构版本2），此前71表为结构版本1。阶段9没有新增业务表。初始化、已有库升级及本机工具说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
 ## 默认自动检查
 

@@ -1,4 +1,4 @@
-param([ValidateSet('All','Auth','Product','Admin','Search','Cart','Order','Payment','Fulfillment','Success','Failure','Recovery','Diagnostics','Browser','SessionExpiry')][string]$Suite='All')
+param([ValidateSet('All','Auth','Product','Admin','Search','Cart','Order','Payment','Fulfillment','Creation','Success','Failure','Recovery','Diagnostics','Browser','SessionExpiry')][string]$Suite='All')
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path $PSScriptRoot -Parent
 $taskOriginal=@{}
@@ -71,6 +71,12 @@ try {
     if($LASTEXITCODE -ne 0){throw 'Test product creation migration failed before service startup'}
     [IO.File]::ReadAllText((Join-Path $taskRoot 'infra/migrations/007-procurement-creation.sql')).Replace('gulimall_wms_demo','gulimall_wms_test') | & docker compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
     if($LASTEXITCODE -ne 0){throw 'Test demand creation migration failed before service startup'}
+    [IO.File]::ReadAllText((Join-Path $taskRoot 'infra/migrations/008-address-warehouse-creation.sql')) -replace 'gulimall_(ums|wms)_demo','gulimall_$1_test' | & docker compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -ugulimall --default-character-set=utf8mb4'
+    if($LASTEXITCODE -ne 0){throw 'Test address/warehouse creation migration failed before service startup'}
+    $taskMysql=@(& docker compose ps -q mysql)
+    if($LASTEXITCODE -ne 0 -or $taskMysql.Count -ne 1){throw 'Test MySQL container is not uniquely identified'}
+    & node "$PSScriptRoot/schema-version.mjs" $taskMysql[0] test 2
+    if($LASTEXITCODE -ne 0){throw 'Test database must use the recognized 72-table receipt structure'}
     & "$PSScriptRoot/services.ps1" Start
     Wait-TestServices
     & "$PSScriptRoot/search-index.ps1"
@@ -100,7 +106,7 @@ try {
             & "$PSScriptRoot/restore-drill.ps1" -Backup $taskFailure.backup
         }
     } else {
-        $taskSuites=if($Suite -eq 'All') {@('auth','product','admin','search','cart','order','payment','fulfillment')} else {@($Suite.ToLower())}
+        $taskSuites=if($Suite -eq 'All') {@('auth','product','admin','search','cart','order','payment','fulfillment','creation')} else {@($Suite.ToLower())}
         foreach($taskName in $taskSuites) {
             Wait-TestServices
             Write-Output "Running isolated $taskName acceptance..."

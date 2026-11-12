@@ -26,6 +26,11 @@ if($taskLedger -and $Environment -eq 'Test' -and -not $taskLedger.StartsWith((Jo
 Push-Location $taskRoot
 try {
     if($taskSimulation){& "$PSScriptRoot/simulation.ps1" Stop}else{& "$PSScriptRoot/services.ps1" Stop}
+    $taskMysql=@(& docker compose ps -q mysql)
+    if($LASTEXITCODE -ne 0 -or $taskMysql.Count -ne 1 -or $taskMysql[0] -notmatch '^[a-f0-9]{64}$'){throw 'Backup MySQL container is not uniquely identified'}
+    $taskStructure=& node "$PSScriptRoot/schema-version.mjs" $taskMysql[0] $taskSuffix
+    if($LASTEXITCODE -ne 0){throw 'Backup database structure is not recognized'}
+    $taskStructure=$taskStructure|ConvertFrom-Json
     $taskDump='MYSQL_PWD="$MYSQL_PASSWORD" mysqldump -ugulimall --single-transaction --no-tablespaces --hex-blob --set-gtid-purged=OFF --routines --events --triggers --databases '+($taskSchemas -join ' ')+' > '+$taskTemporary
     & docker compose exec -T mysql sh -c $taskDump
     if($LASTEXITCODE -ne 0){throw 'Database dump failed'}
@@ -38,7 +43,7 @@ try {
     if(Test-Path -LiteralPath $taskUpload){Copy-Item -LiteralPath $taskUpload -Destination (Join-Path $Destination 'uploads') -Recurse}else{New-Item -ItemType Directory (Join-Path $Destination 'uploads') | Out-Null}
     if($taskLedger){Copy-Item -LiteralPath $taskLedger -Destination (Join-Path $Destination 'payment-ledger.json')}
     $taskFiles=@(Get-ChildItem -LiteralPath $Destination -File -Recurse | ForEach-Object {@{path=$_.FullName.Substring($Destination.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash}})
-    $taskManifest=@{format=1;createdUtc=[DateTime]::UtcNow.ToString('o');environment=$Environment;schemas=$taskSchemas;files=$taskFiles;mysql='8.0.36';redis='6.2.16';queueRecovery='SQL outbox and order scanner';searchRecovery='rebuild from product database';simulationPayments=[bool]$taskLedger}
+    $taskManifest=@{format=1;structureVersion=$taskStructure.structureVersion;createdUtc=[DateTime]::UtcNow.ToString('o');environment=$Environment;schemas=$taskSchemas;files=$taskFiles;mysql='8.0.36';redis='6.2.16';queueRecovery='SQL outbox and order scanner';searchRecovery='rebuild from product database';simulationPayments=[bool]$taskLedger}
     [IO.File]::WriteAllText((Join-Path $Destination 'manifest.json'),($taskManifest|ConvertTo-Json -Depth 6),(New-Object Text.UTF8Encoding($false)))
     $taskComplete=$true;Write-Output "Consistent database, Redis and uploads backup saved: $Destination"
 }finally{
