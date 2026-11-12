@@ -9,6 +9,8 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.BucketOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.*;
@@ -40,9 +42,41 @@ public class MallSearchServiceImpl implements MallSearchService {
         else source.sort("_score", SortOrder.DESC);
         return source.sort("skuId", SortOrder.ASC);
     }
-    @Override public PageUtils search(SearchParam p) {
-        JSONObject response = elastic.request("POST", "/" + EsConstant.PRODUCT_INDEX + "/_search", build(p).toString());
+    private JSONObject request(SearchParam p,boolean facets) {
+        SearchSourceBuilder source=build(p);
+        if(facets) source.aggregation(AggregationBuilders.nested("attributes","attrs").subAggregation(
+                AggregationBuilders.terms("ids").field("attrs.attrId").size(21).order(BucketOrder.key(true))
+                        .subAggregation(AggregationBuilders.terms("names").field("attrs.attrName").size(1).order(BucketOrder.key(true)))
+                        .subAggregation(AggregationBuilders.terms("values").field("attrs.attrValue").size(51).order(BucketOrder.key(true)))));
+        JSONObject response = elastic.request("POST", "/" + EsConstant.PRODUCT_INDEX + "/_search", source.toString());
+        if(response==null || response.getJSONObject("_shards")==null || response.getJSONObject("hits")==null) throw new ApiProblem(503,"搜索响应不完整，请稍后重试");
         if (response.getBooleanValue("timed_out") || response.getJSONObject("_shards").getIntValue("failed") > 0) throw new ApiProblem(503, "搜索未完整执行，请稍后重试");
+        return response;
+    }
+    @Override public PageUtils search(SearchParam p) { return page(request(p,false),p); }
+    @Override public Map<String,Object> searchWithFacets(SearchParam p) {
+        JSONObject response=request(p,true);
+        try {
+            com.alibaba.fastjson.JSONArray buckets=response.getJSONObject("aggregations").getJSONObject("attributes").getJSONObject("ids").getJSONArray("buckets");
+            List<Map<String,Object>> attrs=new ArrayList<>();
+            for(int i=0;i<Math.min(20,buckets.size());i++) {
+                JSONObject bucket=buckets.getJSONObject(i);
+                com.alibaba.fastjson.JSONArray names=bucket.getJSONObject("names").getJSONArray("buckets"),values=bucket.getJSONObject("values").getJSONArray("buckets");
+                Map<String,Object> attr=new LinkedHashMap<>(); String id=bucket.getString("key");
+                String name=names.isEmpty()?null:names.getJSONObject(0).getString("key");
+                attr.put("attrId",id); attr.put("attrName",name==null || name.isEmpty()?"属性 "+id:name);
+                List<String> options=new ArrayList<>();
+                for(int n=0;n<Math.min(50,values.size());n++) {
+                    String value=values.getJSONObject(n).getString("key");
+                    if(value!=null && !value.isEmpty() && value.length()<=255 && value.indexOf('\r')<0 && value.indexOf('\n')<0) options.add(value);
+                }
+                attr.put("values",options); attr.put("truncated",values.size()>50); attrs.add(attr);
+            }
+            Map<String,Object> facets=new LinkedHashMap<>(); facets.put("attrs",attrs); facets.put("attrsTruncated",buckets.size()>20);
+            Map<String,Object> result=new LinkedHashMap<>(); result.put("page",page(response,p)); result.put("facets",facets); return result;
+        } catch(RuntimeException malformed) { throw new ApiProblem(503,"搜索规格响应不完整，请稍后重试"); }
+    }
+    private PageUtils page(JSONObject response,SearchParam p) {
         List<Map<String,Object>> list = new ArrayList<>();
         JSONObject hits = response.getJSONObject("hits");
         for (Object hit : hits.getJSONArray("hits")) {

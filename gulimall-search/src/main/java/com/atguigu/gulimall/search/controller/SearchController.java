@@ -33,6 +33,6 @@ public class SearchController {
         }
         params.setAttrs(query.get("attrs"));
         params.validate();
-        return R.ok().put("page", search.search(params));
+        return R.ok(search.searchWithFacets(params));
     }
 }

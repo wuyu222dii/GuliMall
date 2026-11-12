@@ -22,9 +22,9 @@ public class SearchParametersTest {
     }
     @Test public void preservesListsCommaValuesAndLegacyCategoryAlias() throws Exception {
         MallSearchService service=mock(MallSearchService.class);
-        when(service.search(any(SearchParam.class))).thenReturn(new PageUtils(Collections.emptyList(),0,12,1));
+        when(service.searchWithFacets(any(SearchParam.class))).thenReturn(Collections.singletonMap("page",new PageUtils(Collections.emptyList(),0,12,1)));
         mvc(service).perform(get("/search").param("catalog3Id","3").param("brandId","1","2,3").param("attrs","1_红,蓝","2_128GB")).andExpect(status().isOk());
-        ArgumentCaptor<SearchParam> capture=ArgumentCaptor.forClass(SearchParam.class);verify(service).search(capture.capture());
+        ArgumentCaptor<SearchParam> capture=ArgumentCaptor.forClass(SearchParam.class);verify(service).searchWithFacets(capture.capture());
         assertEquals(Long.valueOf(3),capture.getValue().getCatalogId());assertEquals(Arrays.asList(1L,2L,3L),capture.getValue().getBrandId());assertEquals(Arrays.asList("1_红,蓝","2_128GB"),capture.getValue().getAttrs());
     }
     @Test public void invalidQueryNeverExecutesSearch() throws Exception {

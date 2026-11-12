@@ -1,4 +1,4 @@
-param([ValidateSet('All','Auth','Product','Admin','Search','Cart','CartAddition','Order','Payment','Fulfillment','Creation','Success','Failure','Recovery','Diagnostics','Browser','SessionExpiry')][string]$Suite='All')
+param([ValidateSet('All','Auth','Product','Admin','Search','SearchFacets','Cart','CartAddition','Order','Payment','Fulfillment','Creation','Success','Failure','Recovery','Diagnostics','Browser','SessionExpiry')][string]$Suite='All')
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path $PSScriptRoot -Parent
 $taskOriginal=@{}
@@ -106,7 +106,7 @@ try {
             & "$PSScriptRoot/restore-drill.ps1" -Backup $taskFailure.backup
         }
     } else {
-        $taskSuites=if($Suite -eq 'All') {@('auth','product','admin','search','cart','cartaddition','order','payment','fulfillment','creation')} else {@($Suite.ToLower())}
+        $taskSuites=if($Suite -eq 'All') {@('auth','product','admin','search','searchfacets','cart','cartaddition','order','payment','fulfillment','creation')} else {@($Suite.ToLower())}
         foreach($taskName in $taskSuites) {
             Wait-TestServices
             Write-Output "Running isolated $taskName acceptance..."
