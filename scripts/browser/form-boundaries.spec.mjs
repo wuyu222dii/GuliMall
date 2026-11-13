@@ -82,7 +82,7 @@ test('干净品牌保存中：先等待结果再退出，只读加载和空闲�
   await page.getByRole('button',{name:'退出登录',exact:true}).click();await dialog(page).getByRole('button',{name:'确认放弃并继续',exact:true}).click();await expect.poll(()=>logouts).toBe(1);await expect.poll(async()=>(await page.request.get('/api/auth/me')).status()).toBe(401)
   await login(page,JSON.parse(readFileSync(process.env.GULIMALL_ADMIN_ACCESS_FILE,'utf8')))
   let releaseRead,enteredRead;const readPause=new Promise(r=>releaseRead=r),reading=new Promise(r=>enteredRead=r)
-  await page.route('**/api/admin/product/admin/catalog',async route=>{enteredRead();await readPause;await route.continue()})
+  await page.route('**/api/admin/product/admin/catalog/brands/page?*',async route=>{enteredRead();await readPause;await route.continue()})
   try{await page.goto('/admin/products/catalog?kind=brands');await reading;await page.getByRole('link',{name:'订单',exact:true}).click();await expect(page).toHaveURL(/\/admin\/orders/);await expect(dialog(page)).toHaveCount(0)}finally{releaseRead()}
  }finally{release()}
 })

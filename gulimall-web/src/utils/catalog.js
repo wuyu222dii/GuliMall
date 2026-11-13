@@ -1,4 +1,8 @@
 export const catalogKeys = { categories: 'catId', brands: 'brandId', groups: 'attrGroupId', attrs: 'attrId' }
+export function catalogPage(value, kind) {
+  if (!value || !Array.isArray(value.list) || !Number.isInteger(value.totalCount) || value.totalCount < 0 || !Number.isInteger(value.pageSize) || value.pageSize < 1 || value.pageSize > 100 || !Number.isInteger(value.currPage) || value.currPage < 1 || value.totalPage !== Math.ceil(value.totalCount / value.pageSize) || value.list.length > value.pageSize || value.list.some(row => !row || !row[catalogKeys[kind]])) throw new Error('资料分页结果不完整，请重新加载。')
+  return value
+}
 export function catalogCategories(tree, prefix = '') {
   return [...tree].sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0) || a.catId - b.catId).flatMap(row => {
     const path = prefix ? prefix + ' / ' + row.name : row.name

@@ -1,6 +1,11 @@
 import request from './request'
 
 export const getCatalog = () => request.get('/api/admin/product/admin/catalog')
+export const getCatalogTree = () => request.get('/api/admin/product/admin/catalog/categories/tree')
+export const listCatalog = (kind, params) => request.get(`/api/admin/product/admin/catalog/${kind}/page`, { params })
+export const getCatalogDetail = (kind, id) => request.get(`/api/admin/product/admin/catalog/${kind}/${id}`)
+export const locateCatalog = (kind, id, params) => request.get(`/api/admin/product/admin/catalog/${kind}/${id}/position`, { params })
+export const getProductBrands = ids => request.get('/api/admin/product/brand/infos', { params: new URLSearchParams(ids.map(id => ['brandId', id])) })
 export const saveCatalog = (kind, data) => request.post(`/api/admin/product/admin/catalog/${kind}`, data)
 export const deleteCatalog = (kind, id) => request.delete(`/api/admin/product/admin/catalog/${kind}/${id}`)
 export const listProducts = (params) => request.get('/api/admin/product/spuinfo/list', { params })

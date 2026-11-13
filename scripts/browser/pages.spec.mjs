@@ -57,9 +57,9 @@ test('基础资料：新增响应丢失、已保存后刷新失败和旧数据�
  await page.getByRole('button',{name:'保存基础资料',exact:true}).click();await expect(page.getByText('本次新增结果未知，原输入已保留。',{exact:false})).toBeVisible();await expect(page.getByLabel('分类名称',{exact:true})).toHaveValue(name);await expect(page.getByLabel('分类名称',{exact:true})).toBeDisabled()
  await page.unroute('**/api/admin/product/admin/catalog/categories');await page.getByRole('button',{name:'重新加载资料',exact:true}).click();await page.getByLabel('查询名称或编号',{exact:true}).fill(name);await page.getByRole('button',{name:'查询资料',exact:true}).click();await expect(page.locator('.admin-table tbody')).toContainText(name);await page.getByRole('button',{name:'已核对，放弃本次资料表单',exact:true}).click()
  await page.getByLabel('分类名称',{exact:true}).fill(name+' 第二条')
- await page.route('**/api/admin/product/admin/catalog',route=>route.abort('failed'))
+ await page.route('**/api/admin/product/admin/catalog/categories/tree',route=>route.abort('failed'))
  await page.getByRole('button',{name:'保存基础资料',exact:true}).click();await expect(page.getByRole('alert')).toContainText('资料已保存，但列表刷新失败');await expect(page.getByText('当前显示上次成功加载的基础资料，重新加载成功前暂停修改。',{exact:true})).toBeVisible()
- await page.unroute('**/api/admin/product/admin/catalog');await page.getByRole('button',{name:'重新加载资料',exact:true}).click();await expect(page.getByLabel('分类名称',{exact:true})).toBeEnabled();await page.getByRole('button',{name:'保存基础资料',exact:true}).click();await expect(page.getByText('分类已保存。',{exact:true})).toBeVisible()
+ await page.unroute('**/api/admin/product/admin/catalog/categories/tree');await page.getByRole('button',{name:'重新加载资料',exact:true}).click();await expect(page.getByLabel('分类名称',{exact:true})).toBeEnabled();await page.getByRole('button',{name:'保存基础资料',exact:true}).click();await expect(page.getByText('分类已保存。',{exact:true})).toBeVisible()
  const meta=(await json(page,'/api/admin/product/admin/catalog')).data,created=meta.categories.filter(category=>category.name===name||category.name===name+' 第二条');expect(created).toHaveLength(2)
  const csrf=(await json(page,'/api/auth/csrf')).csrfToken
  for(const category of created)expect((await page.request.delete('/api/admin/product/admin/catalog/categories/'+category.catId,{headers:{'X-CSRF-Token':csrf}})).status()).toBe(200)

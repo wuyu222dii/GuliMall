@@ -28,6 +28,47 @@ public class AdminCatalogService {
         data.put("groups", groups.list()); data.put("attrs", attrs.list()); data.put("relations", relations.list());
         return data;
     }
+    public List<CategoryEntity> categoryTree() { return categories.listWithTree(); }
+    public com.atguigu.common.utils.PageUtils page(AdminCatalogQuery query) {
+        switch(query.kind) {
+            case "brands": return page(brands,query);
+            case "groups": return page(groups,query);
+            default: return page(attrs,query);
+        }
+    }
+    private <T> com.atguigu.common.utils.PageUtils page(com.baomidou.mybatisplus.extension.service.IService<T> service,AdminCatalogQuery query) {
+        return new com.atguigu.common.utils.PageUtils(service.page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<T>(query.page,query.limit),query.<T>conditions(false).orderByAsc(query.idColumn)));
+    }
+    public Object detail(String kind,Long id) {
+        if(id==null || id<=0) throw new ApiProblem(400,"资料编号不正确");
+        Object result;
+        switch(kind) {
+            case "brands": result=brands.getById(id); break;
+            case "groups": result=groups.getById(id); break;
+            case "attrs":
+                AttrEntity attr=attrs.getById(id);
+                if(attr==null) throw new ApiProblem(404,"属性不存在");
+                AttrVo value=new AttrVo(); org.springframework.beans.BeanUtils.copyProperties(attr,value);
+                AttrAttrgroupRelationEntity relation=relations.getOne(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id",id));
+                if(relation!=null) value.setAttrGroupId(relation.getAttrGroupId()); result=value; break;
+            default: throw new ApiProblem(400,"资料类型不正确");
+        }
+        if(result==null) throw new ApiProblem(404,"资料不存在"); return result;
+    }
+    public Map<String,Object> position(AdminCatalogQuery query,Long id) {
+        if(id==null || id<=0) throw new ApiProblem(400,"资料编号不正确");
+        switch(query.kind) {
+            case "brands": return position(brands,query,id);
+            case "groups": return position(groups,query,id);
+            default: return position(attrs,query,id);
+        }
+    }
+    private <T> Map<String,Object> position(com.baomidou.mybatisplus.extension.service.IService<T> service,AdminCatalogQuery query,Long id) {
+        boolean found=service.count(new QueryWrapper<T>().eq(query.idColumn,id))>0;
+        boolean inFilter=found && service.count(query.<T>conditions(false).eq(query.idColumn,id))>0;
+        int page=found?service.count(query.<T>conditions(!inFilter).lt(query.idColumn,id))/query.limit+1:1;
+        Map<String,Object> result=new LinkedHashMap<>(); result.put("found",found); result.put("inFilter",inFilter); result.put("page",page); return result;
+    }
     private CategoryEntity leaf(Long id) {
         CategoryEntity category = categories.getById(id);
         if (category == null || !Integer.valueOf(3).equals(category.getCatLevel())) throw new ApiProblem(400, "请选择有效的三级分类");
