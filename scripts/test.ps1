@@ -63,6 +63,7 @@ try {
     foreach($taskProperty in $taskConfig.PSObject.Properties) { [Environment]::SetEnvironmentVariable($taskProperty.Name,[string]$taskProperty.Value,'Process') }
     $env:COMPOSE_FILE=(Join-Path $taskRoot 'compose.yaml')+';'+(Join-Path $taskRoot 'infra/compose.test.yaml')
     $env:COMPOSE_PROJECT_NAME='gulimall-test';$env:GULIMALL_TEST_INIT_DIR=$taskInit.Replace('\','/');$env:GULIMALL_ADMIN_ACCESS_FILE=$taskAdminPath
+    $env:GULIMALL_TEST_POWERSHELL=[Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
     $env:GULIMALL_TEST='1';$env:GULIMALL_ACCEPTANCE='1';$env:GULIMALL_FAULTS='1'
     New-Item -ItemType Directory -Force $env:UPLOAD_DIR | Out-Null
     Docker-Checked -Arguments @('compose','up','-d','--wait','--wait-timeout','300')

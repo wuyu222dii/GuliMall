@@ -36,7 +36,7 @@ export function inspectDatabaseStructure(query,suffix,expectedVersion){
  assert.equal(query(`SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema='${ums}' AND table_name='${receipt}';`).trim(),'0','Address receipts cannot follow physical address deletion through foreign keys')
  return {structureVersion:version,tables:tables.length}
 }
-if(process.argv[1]&&pathToFileURL(resolve(process.argv[1])).href===import.meta.url){
+if(process.argv[1]&&!process.execArgv.some(arg=>arg==='-e'||arg==='--eval'||arg.startsWith('--eval='))&&pathToFileURL(resolve(process.argv[1])).href===import.meta.url){
  const [container,suffix,version,...extra]=process.argv.slice(2)
  assert(/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(container||'')&&extra.length===0,'Expected a Docker container, Demo/Test suffix and optional structure version')
  assert(version===undefined||['1','2'].includes(version),'Unsupported structure version')

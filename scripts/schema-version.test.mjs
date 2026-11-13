@@ -1,6 +1,17 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {spawnSync} from 'node:child_process'
+import {fileURLToPath} from 'node:url'
 import {backupStructureVersion,expectedDatabaseTables,inspectDatabaseStructure} from './schema-version.mjs'
+
+test('inline recovery imports do not accidentally execute the database CLI',()=>{
+ const module=fileURLToPath(new URL('./schema-version.mjs',import.meta.url))
+ const code="import {pathToFileURL} from 'node:url';const m=await import(pathToFileURL(process.argv[1]).href);console.log(m.backupStructureVersion({structureVersion:2}))"
+ for(const flag of ['-e','--eval']){
+  const result=spawnSync(process.execPath,['--input-type=module',flag,code,module],{encoding:'utf8',windowsHide:true,timeout:10000})
+  assert.equal(result.status,0,result.stderr);assert.equal(result.stdout.trim(),'2')
+ }
+})
 
 const receipt='ums_address_creation_receipt'
 function database(version){

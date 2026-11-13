@@ -1,4 +1,6 @@
-# 常驻本地模拟商城（阶段 10–21）
+# 常驻本地模拟商城（阶段 10–44）
+
+阶段44集中验收完成：Java58、Node68、PowerShell、迁移及前端lint/build通过；完整All105（原78+新增27）、Diagnostics四类故障、Browser96（Chromium/Edge各48，15.3m）通过。Test单代恢复、新回执重放及旧Demo迁移后的两代恢复通过，常驻LOCAL_TEST最终18项和预检健康，原演示数据与私有文件保留。详见 [阶段44](STAGE44.md)。
 
 本轮只使用本机服务：支付为 LOCAL_TEST，验证码为 development，图片真实写入本地。数据库、Redis Session、商品、购物车、订单、库存、消息、发货和收货仍走真实业务逻辑，不通过前端改状态制造成功。不接真实支付宝、短信或 OSS，不开放公网。
 

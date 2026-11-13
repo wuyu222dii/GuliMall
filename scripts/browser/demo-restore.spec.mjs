@@ -4,6 +4,7 @@ import {join} from 'node:path'
 import {randomUUID} from 'node:crypto'
 import {assertRestoreEnvironment,restoreSql,docker} from '../demo-restore-guard.mjs'
 import {json,login,signIn,register,openPage,closeContexts} from './helpers.mjs'
+import {prepareRecoveryReceipts} from '../recovery-receipts.mjs'
 import {orderStatuses} from '../../gulimall-web/src/utils/payment.js'
 let contexts=[]
 test.afterEach(async({},info)=>closeContexts(contexts,info))
@@ -21,6 +22,8 @@ test('Demo 冷恢复：原交易可读、完整模拟交易及持久释放意图
   await member.getByRole('link',{name:'收货地址',exact:true}).click();await member.getByRole('button',{name:'新增地址',exact:true}).click()
   for(const[name,value]of Object.entries({'收件人':'恢复模拟会员','手机号':'13800000001','省份':'浙江省','城市':'杭州市','区县':'西湖区','详细地址':'恢复副本验收20号'}))await member.getByLabel(name,{exact:true}).fill(value)
   await member.getByRole('checkbox',{name:'设为默认地址',exact:true}).check();await member.getByRole('button',{name:'保存',exact:true}).click();await expect(member.getByText('恢复副本验收20号',{exact:false})).toBeVisible()
+  const client=page=>({async call(path,method='GET',data,expected=200){const csrf=(await json(page,'/api/auth/csrf')).csrfToken;const response=await page.request.fetch('http://127.0.0.1:8080'+path,{method,headers:{'X-CSRF-Token':csrf},...(data===undefined?{}:{data})});expect(response.status()).toBe(expected);return response.json()}})
+  fixture.receipts=await prepareRecoveryReceipts(client(admin),client(member),fixture.sku)
  }else{
   await member.goto('/login?redirect=%2Fmember%2Forders');await signIn(member,JSON.parse(readFileSync(file('restore-member.json'),'utf8')));await expect(member.getByRole('heading',{name:'已完成',exact:true})).toBeVisible();await expect(member.getByRole('heading',{name:'已关闭',exact:true})).toBeVisible();await expect(member.getByText(/恢复模拟会员/)).toHaveCount(2)
  }

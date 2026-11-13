@@ -3,6 +3,7 @@ import {readFileSync,writeFileSync,existsSync,readdirSync} from 'node:fs'
 import {join,resolve,relative,sep} from 'node:path'
 import {randomUUID,createHash} from 'node:crypto'
 import {assertRestoreEnvironment,restoreSql,docker} from './demo-restore-guard.mjs'
+import {verifyRecoveryReceipts} from './recovery-receipts.mjs'
 import {moneyCents} from './backup-audit.mjs'
 import {inspectDatabaseStructure} from './schema-version.mjs'
 const ctx=assertRestoreEnvironment(process.env.GULIMALL_DEMO_RESTORE_CONTEXT,{allowStoppedBroker:process.argv[2]==='checkpoint'}),sql=q=>restoreSql(ctx,q),file=name=>join(ctx.source,'.tools',name),read=path=>JSON.parse(readFileSync(path,'utf8')),save=(name,value)=>writeFileSync(file(name),JSON.stringify(value,null,2)+'\n')
@@ -78,6 +79,8 @@ if(action==='snapshot'){
  assert.equal((await admin.call('/api/admin/product/spuinfo/creation/'+fixture.creationSnapshot.creationRequestId)).id,fixture.productId)
  assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_demo.pms_spu_info WHERE creation_request_id='${fixture.creationSnapshot.creationRequestId}';`),'1')
  assert.equal(sql(`SELECT COUNT(*) FROM gulimall_pms_demo.pms_sku_info WHERE spu_id=${fixture.productId};`),'1')
+ const member=new Client();await member.call('/api/auth/csrf');await member.call('/api/auth/login','POST',read(file('restore-member.json')))
+ const receipts=await verifyRecoveryReceipts(admin,member,fixture.receipts);save('receipt-recovery-result.json',receipts)
  const demandFound=await admin.call('/api/admin/ware/purchasedetail/creation/'+fixture.demandRequest.creationRequestId)
  assert.equal(demandFound.id,fixture.demand);assert.equal(demandFound.status,3);assert.equal(demandFound.purchaseId,fixture.purchase);assert.equal(demandFound.deleted,false)
  assert.equal((await admin.call('/api/admin/ware/purchasedetail/save','POST',fixture.demandRequest)).id,fixture.demand)
@@ -110,5 +113,5 @@ if(action==='snapshot'){
  const fixture=read(file('restore-fixture.json'));assert.match(fixture.afterRecovery,/^[a-f0-9]{32}$/)
  assert.equal(sql(`SELECT stock,stock_locked FROM gulimall_wms_demo.wms_ware_sku WHERE sku_id=${fixture.sku};`),'4\t0')
  for(const sn of [fixture.completed,fixture.afterRecovery])assert.equal(sql(`SELECT status,inventory_status,pay_amount FROM gulimall_oms_demo.oms_order WHERE order_sn='${sn}';`),'3\t1\t0.10')
- save('restore-result.json',{original:originalIntact(),newCompleted:[fixture.completed,fixture.afterRecovery],compensated:fixture.pending,compensation:read(file('compensation-result.json')),productCreation:read(file('creation-result.json')),stock:'4/0',realServices:false});console.log('PASS: original restored state retained and another genuine mock trade completed after cold recovery')
+ save('restore-result.json',{original:originalIntact(),newCompleted:[fixture.completed,fixture.afterRecovery],compensated:fixture.pending,compensation:read(file('compensation-result.json')),productCreation:read(file('creation-result.json')),receipts:read(file('receipt-recovery-result.json')),stock:'4/0',realServices:false});console.log('PASS: original restored state retained and another genuine mock trade completed after cold recovery')
 }else throw new Error('Unknown restore verification phase')

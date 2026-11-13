@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync, openSync, closeSync, copyFileSync } from 'node:fs'
 import { randomInt, randomUUID, createHash } from 'node:crypto'
+import { prepareRecoveryReceipts } from './recovery-receipts.mjs'
 import { assertTestEnvironment } from './test-environment.mjs'
 import { testConfig, createPaymentGateway, providerTime } from './payment-test-gateway.mjs'
 await assertTestEnvironment()
@@ -9,22 +10,39 @@ const mode=process.argv[2]
 assert(['success','failure'].includes(mode),'Use scripts/test.ps1 -Suite Success or Failure')
 const label='demo9_'+randomUUID().replaceAll('-','').slice(0,12), config=testConfig('.tools/test/demo-payment.json'), baseline={...process.env}
 const dataFile='.data/test-simulation/payment/trades.json'
+const shell=process.env.GULIMALL_TEST_POWERSHELL || 'powershell.exe'
 let gateway, rabbitStopped=false
 function command(program,args,env=process.env,timeout=45000) {
-  const childEnv={...env};if(program==='powershell.exe')delete childEnv.PSModulePath
+  const childEnv={...env};if(program===shell)delete childEnv.PSModulePath
   const log='.tools/test/operation-last.log',descriptor=openSync(log,'w')
-  try {
-    const r=spawnSync(program,args,{env:childEnv,stdio:['ignore',descriptor,descriptor],timeout,windowsHide:true})
-    if(r.status!==0)copyFileSync(log,'.tools/test/operation-error.log')
-    assert.equal(r.status,0,'Local demo operation failed; inspect .tools/test/operation-error.log')
-  }finally{closeSync(descriptor)}
+  let r
+  try { r=spawnSync(program,args,{env:childEnv,stdio:['ignore',descriptor,descriptor],timeout,windowsHide:true}) } finally { closeSync(descriptor) }
+  checked(program,args,r,timeout)
 }
-function service(action,module,local=true) {const env={...baseline};if(local&&gateway)Object.assign(env,{SPRING_PROFILES_ACTIVE:'dev,test,payment-test',ALIPAY_APP_ID:config.appId,ALIPAY_PRIVATE_KEY:config.merchantPrivate,ALIPAY_PUBLIC_KEY:config.providerPublic,ALIPAY_SELLER_ID:config.sellerId,ALIPAY_NOTIFY_URL:config.notifyUrl,ALIPAY_RETURN_URL:config.returnUrl,ALIPAY_GATEWAY_URL:gateway.url+'/gateway.do'});command('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/services.ps1',action,'-Modules',module],env)}
+function checked(program,args,r,timeout) {
+  if(r.status!==0){copyFileSync('.tools/test/operation-last.log','.tools/test/operation-error.log');writeFileSync('.tools/test/operation-error.json',JSON.stringify({program,args,cwd:process.cwd(),status:r.status,signal:r.signal,error:r.error?{code:r.error.code,message:r.error.message}:null,timeout},null,2)+'\n')}
+  assert.equal(r.status,0,'Local demo operation failed; inspect .tools/test/operation-error.log')
+}
+async function backup(destination) {
+  const args=['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File','scripts/backup.ps1','-Environment','Test','-Destination',destination]
+  const env={...process.env,GULIMALL_SIMULATION_LEDGER:dataFile};delete env.PSModulePath
+  const descriptor=openSync('.tools/test/operation-last.log','w');let result
+  // Keep fixture callbacks responsive while the cold-backup process runs.
+  try {
+    result=await new Promise(resolve=>{
+      const child=spawn(shell,args,{env,stdio:['ignore',descriptor,descriptor],timeout:180000,windowsHide:true})
+      child.once('error',error=>resolve({status:null,error}))
+      child.once('exit',(status,signal)=>resolve({status,signal}))
+    })
+  }finally{closeSync(descriptor)}
+  checked(shell,args,result,180000)
+}
+function service(action,module,local=true) {const env={...baseline};if(local&&gateway)Object.assign(env,{SPRING_PROFILES_ACTIVE:'dev,test,payment-test',ALIPAY_APP_ID:config.appId,ALIPAY_PRIVATE_KEY:config.merchantPrivate,ALIPAY_PUBLIC_KEY:config.providerPublic,ALIPAY_SELLER_ID:config.sellerId,ALIPAY_NOTIFY_URL:config.notifyUrl,ALIPAY_RETURN_URL:config.returnUrl,ALIPAY_GATEWAY_URL:gateway.url+'/gateway.do'});command(shell,['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/services.ps1',action,'-Modules',module],env)}
 function sql(input){const r=spawnSync('docker',['compose','exec','-T','mysql','sh','-c','MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -ugulimall --batch --skip-column-names'],{input,encoding:'utf8',windowsHide:true});assert.equal(r.status,0,r.stderr);return r.stdout.trim()}
 async function until(check,message){for(let i=0;i<80;i++){try{if(await check())return}catch{}await new Promise(r=>setTimeout(r,1000))}assert.fail(message)}
 class Client {
   cookie='';csrf=''
-  async call(path,method='GET',body){const form=body instanceof FormData;const r=await fetch('http://127.0.0.1:88'+path,{method,headers:{Cookie:this.cookie,'X-CSRF-Token':this.csrf,...(body===undefined||form?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:form?body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});const c=r.headers.getSetCookie().find(v=>v.startsWith('GULIMALLSESSION='));if(c)this.cookie=c.split(';')[0];const data=await r.json();if(data.csrfToken)this.csrf=data.csrfToken;assert.equal(r.status,200,JSON.stringify(data));assert.equal(data.code,0,data.msg);return data}
+  async call(path,method='GET',body,expected=200){const form=body instanceof FormData;const r=await fetch('http://127.0.0.1:88'+path,{method,headers:{Cookie:this.cookie,'X-CSRF-Token':this.csrf,...(body===undefined||form?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:form?body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});const c=r.headers.getSetCookie().find(v=>v.startsWith('GULIMALLSESSION='));if(c)this.cookie=c.split(';')[0];const data=await r.json();if(data.csrfToken)this.csrf=data.csrfToken;assert.equal(r.status,expected,'Recovery API status mismatch: '+path);if(expected===200)assert.equal(data.code,0,data.msg);return data}
 }
 const admin=new Client(),member=new Client()
 try {
@@ -57,6 +75,8 @@ try {
   const user=(await member.call('/api/auth/register','POST',{username:label,phone,password,code:otp.developmentCode})).user
   await member.call('/api/auth/logout','POST');await member.call('/api/auth/csrf');await member.call('/api/auth/login','POST',{username:label,password})
   const addressId=(await member.call('/api/member/addresses','POST',{name:'本地演示会员',phone,province:'浙江省',city:'杭州市',region:'西湖区',detailAddress:'阶段九演示地址',defaultStatus:1})).id
+  writeFileSync('.tools/test/recovery-member-'+mode+'.json',JSON.stringify({username:label,password})+'\n')
+  const receipts=await prepareRecoveryReceipts(admin,member,skus[0])
   await member.call('/api/cart/items','POST',{skuId:skus[0],count:mode==='success'?3:1})
   if(mode==='success')await member.call('/api/cart/items','POST',{skuId:skus[1],count:1})
   const confirmation=(await member.call('/api/order/mine/confirm','POST',{})).confirmation
@@ -86,7 +106,7 @@ try {
     writeFileSync('.tools/test/backup-session.json',JSON.stringify({cookie:admin.cookie,csrf:admin.csrf}))
     console.log('4. Taking a cold backup while the release event is durable but the broker is unavailable.')
     const port=Number(new URL(gateway.url).port);await gateway.close()
-    command('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/backup.ps1','-Environment','Test','-Destination','.data/backups/'+label],{...process.env,GULIMALL_SIMULATION_LEDGER:dataFile},180000)
+    await backup('.data/backups/'+label)
     gateway=await createPaymentGateway({config,dataFile,port})
     command('docker',['compose','start','rabbitmq']);rabbitStopped=false
     await until(async()=>(await member.call(`/api/order/mine/${order.orderSn}/payment-status`)).payment.order.inventoryStatus===2,'Stock release did not recover')
@@ -94,7 +114,7 @@ try {
     console.log('5. After order restart and broker recovery, the durable release event completed once; stock restored to 5.')
   }
   const detail=await member.call(`/api/order/mine/${order.id}`)
-  const report={creationSnapshot,demandCreations,deletedDemand,mode:'LOCAL_TEST',scenario:mode,label,productId,skus,purchaseId,memberId:user.id,orderId:order.id,orderSn:order.orderSn,status:detail.order.status,inventoryStatus:detail.order.inventoryStatus,amount:detail.order.payAmount,image:uploaded,imageSha256,backup:mode==='failure'?'.data/backups/'+label:null,history:detail.history.map(h=>h.orderStatus),realAlipaySandbox:false,publicCallback:false}
+  const report={receipts,creationSnapshot,demandCreations,deletedDemand,mode:'LOCAL_TEST',scenario:mode,label,productId,skus,purchaseId,memberId:user.id,orderId:order.id,orderSn:order.orderSn,status:detail.order.status,inventoryStatus:detail.order.inventoryStatus,amount:detail.order.payAmount,image:uploaded,imageSha256,backup:mode==='failure'?'.data/backups/'+label:null,history:detail.history.map(h=>h.orderStatus),realAlipaySandbox:false,publicCallback:false}
   writeFileSync(`.tools/test/demo-${mode}.json`,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report))
 } finally {
   if(rabbitStopped)command('docker',['compose','start','rabbitmq'])

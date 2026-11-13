@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {readFileSync,writeFileSync} from 'node:fs'
 import {spawnSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
+import {verifyRecoveryReceipts} from './recovery-receipts.mjs'
 import {assertTestEnvironment} from './test-environment.mjs'
 const source=JSON.parse(readFileSync('.tools/test/demo-success.json','utf8')),failure=JSON.parse(readFileSync('.tools/test/demo-failure.json','utf8')),session=JSON.parse(readFileSync('.tools/test/backup-session.json','utf8'))
 const container=process.env.GULIMALL_RESTORE_MYSQL
@@ -11,6 +12,14 @@ async function call(path,method='GET',body,expected=200){const r=await fetch('ht
 function sql(input){const r=spawnSync('docker',['exec','-i',container,'sh','-c','MYSQL_PWD="$MYSQL_PASSWORD" exec mysql -ugulimall --batch --skip-column-names'],{input,encoding:'utf8',windowsHide:true});assert.equal(r.status,0,r.stderr);return r.stdout.trim()}
 await until(async()=>{await assertTestEnvironment();return(await call('/api/auth/me')).user.admin},'Restored test services or saved Redis Session not ready')
 assert(Number.isSafeInteger(source.orderId));assert(Number.isSafeInteger(failure.orderId))
+const receiptResults=[]
+for(const [mode,story] of [['success',source],['failure',failure]]){
+ let memberCookie='',memberCsrf=''
+ const member={async call(path,method='GET',body,expected=200){const response=await fetch('http://127.0.0.1:88'+path,{method,headers:{Cookie:memberCookie,'X-CSRF-Token':memberCsrf,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const cookie=response.headers.getSetCookie().find(v=>v.startsWith('GULIMALLSESSION='));if(cookie)memberCookie=cookie.split(';')[0];assert.equal(response.status,expected,'Restored member API failed: '+path);const data=await response.json();if(data.csrfToken)memberCsrf=data.csrfToken;return data}}
+ await member.call('/api/auth/csrf');await member.call('/api/auth/login','POST',JSON.parse(readFileSync('.tools/test/recovery-member-'+mode+'.json','utf8')))
+ receiptResults.push(await verifyRecoveryReceipts({call},member,story.receipts))
+}
+
 sql(`UPDATE gulimall_oms_test.oms_order SET note='restore-proof' WHERE id=${source.orderId};`)
 const completed=await call('/api/admin/order/order/info/'+source.orderId)
 assert.equal(completed.order.note,'restore-proof','HTTP service did not connect to the restored instance');assert.equal(completed.order.status,3);assert.equal(Number(completed.order.payAmount),3.75)
@@ -59,5 +68,5 @@ const total=(await call('/api/admin/product/search-sync?limit=1')).page.totalCou
 const seconds=Math.max(90,Math.ceil(total/20)*(15+20)+30)
 console.log(`Restored search: ${total} persisted tasks, ${seconds}s verification budget`)
 await until(async()=>(await call('/api/search?keyword='+source.label)).page.list.length===2,'Search did not rebuild from restored product database',seconds)
-writeFileSync('.tools/test/restore-result.json',JSON.stringify({freshInstances:true,savedSession:true,uploadedImages:true,completedOrder:source.orderSn,releaseRecovered:failure.orderSn,searchRebuilt:true,simulationPayments,productCreationRecovered:true,demandCreationRecovered:true,deletedDemandNotRevived:true,realAlipaySandbox:false},null,2)+'\n')
+writeFileSync('.tools/test/restore-result.json',JSON.stringify({receiptResults,freshInstances:true,savedSession:true,uploadedImages:true,completedOrder:source.orderSn,releaseRecovered:failure.orderSn,searchRebuilt:true,simulationPayments,productCreationRecovered:true,demandCreationRecovered:true,deletedDemandNotRevived:true,realAlipaySandbox:false},null,2)+'\n')
 console.log('PASS: restored order snapshots, Redis Session, image hashes, fresh-vhost release recovery and Elasticsearch rebuild.')
